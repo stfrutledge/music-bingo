@@ -1,9 +1,29 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../shared/Button';
 import { useOfflineStatus } from '../../hooks/useOfflineStatus';
+import { useGame } from '../../context/GameContext';
 
 export function HomeScreen() {
   const isOffline = useOfflineStatus();
+  const navigate = useNavigate();
+  const { game, isLoading } = useGame();
+
+  // Auto-redirect to game screen if there's an active game
+  useEffect(() => {
+    if (!isLoading && game && !game.endedAt) {
+      navigate('/host/game', { replace: true });
+    }
+  }, [game, isLoading, navigate]);
+
+  // Show loading while checking for active game
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
+        <div className="text-slate-400">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center p-4 safe-area-inset">

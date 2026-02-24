@@ -11,11 +11,12 @@ import { PatternDisplay } from '../shared/PatternDisplay';
 
 export function GameScreen() {
   const navigate = useNavigate();
-  const { game, playlist, currentSong, nextSong, prevSong, setPlaying } = useGame();
+  const { game, playlist, currentSong, nextSong, prevSong, setPlaying, isLoading } = useGame();
   const audio = useAudioPlayer();
   const wakeLock = useWakeLock();
 
   const [showCalledList, setShowCalledList] = useState(false);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
 
   // Acquire wake lock when game starts
   useEffect(() => {
@@ -29,7 +30,8 @@ export function GameScreen() {
   useEffect(() => {
     if (currentSong && playlist) {
       const url = getAudioUrl(playlist.baseAudioUrl, currentSong.audioFile);
-      audio.loadAudio(url, currentSong.startTime || 0);
+      audio.loadAudio(url, currentSong.startTime || 0, shouldAutoPlay);
+      setShouldAutoPlay(false); // Reset after use
     }
   }, [currentSong?.id, playlist?.baseAudioUrl]);
 
@@ -37,6 +39,14 @@ export function GameScreen() {
   useEffect(() => {
     setPlaying(audio.isPlaying);
   }, [audio.isPlaying]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
+        <div className="text-slate-400">Loading game...</div>
+      </div>
+    );
+  }
 
   if (!game || !playlist || !currentSong) {
     return (
@@ -70,11 +80,13 @@ export function GameScreen() {
 
   const handleNextSong = () => {
     audio.stop();
+    setShouldAutoPlay(true);
     nextSong();
   };
 
   const handlePrevSong = () => {
     audio.stop();
+    setShouldAutoPlay(true);
     prevSong();
   };
 

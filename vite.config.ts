@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import fs from 'fs'
 
 export default defineConfig({
   plugins: [
@@ -63,7 +64,6 @@ export default defineConfig({
       name: 'serve-mp3s',
       configureServer(server) {
         server.middlewares.use('/audio', (req, res, next) => {
-          const fs = require('fs')
           const audioPath = path.join('C:/Users/sfrut/OneDrive/Desktop/Music Bingo MP3s', decodeURIComponent(req.url || '').slice(1))
 
           if (fs.existsSync(audioPath)) {

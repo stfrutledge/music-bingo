@@ -6,6 +6,80 @@ export async function openAudioCache(): Promise<Cache> {
   return caches.open(AUDIO_CACHE_NAME);
 }
 
+/**
+ * Check if audio files are directly accessible (local server or already available).
+ * This is faster than checking cache and works for locally-hosted files.
+ */
+export async function checkAudioAvailability(playlist: Playlist): Promise<{
+  available: number;
+  total: number;
+  allAvailable: boolean;
+  isLocal: boolean;
+}> {
+  const total = playlist.songs.length;
+  let available = 0;
+
+  // Check if baseUrl is local (localhost, 127.0.0.1, or relative path)
+  const isLocal = isLocalUrl(playlist.baseAudioUrl);
+
+  // Sample check: test first few files to see if they're accessible
+  const samplesToCheck = Math.min(3, playlist.songs.length);
+
+  for (let i = 0; i < samplesToCheck; i++) {
+    const song = playlist.songs[i];
+    const url = getAudioUrl(playlist.baseAudioUrl, song.audioFile);
+
+    try {
+      // Use GET with range header to just fetch first byte (more compatible than HEAD)
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Range': 'bytes=0-0' },
+      });
+      // Accept 200 (full response) or 206 (partial content)
+      if (response.ok || response.status === 206) {
+        available++;
+      }
+    } catch (err) {
+      console.warn(`File not accessible: ${url}`, err);
+    }
+  }
+
+  // If all samples are available, assume all files are available
+  const allAvailable = available === samplesToCheck;
+
+  return {
+    available: allAvailable ? total : available,
+    total,
+    allAvailable,
+    isLocal,
+  };
+}
+
+/**
+ * Check if a URL is local (doesn't require downloading/caching).
+ */
+export function isLocalUrl(url: string): boolean {
+  if (!url) return false;
+
+  // Relative URLs are local
+  if (url.startsWith('/') || url.startsWith('./')) return true;
+
+  try {
+    const parsed = new URL(url, window.location.origin);
+    const hostname = parsed.hostname.toLowerCase();
+
+    return (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0' ||
+      hostname.endsWith('.local') ||
+      hostname === window.location.hostname
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function getCacheStatus(playlist: Playlist): Promise<CacheStatus> {
   const cache = await openAudioCache();
   let cachedCount = 0;

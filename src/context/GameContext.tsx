@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
 import type { GameState, Playlist, GameRound, WinRecord, Song } from '../types';
-import { saveGame, getGame } from '../lib/db';
+import { saveGame, getGame, getActiveGame, getPlaylist } from '../lib/db';
 import { shuffleSongOrder } from '../lib/cardGenerator';
 
 interface GameContextState {
@@ -186,6 +186,30 @@ const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+  const hasRestoredRef = useRef(false);
+
+  // Restore active game on mount
+  useEffect(() => {
+    if (hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
+
+    const restoreActiveGame = async () => {
+      dispatch({ type: 'SET_LOADING', payload: true });
+
+      const activeGame = await getActiveGame();
+      if (activeGame) {
+        const playlist = await getPlaylist(activeGame.playlistId);
+        if (playlist) {
+          dispatch({ type: 'SET_GAME', payload: { game: activeGame, playlist } });
+          return;
+        }
+      }
+
+      dispatch({ type: 'SET_LOADING', payload: false });
+    };
+
+    restoreActiveGame();
+  }, []);
 
   // Persist game state changes
   useEffect(() => {

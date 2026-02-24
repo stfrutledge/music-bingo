@@ -14,7 +14,7 @@ interface UseAudioPlayerReturn extends AudioPlayerState {
   pause: () => void;
   stop: () => void;
   seek: (time: number) => void;
-  loadAudio: (url: string, startTime?: number) => Promise<void>;
+  loadAudio: (url: string, startTime?: number, autoPlay?: boolean) => Promise<void>;
 }
 
 export function useAudioPlayer(): UseAudioPlayerReturn {
@@ -81,7 +81,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     };
   }, []);
 
-  const loadAudio = useCallback(async (url: string, startTime: number = 0) => {
+  const loadAudio = useCallback(async (url: string, startTime: number = 0, autoPlay: boolean = false) => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -98,6 +98,18 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
 
     audio.src = url;
     audio.load();
+
+    if (autoPlay) {
+      // Wait for audio to be ready, then play
+      audio.addEventListener('canplay', async function onCanPlay() {
+        audio.removeEventListener('canplay', onCanPlay);
+        try {
+          await audio.play();
+        } catch (err) {
+          console.warn('Auto-play failed:', err);
+        }
+      }, { once: true });
+    }
   }, []);
 
   const play = useCallback(async () => {
