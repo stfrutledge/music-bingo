@@ -89,3 +89,22 @@ export interface AppSettings {
   lastPlaylistId?: string;
   darkMode: boolean;
 }
+
+export interface GroupRecommendation {
+  cardCount: number;
+  maxOverlap: number;
+  maxPositionalOverlap: number;
+  suggestedPatterns: string[];
+  description: string;
+}
+
+export interface GenerationStats {
+  totalCards: number;
+  songDistribution: Map<string, number>;
+  minAppearances: number;
+  maxAppearances: number;
+  maxOverlap: number;
+  avgOverlap: number;
+  maxPositionalOverlap: number;
+  avgPositionalOverlap: number;
+}
