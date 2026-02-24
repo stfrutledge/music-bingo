@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { BingoCard } from '../../types';
 import { useGame } from '../../context/GameContext';
 import { getCard } from '../../lib/db';
-import { getPatternById, getPatternIndices, patternIndicesToSlotIndices } from '../../lib/patterns';
+import { getPatternById } from '../../lib/patterns';
 import { checkWin } from '../../lib/winChecker';
 import { Button } from '../shared/Button';
 import { BingoGrid } from '../shared/BingoGrid';
@@ -18,6 +18,7 @@ export function WinnerVerification() {
   const [result, setResult] = useState<{
     isWin: boolean;
     missingSlots: number[];
+    matchedSlots: number[];
   } | null>(null);
 
   useEffect(() => {
@@ -36,7 +37,6 @@ export function WinnerVerification() {
 
   const currentRound = game.rounds[game.currentRound];
   const pattern = getPatternById(currentRound.patternId);
-  const patternSlotIndices = patternIndicesToSlotIndices(getPatternIndices(pattern));
 
   const handleCheckCard = async () => {
     const num = parseInt(cardNumber);
@@ -63,6 +63,7 @@ export function WinnerVerification() {
     setResult({
       isWin: checkResult.isWin,
       missingSlots: checkResult.missingSlots,
+      matchedSlots: checkResult.matchedSlots,
     });
 
     setLoading(false);
@@ -147,8 +148,8 @@ export function WinnerVerification() {
                 songMap={songMap}
                 calledSongIds={calledSet}
                 excludedSongIds={excludedSongIds}
-                highlightedSlots={result.isWin ? patternSlotIndices : []}
-                patternSlots={result.isWin ? [] : patternSlotIndices}
+                highlightedSlots={result.isWin ? result.matchedSlots : []}
+                patternSlots={result.isWin ? [] : result.matchedSlots}
                 size="sm"
               />
               <div className="mt-4 flex gap-2 text-sm justify-center">
