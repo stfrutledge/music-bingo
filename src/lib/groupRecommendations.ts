@@ -6,53 +6,57 @@ import type { GroupRecommendation } from '../types';
  * Smaller groups benefit from stricter uniqueness for more varied gameplay.
  */
 export function getGroupRecommendation(playerCount: number): GroupRecommendation {
+  // Higher maxOverlap = cards share more songs = faster games
+  // With random song selection, high overlap allows natural clustering
+  // All groups now use maxOverlap: 22 for fast games (~12-18 songs to win)
+
   if (playerCount <= 10) {
     return {
       cardCount: Math.max(10, playerCount + 2),
-      maxOverlap: 12,
-      maxPositionalOverlap: 2,
+      maxOverlap: 22,
+      maxPositionalOverlap: 4,
       suggestedPatterns: ['single-line-h', 'single-line-v', 'single-line-d'],
-      description: 'Small group - strict overlap settings for maximum card uniqueness',
+      description: 'Small group - quick games',
     };
   }
 
   if (playerCount <= 25) {
     return {
       cardCount: playerCount + 5,
-      maxOverlap: 15,
-      maxPositionalOverlap: 3,
+      maxOverlap: 22,
+      maxPositionalOverlap: 4,
       suggestedPatterns: ['single-line-h', 'single-line-v', 'four-corners'],
-      description: 'Medium-small group - balanced settings for good variety',
+      description: 'Medium-small group - fast rounds',
     };
   }
 
   if (playerCount <= 50) {
     return {
       cardCount: Math.round(playerCount * 1.1),
-      maxOverlap: 16,
-      maxPositionalOverlap: 3,
+      maxOverlap: 22,
+      maxPositionalOverlap: 4,
       suggestedPatterns: ['single-line-h', 'four-corners', 'letter-x'],
-      description: 'Medium group - moderate overlap for feasible generation',
+      description: 'Medium group - quick rounds',
     };
   }
 
   if (playerCount <= 100) {
     return {
       cardCount: Math.round(playerCount * 1.05),
-      maxOverlap: 18,
+      maxOverlap: 22,
       maxPositionalOverlap: 4,
       suggestedPatterns: ['four-corners', 'letter-x', 'plus-sign'],
-      description: 'Large group - relaxed overlap to ensure generation succeeds',
+      description: 'Large group - fast games',
     };
   }
 
   // 100+ players
   return {
     cardCount: Math.round(playerCount * 1.02),
-    maxOverlap: 20,
+    maxOverlap: 22,
     maxPositionalOverlap: 4,
     suggestedPatterns: ['letter-x', 'frame', 'blackout'],
-    description: 'Very large group - harder patterns recommended to extend game time',
+    description: 'Very large group - quick rounds',
   };
 }
 

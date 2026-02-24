@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import type { Playlist, BingoCard, GenerationStats, GroupRecommendation } from '../../types';
-import { getPlaylist, getCardsForPlaylist, saveCards, deleteCardsForPlaylist } from '../../lib/db';
+import type { Playlist, BingoCard, GenerationStats, PacingTable } from '../../types';
+import { getPlaylist, getCardsForPlaylist, saveCards, deleteCardsForPlaylist, savePacingTable, getPacingTable } from '../../lib/db';
 import { generateCards } from '../../lib/cardGenerator';
 import { generateCardsPDF, downloadPDF } from '../../lib/pdfGenerator';
-import { getGroupRecommendation } from '../../lib/groupRecommendations';
 import { Button } from '../shared/Button';
 import { BingoGrid } from '../shared/BingoGrid';
 
@@ -17,17 +16,10 @@ export function CardGenerator() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState<GenerationStats | null>(null);
+  const [pacingTable, setPacingTable] = useState<PacingTable | null>(null);
 
-  // Group size and recommendations
-  const [expectedPlayers, setExpectedPlayers] = useState<number | ''>('');
-  const [recommendation, setRecommendation] = useState<GroupRecommendation | null>(null);
-
-  // Generation settings
-  const [cardCount, setCardCount] = useState(60);
-  const [maxOverlap, setMaxOverlap] = useState(18);
-  const [maxPositionalOverlap, setMaxPositionalOverlap] = useState(3);
-  const [enforcePositionalUniqueness, setEnforcePositionalUniqueness] = useState(true);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  // Generation settings - just card count now
+  const [cardCount, setCardCount] = useState(80);
 
   const [previewCard, setPreviewCard] = useState<BingoCard | null>(null);
 
@@ -37,34 +29,20 @@ export function CardGenerator() {
     }
   }, [id]);
 
-  // Update recommendations when player count changes
-  useEffect(() => {
-    if (typeof expectedPlayers === 'number' && expectedPlayers > 0) {
-      const rec = getGroupRecommendation(expectedPlayers);
-      setRecommendation(rec);
-    } else {
-      setRecommendation(null);
-    }
-  }, [expectedPlayers]);
-
-  const applyRecommendation = () => {
-    if (recommendation) {
-      setCardCount(recommendation.cardCount);
-      setMaxOverlap(recommendation.maxOverlap);
-      setMaxPositionalOverlap(recommendation.maxPositionalOverlap);
-    }
-  };
-
   const loadData = async (playlistId: string) => {
     setLoading(true);
-    const [playlistData, cardsData] = await Promise.all([
+    const [playlistData, cardsData, pacingData] = await Promise.all([
       getPlaylist(playlistId),
       getCardsForPlaylist(playlistId),
+      getPacingTable(playlistId),
     ]);
 
     if (playlistData) {
       setPlaylist(playlistData);
       setCards(cardsData);
+      if (pacingData) {
+        setPacingTable(pacingData);
+      }
       if (cardsData.length > 0) {
         setPreviewCard(cardsData[0]);
       }
@@ -80,18 +58,17 @@ export function CardGenerator() {
     // Delete existing cards first
     await deleteCardsForPlaylist(playlist.id);
 
-    // Generate new cards with positional overlap settings
-    const { cards: newCards, stats: newStats } = generateCards(playlist, {
+    // Generate new cards with pacing table
+    const { cards: newCards, stats: newStats, pacingTable: newPacingTable } = generateCards(playlist, {
       cardCount,
-      maxOverlap,
-      maxPositionalOverlap,
-      enforcePositionalUniqueness,
     });
 
     await saveCards(newCards);
+    await savePacingTable(newPacingTable);
 
     setCards(newCards);
     setStats(newStats);
+    setPacingTable(newPacingTable);
     setPreviewCard(newCards[0]);
     setGenerating(false);
   };
@@ -147,59 +124,6 @@ export function CardGenerator() {
             <h2 className="text-lg font-semibold text-white mb-4">Generation Settings</h2>
 
             <div className="space-y-4">
-              {/* Expected Players Input */}
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">
-                  Expected Players
-                </label>
-                <input
-                  type="number"
-                  value={expectedPlayers}
-                  onChange={e => {
-                    const val = e.target.value;
-                    setExpectedPlayers(val === '' ? '' : Math.max(1, parseInt(val) || 1));
-                  }}
-                  placeholder="Enter player count..."
-                  className="input w-40"
-                  min="1"
-                  max="500"
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  Auto-recommends optimal settings for your group size
-                </p>
-              </div>
-
-              {/* Recommendation Panel */}
-              {recommendation && (
-                <div className="p-3 bg-indigo-900/30 border border-indigo-700 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-indigo-300">Recommended Settings</span>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={applyRecommendation}
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                  <p className="text-xs text-slate-400 mb-2">{recommendation.description}</p>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div>
-                      <span className="text-slate-500">Cards:</span>{' '}
-                      <span className="text-white">{recommendation.cardCount}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Overlap:</span>{' '}
-                      <span className="text-white">{recommendation.maxOverlap}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Positional:</span>{' '}
-                      <span className="text-white">{recommendation.maxPositionalOverlap}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div>
                 <label className="block text-sm text-slate-400 mb-1">
                   Number of Cards
@@ -212,89 +136,32 @@ export function CardGenerator() {
                   min="1"
                   max="200"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">
-                  Maximum Song Overlap
-                </label>
-                <input
-                  type="number"
-                  value={maxOverlap}
-                  onChange={e => setMaxOverlap(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="input w-32"
-                  min="1"
-                  max="23"
-                />
                 <p className="text-xs text-slate-500 mt-1">
-                  No two cards will share more than this many songs
+                  Generate enough for your max expected attendance
                 </p>
               </div>
 
-              {/* Advanced Settings Toggle */}
-              <div>
-                <button
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
-                >
-                  <span>{showAdvanced ? '▼' : '▶'}</span>
-                  Advanced Settings
-                </button>
-              </div>
-
-              {/* Advanced Settings Panel */}
-              {showAdvanced && (
-                <div className="p-3 bg-navy-800 rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="block text-sm text-slate-400">
-                        Positional Uniqueness
-                      </label>
-                      <p className="text-xs text-slate-500">
-                        Prevent identical winning lines
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setEnforcePositionalUniqueness(!enforcePositionalUniqueness)}
-                      className={`
-                        w-12 h-6 rounded-full transition-colors relative
-                        ${enforcePositionalUniqueness ? 'bg-indigo-600' : 'bg-slate-600'}
-                      `}
-                    >
-                      <span
-                        className={`
-                          absolute top-1 w-4 h-4 bg-white rounded-full transition-transform
-                          ${enforcePositionalUniqueness ? 'left-7' : 'left-1'}
-                        `}
-                      />
-                    </button>
-                  </div>
-
-                  {enforcePositionalUniqueness && (
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">
-                        Max Positional Overlap
-                      </label>
-                      <input
-                        type="range"
-                        value={maxPositionalOverlap}
-                        onChange={e => setMaxPositionalOverlap(parseInt(e.target.value))}
-                        min="1"
-                        max="4"
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-xs text-slate-500">
-                        <span>Strict (1)</span>
-                        <span className="text-white font-medium">{maxPositionalOverlap}</span>
-                        <span>Relaxed (4)</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Max songs in same position within any winning line
-                      </p>
-                    </div>
-                  )}
+              {/* Playlist size guidance */}
+              <div className="p-3 bg-navy-800 rounded-lg space-y-2">
+                <div className="text-sm">
+                  <span className="text-slate-400">Playlist: </span>
+                  <span className="text-white font-medium">{playlist.songs.length} songs</span>
+                  <span className="text-slate-400"> → </span>
+                  <span className="text-white">{Math.round((24 / playlist.songs.length) * 100)}% coverage per card</span>
                 </div>
-              )}
+                {playlist.songs.length >= 48 && playlist.songs.length <= 55 && (
+                  <p className="text-xs text-green-400">Optimal range for ~12-16 songs to first winner</p>
+                )}
+                {playlist.songs.length < 48 && (
+                  <p className="text-xs text-yellow-400">Fast games (~8-12 songs to winner)</p>
+                )}
+                {playlist.songs.length > 55 && playlist.songs.length <= 65 && (
+                  <p className="text-xs text-yellow-400">Slower games (~16-22 songs to winner)</p>
+                )}
+                {playlist.songs.length > 65 && (
+                  <p className="text-xs text-red-400">Warning: Games may run long. Consider trimming to 50-55 songs.</p>
+                )}
+              </div>
 
               <div className="pt-4">
                 <Button
@@ -312,18 +179,38 @@ export function CardGenerator() {
               <div className="mt-6 p-4 bg-navy-800 rounded-lg">
                 <h3 className="text-sm font-semibold text-white mb-2">Generation Stats</h3>
                 <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="text-slate-400">Cards generated:</div>
+                  <div className="text-white">{stats.totalCards}</div>
+                  <div className="text-slate-400">Songs used:</div>
+                  <div className="text-white">{stats.songDistribution.size}</div>
                   <div className="text-slate-400">Song appearances:</div>
                   <div className="text-white">
                     {stats.minAppearances} - {stats.maxAppearances}
                   </div>
-                  <div className="text-slate-400">Max song overlap:</div>
-                  <div className="text-white">{stats.maxOverlap} songs</div>
-                  <div className="text-slate-400">Avg song overlap:</div>
-                  <div className="text-white">{stats.avgOverlap.toFixed(1)} songs</div>
-                  <div className="text-slate-400">Max positional overlap:</div>
-                  <div className="text-white">{stats.maxPositionalOverlap} per line</div>
-                  <div className="text-slate-400">Avg positional overlap:</div>
-                  <div className="text-white">{stats.avgPositionalOverlap.toFixed(2)} per line</div>
+                </div>
+              </div>
+            )}
+
+            {pacingTable && (
+              <div className="mt-4 p-4 bg-navy-800 rounded-lg">
+                <h3 className="text-sm font-semibold text-white mb-2">Expected Game Length</h3>
+                <p className="text-xs text-slate-400 mb-3">
+                  Songs until first winner (based on group size)
+                </p>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  {pacingTable.entries.map(entry => (
+                    <div key={entry.groupSize} className="bg-navy-700 rounded p-2 text-center">
+                      <div className="text-slate-400 text-xs">{entry.groupSize} players</div>
+                      <div className="text-white font-medium">
+                        ~{entry.expectedSongsToWin} songs
+                      </div>
+                      {entry.excludeCount > 0 && (
+                        <div className="text-xs text-yellow-400">
+                          ({entry.excludeCount} excluded)
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

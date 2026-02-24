@@ -13,7 +13,8 @@ export interface WinCheckResult {
 export function checkWin(
   card: BingoCard,
   pattern: BingoPattern,
-  calledSongIds: Set<string>
+  calledSongIds: Set<string>,
+  excludedSongIds: Set<string> = new Set()
 ): WinCheckResult {
   const patternIndices = getPatternIndices(pattern);
   const slotIndices = patternIndicesToSlotIndices(patternIndices);
@@ -24,7 +25,8 @@ export function checkWin(
 
   for (const slotIdx of slotIndices) {
     const songId = card.slots[slotIdx];
-    if (calledSongIds.has(songId)) {
+    // A slot is "marked" if the song was called OR if it's excluded (dead square)
+    if (calledSongIds.has(songId) || excludedSongIds.has(songId)) {
       matchedSlots.push(slotIdx);
     } else {
       missingSlots.push(slotIdx);

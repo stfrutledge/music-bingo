@@ -1,11 +1,12 @@
 import Dexie, { type Table } from 'dexie';
-import type { Playlist, BingoCard, GameState, AppSettings } from '../types';
+import type { Playlist, BingoCard, GameState, AppSettings, PacingTable } from '../types';
 
 export class MusicBingoDatabase extends Dexie {
   playlists!: Table<Playlist, string>;
   cards!: Table<BingoCard, string>;
   games!: Table<GameState, string>;
   settings!: Table<AppSettings, string>;
+  pacingTables!: Table<PacingTable, string>;
 
   constructor() {
     super('MusicBingoDB');
@@ -15,6 +16,15 @@ export class MusicBingoDatabase extends Dexie {
       cards: 'id, playlistId, cardNumber',
       games: 'id, playlistId, startedAt',
       settings: 'mode',
+    });
+
+    // Version 2: Add pacing tables
+    this.version(2).stores({
+      playlists: 'id, name, createdAt, updatedAt',
+      cards: 'id, playlistId, cardNumber',
+      games: 'id, playlistId, startedAt',
+      settings: 'mode',
+      pacingTables: 'playlistId, createdAt',
     });
   }
 }
@@ -86,4 +96,17 @@ export async function getSettings(): Promise<AppSettings | undefined> {
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
   await db.settings.put(settings);
+}
+
+// Pacing table operations
+export async function savePacingTable(pacingTable: PacingTable): Promise<void> {
+  await db.pacingTables.put(pacingTable);
+}
+
+export async function getPacingTable(playlistId: string): Promise<PacingTable | undefined> {
+  return db.pacingTables.get(playlistId);
+}
+
+export async function deletePacingTable(playlistId: string): Promise<void> {
+  await db.pacingTables.where('playlistId').equals(playlistId).delete();
 }

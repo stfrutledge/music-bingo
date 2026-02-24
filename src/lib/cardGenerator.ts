@@ -1,174 +1,347 @@
-import type { BingoCard, Playlist, Song, GenerationStats } from '../types';
+import type { BingoCard, Playlist, Song, GenerationStats, PacingTable, PacingEntry, GenerationResult } from '../types';
 
 interface GenerationOptions {
   cardCount: number;
-  slotsPerCard: number; // 24 (5x5 minus free space)
-  maxOverlap: number; // Maximum songs two cards can share
-  maxPositionalOverlap: number; // Max shared songs in same position within any winning line
-  enforcePositionalUniqueness: boolean;
-  maxAttempts: number;
+  slotsPerCard: number;
+  maxOverlap: number;
+  targetSongsToWin: number;
 }
 
 const DEFAULT_OPTIONS: GenerationOptions = {
-  cardCount: 60,
+  cardCount: 80,
   slotsPerCard: 24,
-  maxOverlap: 18, // Cards can share at most 18 songs
-  maxPositionalOverlap: 3, // No winning line should share more than 3 songs in same positions
-  enforcePositionalUniqueness: true,
-  maxAttempts: 1000,
+  maxOverlap: 18,
+  targetSongsToWin: 13, // Target ~13 songs called before first winner
 };
 
 /**
- * Winning lines in a 5x5 bingo grid, converted to slot indices (0-23, skipping grid index 12 which is free space).
- * Grid layout:
- *   0  1  2  3  4
- *   5  6  7  8  9
- *  10 11 [F] 12 13   (F = free space at grid index 12)
- *  14 15 16 17 18
- *  19 20 21 22 23
- *
- * Slot indices adjust for the missing center: positions 0-11 stay the same, positions 13-24 become 12-23.
+ * Winning lines in a 5x5 bingo grid (slot indices 0-23, skipping center free space)
  */
 const WINNING_LINES: number[][] = [
   // 5 Rows
-  [0, 1, 2, 3, 4],           // Row 0
-  [5, 6, 7, 8, 9],           // Row 1
-  [10, 11, -1, 12, 13],      // Row 2 (center is free space, marked -1)
-  [14, 15, 16, 17, 18],      // Row 3
-  [19, 20, 21, 22, 23],      // Row 4
-
+  [0, 1, 2, 3, 4],
+  [5, 6, 7, 8, 9],
+  [10, 11, -1, 12, 13],  // center is free space
+  [14, 15, 16, 17, 18],
+  [19, 20, 21, 22, 23],
   // 5 Columns
-  [0, 5, 10, 14, 19],        // Col 0
-  [1, 6, 11, 15, 20],        // Col 1
-  [2, 7, -1, 16, 21],        // Col 2 (center is free space)
-  [3, 8, 12, 17, 22],        // Col 3
-  [4, 9, 13, 18, 23],        // Col 4
-
+  [0, 5, 10, 14, 19],
+  [1, 6, 11, 15, 20],
+  [2, 7, -1, 16, 21],
+  [3, 8, 12, 17, 22],
+  [4, 9, 13, 18, 23],
   // 2 Diagonals
-  [0, 6, -1, 17, 23],        // Top-left to bottom-right (center is free)
-  [4, 8, -1, 15, 19],        // Top-right to bottom-left (center is free)
+  [0, 6, -1, 17, 23],
+  [4, 8, -1, 15, 19],
 ];
 
+/**
+ * Generate cards incrementally - each card is generated considering previous cards.
+ * Any prefix (cards #1 through #N) forms a well-balanced set.
+ */
 export function generateCards(
   playlist: Playlist,
   options: Partial<GenerationOptions> = {}
-): { cards: BingoCard[]; stats: GenerationStats } {
+): GenerationResult {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  const { cardCount, slotsPerCard, maxOverlap, maxPositionalOverlap, enforcePositionalUniqueness, maxAttempts } = opts;
+  const { cardCount, slotsPerCard, maxOverlap } = opts;
 
   const songs = playlist.songs;
-  if (songs.length < slotsPerCard) {
+  const numSongs = songs.length;
+
+  if (numSongs < slotsPerCard) {
     throw new Error(`Playlist must have at least ${slotsPerCard} songs`);
   }
 
-  const cards: BingoCard[] = [];
+  // Track song appearances incrementally
   const songAppearances = new Map<string, number>();
-
-  // Initialize appearance counts
   songs.forEach(s => songAppearances.set(s.id, 0));
 
-  for (let cardNum = 1; cardNum <= cardCount; cardNum++) {
-    let finalSlots: string[] | null = null;
-    let songAttempts = 0;
+  const cards: BingoCard[] = [];
 
-    while (!finalSlots && songAttempts < maxAttempts) {
-      songAttempts++;
-      const candidateSongs = selectSongsForCard(songs, songAppearances, slotsPerCard);
-
-      // Check song overlap with existing cards
-      const songOverlapOk = cards.every(existingCard => {
-        const overlap = countOverlap(candidateSongs, existingCard.slots);
-        return overlap <= maxOverlap;
-      });
-
-      if (!songOverlapOk) continue;
-
-      // Try multiple arrangements to satisfy positional overlap
-      if (enforcePositionalUniqueness && cards.length > 0) {
-        const arrangedSlots = tryArrangements(
-          candidateSongs,
-          cards,
-          maxPositionalOverlap,
-          100 // arrangement attempts
-        );
-        if (arrangedSlots) {
-          finalSlots = arrangedSlots;
-        }
-      } else {
-        // No positional checking, just shuffle
-        finalSlots = shuffleArray([...candidateSongs]);
-      }
-    }
-
-    if (!finalSlots) {
-      // If we couldn't find a valid card, use best effort (shuffled)
-      const fallbackSongs = selectSongsForCard(songs, songAppearances, slotsPerCard);
-      finalSlots = shuffleArray([...fallbackSongs]);
-    }
+  // Generate cards one at a time, incrementally
+  for (let cardIdx = 0; cardIdx < cardCount; cardIdx++) {
+    const cardSongs = selectSongsForCard(
+      songs,
+      songAppearances,
+      slotsPerCard,
+      cards,
+      maxOverlap
+    );
 
     // Update appearance counts
-    finalSlots.forEach(songId => {
+    for (const songId of cardSongs) {
       songAppearances.set(songId, (songAppearances.get(songId) || 0) + 1);
-    });
+    }
+
+    // Shuffle slot positions
+    const shuffledSlots = shuffleArray(cardSongs);
 
     cards.push({
-      id: `${playlist.id}-card-${cardNum}`,
+      id: `${playlist.id}-card-${cardIdx + 1}`,
       playlistId: playlist.id,
-      cardNumber: cardNum,
-      slots: finalSlots,
+      cardNumber: cardIdx + 1,
+      slots: shuffledSlots,
       createdAt: Date.now(),
     });
   }
 
+  // Calculate stats
   const stats = calculateStats(cards, songAppearances);
 
-  return { cards, stats };
+  // Generate pacing table
+  const pacingTable = generatePacingTable(playlist, cards, songAppearances, opts);
+
+  return { cards, stats, pacingTable };
 }
 
 /**
- * Try multiple random arrangements of songs to find one that satisfies positional overlap constraints.
+ * Select songs for a new card, balancing:
+ * 1. Even distribution (prefer underrepresented songs)
+ * 2. Overlap constraints with existing cards
  */
-function tryArrangements(
-  songs: string[],
+function selectSongsForCard(
+  songs: Song[],
+  appearances: Map<string, number>,
+  count: number,
   existingCards: BingoCard[],
-  maxPositionalOverlap: number,
-  attempts: number
-): string[] | null {
-  for (let i = 0; i < attempts; i++) {
-    const arrangement = shuffleArray([...songs]);
-    const positionalOk = checkPositionalOverlap(arrangement, existingCards, maxPositionalOverlap);
-    if (positionalOk) {
-      return arrangement;
+  maxOverlap: number
+): string[] {
+  const numSongs = songs.length;
+
+  // Calculate target appearances for even distribution
+  const totalAppsNeeded = (existingCards.length + 1) * count;
+  const targetPerSong = totalAppsNeeded / numSongs;
+
+  // Build weighted selection - heavily favor underrepresented songs
+  const songScores: { id: string; score: number }[] = [];
+
+  for (const song of songs) {
+    const current = appearances.get(song.id) || 0;
+    // Songs below target get high scores, songs above get low scores
+    const deficit = targetPerSong - current;
+    // Score ranges from 10 (very underrepresented) to 0.1 (very overrepresented)
+    const score = Math.max(0.1, Math.min(10, deficit + 5));
+    songScores.push({ id: song.id, score });
+  }
+
+  // Try multiple times to find a valid selection
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const selected = weightedSampleWithoutReplacement(songScores, count);
+
+    // Check overlap with recent cards (checking all would be slow)
+    const checkCount = Math.min(20, existingCards.length);
+    let valid = true;
+
+    for (let i = existingCards.length - checkCount; i < existingCards.length; i++) {
+      if (i < 0) continue;
+      const overlap = countOverlap(selected, existingCards[i].slots);
+      if (overlap > maxOverlap) {
+        valid = false;
+        break;
+      }
+    }
+
+    if (valid) {
+      return selected;
     }
   }
-  return null;
+
+  // Fallback: just return weighted selection even if overlap is high
+  return weightedSampleWithoutReplacement(songScores, count);
 }
 
 /**
- * Check if a candidate card arrangement violates positional overlap constraints.
- * Returns true if the arrangement is acceptable (no winning line exceeds maxPositionalOverlap).
+ * Sample N items without replacement using weighted probabilities.
  */
-function checkPositionalOverlap(
-  candidateSlots: string[],
-  existingCards: BingoCard[],
-  maxPositionalOverlap: number
-): boolean {
-  for (const existingCard of existingCards) {
-    for (const line of WINNING_LINES) {
-      let samePositionCount = 0;
-      for (const slotIdx of line) {
-        // Skip free space positions (marked as -1)
-        if (slotIdx === -1) continue;
-        if (candidateSlots[slotIdx] === existingCard.slots[slotIdx]) {
-          samePositionCount++;
+function weightedSampleWithoutReplacement(
+  items: { id: string; score: number }[],
+  count: number
+): string[] {
+  const result: string[] = [];
+  const remaining = [...items];
+
+  for (let i = 0; i < count && remaining.length > 0; i++) {
+    const totalScore = remaining.reduce((sum, item) => sum + item.score, 0);
+    let pick = Math.random() * totalScore;
+
+    for (let j = 0; j < remaining.length; j++) {
+      pick -= remaining[j].score;
+      if (pick <= 0) {
+        result.push(remaining[j].id);
+        remaining.splice(j, 1);
+        break;
+      }
+    }
+
+    // Edge case: if we didn't pick (floating point issues), pick last
+    if (result.length === i && remaining.length > 0) {
+      const last = remaining.pop()!;
+      result.push(last.id);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Generate pacing table by simulating games at different group sizes.
+ * Determines how many songs to exclude for each group size to achieve target game length.
+ */
+function generatePacingTable(
+  playlist: Playlist,
+  cards: BingoCard[],
+  songAppearances: Map<string, number>,
+  opts: GenerationOptions
+): PacingTable {
+  const { targetSongsToWin } = opts;
+  const totalCards = cards.length;
+  const songs = playlist.songs;
+
+  // Sort songs by appearance count (ascending) - least appearing songs are excluded first
+  const sortedSongs = [...songs].sort((a, b) => {
+    const aCount = songAppearances.get(a.id) || 0;
+    const bCount = songAppearances.get(b.id) || 0;
+    return aCount - bCount;
+  });
+
+  const entries: PacingEntry[] = [];
+
+  // Sample different group sizes (include common values)
+  const groupSizes = [5, 10, 15, 20, 25, 30, 35, 40, 50, 60, 80];
+
+  for (const groupSize of groupSizes) {
+    if (groupSize > totalCards) continue;
+
+    // Get cards in play for this group size (cards #1 through #groupSize)
+    const cardsInPlay = cards.slice(0, groupSize);
+
+    // Search for optimal exclusion count
+    let bestExclude = 0;
+    let bestDiff = Infinity;
+
+    // Start from 0 and search upward
+    for (let excludeCount = 0; excludeCount <= Math.min(35, songs.length - 24); excludeCount++) {
+      const excludedIds = new Set(sortedSongs.slice(0, excludeCount).map(s => s.id));
+      const expectedSongs = simulateAverageGameLength(cardsInPlay, songs, excludedIds, 100);
+
+      const diff = Math.abs(expectedSongs - targetSongsToWin);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestExclude = excludeCount;
+      }
+
+      // Stop searching once we're well past target (median dropping fast)
+      if (expectedSongs < targetSongsToWin - 3) break;
+    }
+
+    const excludedSongIds = sortedSongs.slice(0, bestExclude).map(s => s.id);
+    const excludedSet = new Set(excludedSongIds);
+    const expectedSongsToWin = simulateAverageGameLength(cardsInPlay, songs, excludedSet, 200);
+
+    entries.push({
+      groupSize,
+      excludeCount: bestExclude,
+      excludedSongIds,
+      expectedSongsToWin: Math.round(expectedSongsToWin * 10) / 10,
+    });
+  }
+
+  return {
+    playlistId: playlist.id,
+    totalCards,
+    totalSongs: songs.length,
+    entries,
+    createdAt: Date.now(),
+  };
+}
+
+/**
+ * Simulate games to estimate average songs needed for first winner.
+ * Returns average across multiple simulations.
+ */
+function simulateAverageGameLength(
+  cards: BingoCard[],
+  allSongs: Song[],
+  excludedSongIds: Set<string>,
+  simulations: number
+): number {
+  let totalSongs = 0;
+
+  // Active songs (not excluded)
+  const activeSongIds = allSongs
+    .filter(s => !excludedSongIds.has(s.id))
+    .map(s => s.id);
+
+  for (let sim = 0; sim < simulations; sim++) {
+    const songOrder = shuffleArray([...activeSongIds]);
+    const calledSet = new Set<string>();
+
+    let songsToWin = songOrder.length; // Default if no winner
+
+    for (let i = 0; i < songOrder.length; i++) {
+      calledSet.add(songOrder[i]);
+
+      // Check each card for a win (single line pattern)
+      for (const card of cards) {
+        if (checkSingleLineWin(card, calledSet, excludedSongIds)) {
+          songsToWin = i + 1;
+          break;
         }
       }
-      if (samePositionCount > maxPositionalOverlap) {
-        return false;
+
+      if (songsToWin < songOrder.length) break;
+    }
+
+    totalSongs += songsToWin;
+  }
+
+  return totalSongs / simulations;
+}
+
+/**
+ * Check if a card has won with a single line (any row, column, or diagonal).
+ * Excluded songs are treated as "dead squares" - already marked.
+ */
+function checkSingleLineWin(
+  card: BingoCard,
+  calledSongIds: Set<string>,
+  excludedSongIds: Set<string>
+): boolean {
+  for (const line of WINNING_LINES) {
+    let lineComplete = true;
+
+    for (const slotIdx of line) {
+      if (slotIdx === -1) continue; // Free space
+
+      const songId = card.slots[slotIdx];
+      // Slot is "marked" if song was called OR if song is excluded (dead square)
+      const isMarked = calledSongIds.has(songId) || excludedSongIds.has(songId);
+
+      if (!isMarked) {
+        lineComplete = false;
+        break;
       }
     }
+
+    if (lineComplete) return true;
   }
-  return true;
+
+  return false;
+}
+
+function countOverlap(slots1: string[], slots2: string[]): number {
+  const set2 = new Set(slots2);
+  return slots1.filter(s => set2.has(s)).length;
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }
 
 /**
@@ -189,57 +362,6 @@ function getMaxPositionalOverlapBetweenCards(card1: BingoCard, card2: BingoCard)
   return maxOverlap;
 }
 
-function selectSongsForCard(
-  songs: Song[],
-  appearances: Map<string, number>,
-  count: number
-): string[] {
-  // Weight songs by inverse of their appearances
-  // Songs that appear less often are more likely to be selected
-  const totalAppearances = Array.from(appearances.values()).reduce((a, b) => a + b, 0);
-  const avgAppearances = totalAppearances / songs.length || 1;
-
-  const weightedSongs = songs.map(song => {
-    const appearances_count = appearances.get(song.id) || 0;
-    // Weight inversely proportional to appearances
-    const weight = Math.max(1, avgAppearances * 2 - appearances_count);
-    return { song, weight };
-  });
-
-  const selected: string[] = [];
-  const remaining = [...weightedSongs];
-
-  while (selected.length < count && remaining.length > 0) {
-    const totalWeight = remaining.reduce((sum, item) => sum + item.weight, 0);
-    let random = Math.random() * totalWeight;
-
-    for (let i = 0; i < remaining.length; i++) {
-      random -= remaining[i].weight;
-      if (random <= 0) {
-        selected.push(remaining[i].song.id);
-        remaining.splice(i, 1);
-        break;
-      }
-    }
-  }
-
-  return selected;
-}
-
-function countOverlap(slots1: string[], slots2: string[]): number {
-  const set2 = new Set(slots2);
-  return slots1.filter(s => set2.has(s)).length;
-}
-
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
 function calculateStats(
   cards: BingoCard[],
   songAppearances: Map<string, number>
@@ -252,8 +374,11 @@ function calculateStats(
   let totalPositionalOverlap = 0;
   let overlapCount = 0;
 
-  for (let i = 0; i < cards.length; i++) {
-    for (let j = i + 1; j < cards.length; j++) {
+  // Sample pairwise comparisons (checking all pairs for large sets is slow)
+  const sampleSize = Math.min(50, cards.length);
+
+  for (let i = 0; i < sampleSize; i++) {
+    for (let j = i + 1; j < sampleSize; j++) {
       // Song overlap
       const overlap = countOverlap(cards[i].slots, cards[j].slots);
       maxOverlap = Math.max(maxOverlap, overlap);
@@ -283,4 +408,43 @@ function calculateStats(
 export function shuffleSongOrder(songs: Song[]): string[] {
   const ids = songs.map(s => s.id);
   return shuffleArray(ids);
+}
+
+/**
+ * Get pacing entry for a specific group size.
+ * Interpolates between entries if exact match not found.
+ */
+export function getPacingForGroupSize(
+  pacingTable: PacingTable,
+  groupSize: number
+): PacingEntry | null {
+  if (pacingTable.entries.length === 0) return null;
+
+  // Find exact match
+  const exact = pacingTable.entries.find(e => e.groupSize === groupSize);
+  if (exact) return exact;
+
+  // Find surrounding entries
+  let lower: PacingEntry | null = null;
+  let upper: PacingEntry | null = null;
+
+  for (const entry of pacingTable.entries) {
+    if (entry.groupSize <= groupSize) {
+      if (!lower || entry.groupSize > lower.groupSize) {
+        lower = entry;
+      }
+    }
+    if (entry.groupSize >= groupSize) {
+      if (!upper || entry.groupSize < upper.groupSize) {
+        upper = entry;
+      }
+    }
+  }
+
+  // Return closest
+  if (!lower) return upper;
+  if (!upper) return lower;
+
+  // Return the one closest to groupSize
+  return (groupSize - lower.groupSize) <= (upper.groupSize - groupSize) ? lower : upper;
 }

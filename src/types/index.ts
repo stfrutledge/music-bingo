@@ -56,6 +56,8 @@ export interface GameState {
   isPlaying: boolean;
   startedAt: number;
   endedAt?: number;
+  cardRangeStart?: number; // First card number in play
+  cardRangeEnd?: number; // Last card number in play
 }
 
 export interface GameSettings {
@@ -107,4 +109,36 @@ export interface GenerationStats {
   avgOverlap: number;
   maxPositionalOverlap: number;
   avgPositionalOverlap: number;
+}
+
+/**
+ * Pacing entry for a specific group size.
+ * Tells the game engine how many songs to exclude and which ones.
+ */
+export interface PacingEntry {
+  groupSize: number;
+  excludeCount: number;
+  excludedSongIds: string[];
+  expectedSongsToWin: number;
+}
+
+/**
+ * Full pacing table generated alongside cards.
+ * Maps group size to exclusion configuration.
+ */
+export interface PacingTable {
+  playlistId: string;
+  totalCards: number;
+  totalSongs: number;
+  entries: PacingEntry[];
+  createdAt: number;
+}
+
+/**
+ * Extended generation result including pacing data.
+ */
+export interface GenerationResult {
+  cards: BingoCard[];
+  stats: GenerationStats;
+  pacingTable: PacingTable;
 }

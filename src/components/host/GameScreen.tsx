@@ -11,7 +11,7 @@ import { PatternDisplay } from '../shared/PatternDisplay';
 
 export function GameScreen() {
   const navigate = useNavigate();
-  const { game, playlist, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners } = useGame();
+  const { game, playlist, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners, cardsInPlay } = useGame();
   const audio = useAudioPlayer();
   const wakeLock = useWakeLock();
 
@@ -105,10 +105,12 @@ export function GameScreen() {
         <div className="text-right">
           <div className="text-white font-semibold">{songNumber} / {totalSongs}</div>
           <div className="text-sm text-slate-400">
-            {currentRound.winners.length > 0 && (
+            {currentRound.winners.length > 0 ? (
               <span className="text-green-400">
                 {currentRound.winners.length} winner{currentRound.winners.length !== 1 ? 's' : ''}
               </span>
+            ) : (
+              <span>{cardsInPlay} cards</span>
             )}
           </div>
         </div>
