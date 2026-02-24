@@ -1,0 +1,504 @@
+{
+  "id": "music-bingo-2025",
+  "name": "Music Bingo 2025",
+  "description": "Custom playlist for music bingo night",
+  "baseAudioUrl": "/audio/",
+  "songs": [
+    {
+      "id": "sombr-12-to-12",
+      "title": "12 to 12",
+      "artist": "sombr",
+      "audioFile": "12 to 12 - sombr.mp3",
+      "startTime": 144.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "olivia-dean-a-couple-minutes",
+      "title": "A Couple Minutes",
+      "artist": "Olivia Dean",
+      "audioFile": "A Couple Minutes - Olivia Dean.mp3",
+      "startTime": 147.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "harry-styles-aperture",
+      "title": "Aperture",
+      "artist": "Harry Styles",
+      "audioFile": "Aperture - Harry Styles.mp3",
+      "startTime": 226.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "olivia-dean-baby-steps",
+      "title": "Baby Steps",
+      "artist": "Olivia Dean",
+      "audioFile": "Baby Steps - Olivia Dean.mp3",
+      "startTime": 130.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "dominic-fike-babydoll",
+      "title": "Babydoll",
+      "artist": "Dominic Fike",
+      "audioFile": "Babydoll - Dominic Fike.mp3",
+      "startTime": 46.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sombr-back-to-friends",
+      "title": "back to friends",
+      "artist": "sombr",
+      "audioFile": "back to friends - sombr.mp3",
+      "startTime": 84.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bad-bunny-baile-inolvidable",
+      "title": "BAILE INoLVIDABLE",
+      "artist": "Bad Bunny",
+      "audioFile": "BAILE INoLVIDABLE - Bad Bunny.mp3",
+      "startTime": 287.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "luke-combs-be-by-you",
+      "title": "Be By You",
+      "artist": "Luke Combs",
+      "audioFile": "Be By You - Luke Combs.mp3",
+      "startTime": 97.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ella-langley-be-her",
+      "title": "Be Her",
+      "artist": "Ella Langley",
+      "audioFile": "Be Her - Ella Langley.mp3",
+      "startTime": 82.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "don-toliver-body",
+      "title": "Body",
+      "artist": "Don Toliver",
+      "audioFile": "Body - Don Toliver.mp3",
+      "startTime": 52.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "baby-keem-ca-ino",
+      "title": "Ca$ino",
+      "artist": "Baby Keem",
+      "audioFile": "Ca$ino - Baby Keem.mp3",
+      "startTime": 27.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "charli-xcx-chains-of-love",
+      "title": "Chains of Love",
+      "artist": "Charli xcx",
+      "audioFile": "Chains of Love - Charli xcx.mp3",
+      "startTime": 98.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ella-langley-choosin-texas",
+      "title": "Choosin' Texas",
+      "artist": "Ella Langley",
+      "audioFile": "Choosin' Texas - Ella Langley.mp3",
+      "startTime": 110.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "radiohead-creep",
+      "title": "Creep",
+      "artist": "Radiohead",
+      "audioFile": "Creep - Radiohead.mp3",
+      "startTime": 137.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "kingfishr-diamonds-roses",
+      "title": "Diamonds & Roses",
+      "artist": "Kingfishr",
+      "audioFile": "Diamonds & Roses - Kingfishr.mp3",
+      "startTime": 65.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sienna-spiro-die-on-this-hill",
+      "title": "Die On This Hill",
+      "artist": "SIENNA SPIRO",
+      "audioFile": "Die On This Hill - SIENNA SPIRO.mp3",
+      "startTime": 152.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "twenty-one-pilots-drag-path",
+      "title": "Drag Path",
+      "artist": "Twenty One Pilots",
+      "audioFile": "Drag Path - Twenty One Pilots.mp3",
+      "startTime": 149.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "2004-remaster-fleetwood-mac-dreams",
+      "title": "Dreams",
+      "artist": "2004 Remaster - Fleetwood Mac",
+      "audioFile": "Dreams - 2004 Remaster - Fleetwood Mac.mp3",
+      "startTime": 176.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bad-bunny-dtmf",
+      "title": "DtMF",
+      "artist": "Bad Bunny",
+      "audioFile": "DtMF - Bad Bunny.mp3",
+      "startTime": 129.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "charli-xcx-dying-for-you",
+      "title": "Dying for You",
+      "artist": "Charli xcx",
+      "audioFile": "Dying for You - Charli xcx.mp3",
+      "startTime": 28.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "don-toliver-e85",
+      "title": "E85",
+      "artist": "Don Toliver",
+      "audioFile": "E85 - Don Toliver.mp3",
+      "startTime": 47.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "djo-end-of-beginning",
+      "title": "End of Beginning",
+      "artist": "Djo",
+      "audioFile": "End of Beginning - Djo.mp3",
+      "startTime": 88.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bad-bunny-eoo",
+      "title": "EoO",
+      "artist": "Bad Bunny",
+      "audioFile": "EoO - Bad Bunny.mp3",
+      "startTime": 21.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "huntr-x-golden",
+      "title": "Golden",
+      "artist": "HUNTR_X",
+      "audioFile": "Golden - HUNTR_X.mp3",
+      "startTime": 130.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sombr-homewrecker",
+      "title": "Homewrecker",
+      "artist": "sombr",
+      "audioFile": "Homewrecker - sombr.mp3",
+      "startTime": 12.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "morgan-wallen-i-got-better",
+      "title": "I Got Better",
+      "artist": "Morgan Wallen",
+      "audioFile": "I Got Better - Morgan Wallen.mp3",
+      "startTime": 146.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bruno-mars-i-just-might",
+      "title": "I Just Might",
+      "artist": "Bruno Mars",
+      "audioFile": "I Just Might - Bruno Mars.mp3",
+      "startTime": 156.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "she-him-i-thought-i-saw-your-face-today",
+      "title": "I Thought I Saw Your Face Today",
+      "artist": "She & Him",
+      "audioFile": "I Thought I Saw Your Face Today - She & Him.mp3",
+      "startTime": 100.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "olivia-dean-i-ve-seen-it",
+      "title": "I've Seen It",
+      "artist": "Olivia Dean",
+      "audioFile": "I've Seen It - Olivia Dean.mp3",
+      "startTime": 26.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bella-kay-iloveitiloveitiloveit",
+      "title": "iloveitiloveitiloveit",
+      "artist": "Bella Kay",
+      "audioFile": "iloveitiloveitiloveit - Bella Kay.mp3",
+      "startTime": 114.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-goo-goo-dolls-iris",
+      "title": "Iris",
+      "artist": "The Goo Goo Dolls",
+      "audioFile": "Iris - The Goo Goo Dolls.mp3",
+      "startTime": 212.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "milky-just-the-way-you-are",
+      "title": "Just The Way You Are",
+      "artist": "Milky",
+      "audioFile": "Just The Way You Are - Milky.mp3",
+      "startTime": 52.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "kingfishr-killeagh",
+      "title": "Killeagh",
+      "artist": "Kingfishr",
+      "audioFile": "Killeagh - Kingfishr.mp3",
+      "startTime": 74.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "fleetwood-mac-landslide",
+      "title": "Landslide",
+      "artist": "Fleetwood Mac",
+      "audioFile": "Landslide - Fleetwood Mac.mp3",
+      "startTime": 48.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "amble-lonely-island",
+      "title": "Lonely Island",
+      "artist": "Amble",
+      "audioFile": "Lonely Island - Amble.mp3",
+      "startTime": 183.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ravyn-lenae-love-me-not",
+      "title": "Love Me Not",
+      "artist": "Ravyn Lenae",
+      "audioFile": "Love Me Not - Ravyn Lenae.mp3",
+      "startTime": 31.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "zara-larsson-lush-life",
+      "title": "Lush Life",
+      "artist": "Zara Larsson",
+      "audioFile": "Lush Life - Zara Larsson.mp3",
+      "startTime": 101.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "olivia-dean-man-i-need",
+      "title": "Man I Need",
+      "artist": "Olivia Dean",
+      "audioFile": "Man I Need - Olivia Dean.mp3",
+      "startTime": 29.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sabrina-carpenter-manchild",
+      "title": "Manchild",
+      "artist": "Sabrina Carpenter",
+      "audioFile": "Manchild - Sabrina Carpenter.mp3",
+      "startTime": 83.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-killers-mr-brightside",
+      "title": "Mr. Brightside",
+      "artist": "The Killers",
+      "audioFile": "Mr. Brightside - The Killers.mp3",
+      "startTime": 148.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "olivia-dean-nice-to-each-other",
+      "title": "Nice To Each Other",
+      "artist": "Olivia Dean",
+      "audioFile": "Nice To Each Other - Olivia Dean.mp3",
+      "startTime": 117.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "disco-lines-no-broke-boys",
+      "title": "No Broke Boys",
+      "artist": "Disco Lines",
+      "audioFile": "No Broke Boys - Disco Lines.mp3",
+      "startTime": 116.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bad-bunny-nuevayol",
+      "title": "NUEVAYoL",
+      "artist": "Bad Bunny",
+      "audioFile": "NUEVAYoL - Bad Bunny.mp3",
+      "startTime": 38.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "olivia-dean-ok-love-you-bye",
+      "title": "Ok Love You Bye",
+      "artist": "Olivia Dean",
+      "audioFile": "Ok Love You Bye - Olivia Dean.mp3",
+      "startTime": 66.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "taylor-swift-opalite",
+      "title": "Opalite",
+      "artist": "Taylor Swift",
+      "audioFile": "Opalite - Taylor Swift.mp3",
+      "startTime": 144.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "alex-warren-ordinary",
+      "title": "Ordinary",
+      "artist": "Alex Warren",
+      "audioFile": "Ordinary - Alex Warren.mp3",
+      "startTime": 98.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "chappell-roan-pink-pony-club",
+      "title": "Pink Pony Club",
+      "artist": "Chappell Roan",
+      "audioFile": "Pink Pony Club - Chappell Roan.mp3",
+      "startTime": 118.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "zach-bryan-plastic-cigarette",
+      "title": "Plastic Cigarette",
+      "artist": "Zach Bryan",
+      "audioFile": "Plastic Cigarette - Zach Bryan.mp3",
+      "startTime": 136.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "dave-raindance-feat-tems",
+      "title": "Raindance (feat. Tems)",
+      "artist": "Dave",
+      "audioFile": "Raindance (feat. Tems) - Dave.mp3",
+      "startTime": 163.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sam-fender-rein-me-in-with-olivia-dean",
+      "title": "Rein Me In (with Olivia Dean)",
+      "artist": "Sam Fender",
+      "audioFile": "Rein Me In (with Olivia Dean) - Sam Fender.mp3",
+      "startTime": 249.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "zach-bryan-say-why",
+      "title": "Say Why",
+      "artist": "Zach Bryan",
+      "audioFile": "Say Why - Zach Bryan.mp3",
+      "startTime": 71.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ewan-mcvicar-share-the-house",
+      "title": "Share The House",
+      "artist": "Ewan McVicar",
+      "audioFile": "Share The House - Ewan McVicar.mp3",
+      "startTime": 144.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "olivia-dean-so-easy-to-fall-in-love",
+      "title": "So Easy (To Fall In Love)",
+      "artist": "Olivia Dean",
+      "audioFile": "So Easy (To Fall In Love) - Olivia Dean.mp3",
+      "startTime": 81.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "amble-socrates-smiled",
+      "title": "Socrates Smiled",
+      "artist": "Amble",
+      "audioFile": "Socrates Smiled - Amble.mp3",
+      "startTime": 126.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "pinkpantheress-stateside-zara-larsson",
+      "title": "Stateside + Zara Larsson",
+      "artist": "PinkPantheress",
+      "audioFile": "Stateside + Zara Larsson - PinkPantheress.mp3",
+      "startTime": 58.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "taylor-swift-the-fate-of-ophelia",
+      "title": "The Fate of Ophelia",
+      "artist": "Taylor Swift",
+      "audioFile": "The Fate of Ophelia - Taylor Swift.mp3",
+      "startTime": 115.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "noah-kahan-the-great-divide",
+      "title": "The Great Divide",
+      "artist": "Noah Kahan",
+      "audioFile": "The Great Divide - Noah Kahan.mp3",
+      "startTime": 248.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "olivia-dean-the-hardest-part",
+      "title": "The Hardest Part",
+      "artist": "Olivia Dean",
+      "audioFile": "The Hardest Part - Olivia Dean.mp3",
+      "startTime": 59.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bad-bunny-tit-me-pregunt",
+      "title": "Tití Me Preguntó",
+      "artist": "Bad Bunny",
+      "audioFile": "Tití Me Preguntó - Bad Bunny.mp3",
+      "startTime": 68.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sombr-undressed",
+      "title": "undressed",
+      "artist": "sombr",
+      "audioFile": "undressed - sombr.mp3",
+      "startTime": 120.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "lil-uzi-vert-what-you-saying",
+      "title": "What You Saying",
+      "artist": "Lil Uzi Vert",
+      "audioFile": "What You Saying - Lil Uzi Vert.mp3",
+      "startTime": 59.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "raye-where-is-my-husband",
+      "title": "WHERE IS MY HUSBAND!",
+      "artist": "RAYE",
+      "audioFile": "WHERE IS MY HUSBAND! - RAYE.mp3",
+      "startTime": 79.0,
+      "_confidence": 1.0
+    }
+  ]
+}
