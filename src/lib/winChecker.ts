@@ -10,12 +10,116 @@ export interface WinCheckResult {
   missingSongs: { index: number; songId: string }[];
 }
 
+// All possible lines in a 5x5 grid (as grid indices 0-24)
+const ALL_HORIZONTAL_LINES = [
+  [0, 1, 2, 3, 4],       // Row 1
+  [5, 6, 7, 8, 9],       // Row 2
+  [10, 11, 12, 13, 14],  // Row 3 (includes free space at 12)
+  [15, 16, 17, 18, 19],  // Row 4
+  [20, 21, 22, 23, 24],  // Row 5
+];
+
+const ALL_VERTICAL_LINES = [
+  [0, 5, 10, 15, 20],    // Col 1
+  [1, 6, 11, 16, 21],    // Col 2
+  [2, 7, 12, 17, 22],    // Col 3 (includes free space at 12)
+  [3, 8, 13, 18, 23],    // Col 4
+  [4, 9, 14, 19, 24],    // Col 5
+];
+
+const ALL_DIAGONAL_LINES = [
+  [0, 6, 12, 18, 24],    // Top-left to bottom-right
+  [4, 8, 12, 16, 20],    // Top-right to bottom-left
+];
+
+function gridIndexToSlotIndex(gridIdx: number): number | null {
+  if (gridIdx === 12) return null; // Free space
+  return gridIdx > 12 ? gridIdx - 1 : gridIdx;
+}
+
+function checkLineCompletion(
+  card: BingoCard,
+  lineGridIndices: number[],
+  calledSongIds: Set<string>,
+  excludedSongIds: Set<string>
+): { matched: number[]; missing: number[]; missingSongs: { index: number; songId: string }[] } {
+  const matched: number[] = [];
+  const missing: number[] = [];
+  const missingSongs: { index: number; songId: string }[] = [];
+
+  for (const gridIdx of lineGridIndices) {
+    if (gridIdx === 12) continue; // Free space - always counts as matched
+
+    const slotIdx = gridIndexToSlotIndex(gridIdx)!;
+    const songId = card.slots[slotIdx];
+
+    if (calledSongIds.has(songId) || excludedSongIds.has(songId)) {
+      matched.push(slotIdx);
+    } else {
+      missing.push(slotIdx);
+      missingSongs.push({ index: slotIdx, songId });
+    }
+  }
+
+  return { matched, missing, missingSongs };
+}
+
 export function checkWin(
   card: BingoCard,
   pattern: BingoPattern,
   calledSongIds: Set<string>,
   excludedSongIds: Set<string> = new Set()
 ): WinCheckResult {
+  // For "any line" patterns, check all possible lines of that type
+  // and return the best result (winner or closest to winning)
+
+  let linesToCheck: number[][] = [];
+
+  if (pattern.id === 'single-line-h') {
+    linesToCheck = ALL_HORIZONTAL_LINES;
+  } else if (pattern.id === 'single-line-v') {
+    linesToCheck = ALL_VERTICAL_LINES;
+  } else if (pattern.id === 'single-line-d') {
+    linesToCheck = ALL_DIAGONAL_LINES;
+  }
+
+  // If it's an "any line" pattern, find the best line
+  if (linesToCheck.length > 0) {
+    let bestResult: { matched: number[]; missing: number[]; missingSongs: { index: number; songId: string }[] } | null = null;
+
+    for (const line of linesToCheck) {
+      const result = checkLineCompletion(card, line, calledSongIds, excludedSongIds);
+
+      // If this line is complete, return immediately
+      if (result.missing.length === 0) {
+        return {
+          isWin: true,
+          cardNumber: card.cardNumber,
+          patternName: pattern.name,
+          matchedSlots: result.matched,
+          missingSlots: [],
+          missingSongs: [],
+        };
+      }
+
+      // Track the best (most complete) line
+      if (!bestResult || result.missing.length < bestResult.missing.length) {
+        bestResult = result;
+      }
+    }
+
+    // Return the best non-winning result
+    return {
+      isWin: false,
+      cardNumber: card.cardNumber,
+      patternName: pattern.name,
+      matchedSlots: bestResult!.matched,
+      missingSlots: bestResult!.missing,
+      missingSongs: bestResult!.missingSongs,
+    };
+  }
+
+  // For other patterns, use the exact pattern grid
   const patternIndices = getPatternIndices(pattern);
   const slotIndices = patternIndicesToSlotIndices(patternIndices);
 
