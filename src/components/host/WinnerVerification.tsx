@@ -10,7 +10,7 @@ import { BingoGrid } from '../shared/BingoGrid';
 
 export function WinnerVerification() {
   const navigate = useNavigate();
-  const { game, playlist, recordWinner } = useGame();
+  const { game, playlist, recordWinner, excludedSongIds } = useGame();
 
   const [cardNumber, setCardNumber] = useState('');
   const [card, setCard] = useState<BingoCard | null>(null);
@@ -56,9 +56,9 @@ export function WinnerVerification() {
 
     setCard(foundCard);
 
-    // Check for win
+    // Check for win (excluded songs count as marked/called)
     const calledSet = new Set(game.calledSongIds);
-    const checkResult = checkWin(foundCard, pattern, calledSet);
+    const checkResult = checkWin(foundCard, pattern, calledSet, excludedSongIds);
 
     setResult({
       isWin: checkResult.isWin,
@@ -146,6 +146,7 @@ export function WinnerVerification() {
                 slots={card.slots}
                 songMap={songMap}
                 calledSongIds={calledSet}
+                excludedSongIds={excludedSongIds}
                 highlightedSlots={result.isWin ? patternSlotIndices : []}
                 patternSlots={result.isWin ? [] : patternSlotIndices}
                 size="sm"

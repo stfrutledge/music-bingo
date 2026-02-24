@@ -4,6 +4,7 @@ interface BingoGridProps {
   slots: string[];
   songMap: Map<string, Song>;
   calledSongIds?: Set<string>;
+  excludedSongIds?: Set<string>;
   highlightedSlots?: number[];
   patternSlots?: number[];
   size?: 'sm' | 'md' | 'lg';
@@ -20,6 +21,7 @@ export function BingoGrid({
   slots,
   songMap,
   calledSongIds = new Set(),
+  excludedSongIds = new Set(),
   highlightedSlots = [],
   patternSlots = [],
   size = 'md',
@@ -53,6 +55,8 @@ export function BingoGrid({
         const songId = slots[slotIndex];
         const song = songMap.get(songId);
         const isCalled = calledSongIds.has(songId);
+        const isExcluded = excludedSongIds.has(songId);
+        const isMarked = isCalled || isExcluded;
         const isHighlighted = highlightSet.has(slotIndex);
         const isPatternCell = patternSet.has(slotIndex);
 
@@ -61,6 +65,8 @@ export function BingoGrid({
           bgClass = 'bg-green-600';
         } else if (isCalled) {
           bgClass = 'bg-indigo-600';
+        } else if (isExcluded) {
+          bgClass = 'bg-indigo-800'; // Darker shade for dead squares
         }
 
         return (
@@ -70,7 +76,7 @@ export function BingoGrid({
             className={`
               flex flex-col items-center justify-center
               ${bgClass}
-              ${isPatternCell && !isCalled ? 'ring-2 ring-yellow-400 ring-inset' : ''}
+              ${isPatternCell && !isMarked ? 'ring-2 ring-yellow-400 ring-inset' : ''}
               rounded aspect-square overflow-hidden
               ${sizeClasses[size]}
               ${onCellClick ? 'cursor-pointer hover:opacity-80' : ''}
