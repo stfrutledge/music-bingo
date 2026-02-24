@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { GameState, Playlist, GameRound, WinRecord, Song, BingoCard, PacingEntry } from '../types';
-import { saveGame, getGame, getActiveGame, getPlaylist, getCardsForPlaylist, getPacingTable } from '../lib/db';
-import { shuffleSongOrder, getPacingForGroupSize } from '../lib/cardGenerator';
+import { saveGame, getGame, getActiveGame, getPlaylist, getCardsForPlaylist } from '../lib/db';
+import { shuffleSongOrder } from '../lib/cardGenerator';
 import { checkWin } from '../lib/winChecker';
 import { getPatternById } from '../lib/patterns';
 
@@ -228,12 +228,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         const playlist = await getPlaylist(activeGame.playlistId);
         if (playlist) {
           const cards = await getCardsForPlaylist(playlist.id);
-          const pacingTable = await getPacingTable(playlist.id);
-          const groupSize = activeGame.cardRangeEnd && activeGame.cardRangeStart
-            ? (activeGame.cardRangeEnd - activeGame.cardRangeStart + 1)
-            : cards.length;
-          const pacingEntry = pacingTable ? getPacingForGroupSize(pacingTable, groupSize) : null;
-          dispatch({ type: 'SET_GAME', payload: { game: activeGame, playlist, cards, pacingEntry } });
+          dispatch({ type: 'SET_GAME', payload: { game: activeGame, playlist, cards, pacingEntry: null } });
           return;
         }
       }
@@ -254,15 +249,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const startNewGame = useCallback(async (playlist: Playlist, patternIds: string[], cardRange?: CardRangeOptions) => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
-    // Get pacing table and determine excluded songs based on group size
-    const pacingTable = await getPacingTable(playlist.id);
-    const groupSize = cardRange ? (cardRange.cardRangeEnd - cardRange.cardRangeStart + 1) : playlist.songs.length;
-    const pacingEntry = pacingTable ? getPacingForGroupSize(pacingTable, groupSize) : null;
-
-    // Filter out excluded songs from the shuffle
-    const excludedSet = new Set(pacingEntry?.excludedSongIds || []);
-    const activeSongs = playlist.songs.filter(s => !excludedSet.has(s.id));
-    const shuffledOrder = shuffleSongOrder(activeSongs);
+    // Song exclusion disabled - it causes unfair head starts when excluded songs
+    // cluster on winning lines. Games naturally take ~20 songs which is fine.
+    const pacingEntry = null;
+    const shuffledOrder = shuffleSongOrder(playlist.songs);
     const firstSongId = shuffledOrder[0];
 
     const game: GameState = {
@@ -296,12 +286,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const game = await getGame(gameId);
     if (game) {
       const cards = await getCardsForPlaylist(playlist.id);
-      const pacingTable = await getPacingTable(playlist.id);
-      const groupSize = game.cardRangeEnd && game.cardRangeStart
-        ? (game.cardRangeEnd - game.cardRangeStart + 1)
-        : cards.length;
-      const pacingEntry = pacingTable ? getPacingForGroupSize(pacingTable, groupSize) : null;
-      dispatch({ type: 'SET_GAME', payload: { game, playlist, cards, pacingEntry } });
+      dispatch({ type: 'SET_GAME', payload: { game, playlist, cards, pacingEntry: null } });
     }
     dispatch({ type: 'SET_LOADING', payload: false });
   }, []);
