@@ -143,8 +143,55 @@ function generateTestCards(numCards, numSongs, slotsPerCard = 24) {
   return { cards, songs, songAppearances };
 }
 
+// Safe exclusion calculation (mirrors the app logic)
+function calculateSafeExclusions(cards, allSongIds, targetExclusions, maxPerLine = 1) {
+  const excluded = new Set();
+  const cardLineExclusions = cards.map(() => WINNING_LINES.map(() => 0));
+
+  // Build song -> card/line mapping
+  const songLocations = new Map();
+  for (let cardIdx = 0; cardIdx < cards.length; cardIdx++) {
+    const card = cards[cardIdx];
+    for (let lineIdx = 0; lineIdx < WINNING_LINES.length; lineIdx++) {
+      const line = WINNING_LINES[lineIdx];
+      for (const slotIdx of line) {
+        if (slotIdx === -1) continue;
+        const songId = card.slots[slotIdx];
+        if (!songLocations.has(songId)) {
+          songLocations.set(songId, []);
+        }
+        songLocations.get(songId).push({ cardIdx, lineIdx });
+      }
+    }
+  }
+
+  // Sort by fewest locations first
+  const sortedSongs = [...allSongIds].sort((a, b) => {
+    return (songLocations.get(a)?.length || 0) - (songLocations.get(b)?.length || 0);
+  });
+
+  for (const songId of sortedSongs) {
+    if (excluded.size >= targetExclusions) break;
+    const locations = songLocations.get(songId) || [];
+    let canExclude = true;
+    for (const { cardIdx, lineIdx } of locations) {
+      if (cardLineExclusions[cardIdx][lineIdx] >= maxPerLine) {
+        canExclude = false;
+        break;
+      }
+    }
+    if (canExclude) {
+      excluded.add(songId);
+      for (const { cardIdx, lineIdx } of locations) {
+        cardLineExclusions[cardIdx][lineIdx]++;
+      }
+    }
+  }
+  return excluded;
+}
+
 // Main simulation
-console.log('=== Pacing Simulation ===\n');
+console.log('=== Pacing Simulation with Safe Exclusions ===\n');
 
 const NUM_CARDS = 80;
 const NUM_SONGS = 75; // Typical playlist size
@@ -200,3 +247,40 @@ console.log(`  Mean: ${detailed.mean.toFixed(2)} songs`);
 console.log(`  Range: ${detailed.min} - ${detailed.max} songs`);
 console.log(`  10th percentile: ${detailed.p10} songs`);
 console.log(`  90th percentile: ${detailed.p90} songs`);
+
+// Test safe exclusion strategy
+console.log('\n=== Safe Exclusion Strategy (20% target, max 2 per line) ===');
+const targetExclude = Math.floor(NUM_SONGS * 0.20);
+const safeExcluded = calculateSafeExclusions(activeCards, songs, targetExclude, 2);
+console.log(`Target: ${targetExclude}, Actually excluded: ${safeExcluded.size}`);
+
+// Run simulation with safe exclusions
+const safeResults = [];
+for (let sim = 0; sim < 2000; sim++) {
+  const activeSongIds = songs.filter(id => !safeExcluded.has(id));
+  const songOrder = shuffleArray(activeSongIds);
+  const calledSet = new Set();
+  let songsToWin = songOrder.length;
+
+  for (let i = 0; i < songOrder.length; i++) {
+    calledSet.add(songOrder[i]);
+    for (const card of activeCards) {
+      if (checkSingleLineWin(card.slots, calledSet, safeExcluded)) {
+        songsToWin = i + 1;
+        break;
+      }
+    }
+    if (songsToWin < songOrder.length) break;
+  }
+  safeResults.push(songsToWin);
+}
+
+safeResults.sort((a, b) => a - b);
+const safeMedian = safeResults[Math.floor(safeResults.length / 2)];
+const safeMean = safeResults.reduce((a, b) => a + b, 0) / safeResults.length;
+const safeP90 = safeResults[Math.floor(safeResults.length * 0.9)];
+
+console.log(`Results with safe exclusions:`);
+console.log(`  Median: ${safeMedian} songs`);
+console.log(`  Mean: ${safeMean.toFixed(2)} songs`);
+console.log(`  90th percentile: ${safeP90} songs (should be <20)`);

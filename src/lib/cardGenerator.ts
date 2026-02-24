@@ -448,3 +448,75 @@ export function getPacingForGroupSize(
   // Return the one closest to groupSize
   return (groupSize - lower.groupSize) <= (upper.groupSize - groupSize) ? lower : upper;
 }
+
+/**
+ * Calculate safe song exclusions for a given set of active cards.
+ * Ensures no card has more than maxPerLine excluded songs on any winning line.
+ * This prevents unfair head starts while still speeding up games.
+ */
+export function calculateSafeExclusions(
+  cards: BingoCard[],
+  allSongIds: string[],
+  targetExclusions: number,
+  maxPerLine: number = 1
+): Set<string> {
+  const excluded = new Set<string>();
+
+  // Track excluded count per line per card
+  // cardLineExclusions[cardIdx][lineIdx] = count of excluded songs
+  const cardLineExclusions: number[][] = cards.map(() =>
+    WINNING_LINES.map(() => 0)
+  );
+
+  // Build song -> card/line mapping
+  // For each song, which cards have it and on which lines
+  const songLocations = new Map<string, { cardIdx: number; lineIdx: number }[]>();
+
+  for (let cardIdx = 0; cardIdx < cards.length; cardIdx++) {
+    const card = cards[cardIdx];
+    for (let lineIdx = 0; lineIdx < WINNING_LINES.length; lineIdx++) {
+      const line = WINNING_LINES[lineIdx];
+      for (const slotIdx of line) {
+        if (slotIdx === -1) continue; // Free space
+        const songId = card.slots[slotIdx];
+        if (!songLocations.has(songId)) {
+          songLocations.set(songId, []);
+        }
+        songLocations.get(songId)!.push({ cardIdx, lineIdx });
+      }
+    }
+  }
+
+  // Sort songs by how many card-line locations they appear in (fewer = safer to exclude)
+  const sortedSongs = [...allSongIds].sort((a, b) => {
+    const aLocs = songLocations.get(a)?.length || 0;
+    const bLocs = songLocations.get(b)?.length || 0;
+    return aLocs - bLocs;
+  });
+
+  // Greedily add exclusions while respecting maxPerLine constraint
+  for (const songId of sortedSongs) {
+    if (excluded.size >= targetExclusions) break;
+
+    const locations = songLocations.get(songId) || [];
+
+    // Check if excluding this song would violate maxPerLine for any card/line
+    let canExclude = true;
+    for (const { cardIdx, lineIdx } of locations) {
+      if (cardLineExclusions[cardIdx][lineIdx] >= maxPerLine) {
+        canExclude = false;
+        break;
+      }
+    }
+
+    if (canExclude) {
+      excluded.add(songId);
+      // Update counts
+      for (const { cardIdx, lineIdx } of locations) {
+        cardLineExclusions[cardIdx][lineIdx]++;
+      }
+    }
+  }
+
+  return excluded;
+}

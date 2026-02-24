@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { GameState, Playlist, GameRound, WinRecord, Song, BingoCard, PacingEntry } from '../types';
 import { saveGame, getGame, getActiveGame, getPlaylist, getCardsForPlaylist } from '../lib/db';
-import { shuffleSongOrder } from '../lib/cardGenerator';
+import { shuffleSongOrder, calculateSafeExclusions } from '../lib/cardGenerator';
 import { checkWin } from '../lib/winChecker';
 import { getPatternById } from '../lib/patterns';
 
@@ -249,10 +249,31 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const startNewGame = useCallback(async (playlist: Playlist, patternIds: string[], cardRange?: CardRangeOptions) => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
-    // Song exclusion disabled - it causes unfair head starts when excluded songs
-    // cluster on winning lines. Games naturally take ~20 songs which is fine.
-    const pacingEntry = null;
-    const shuffledOrder = shuffleSongOrder(playlist.songs);
+    const cards = await getCardsForPlaylist(playlist.id);
+
+    // Get active cards based on range
+    const activeCards = cardRange
+      ? cards.filter(c => c.cardNumber >= cardRange.cardRangeStart && c.cardNumber <= cardRange.cardRangeEnd)
+      : cards;
+
+    // Calculate safe exclusions - ensures no card has >2 excluded songs per winning line
+    // Target: exclude ~20% of songs to speed up games without unfair head starts
+    // maxPerLine=2 means a card can start with at most 2 "free" squares on any line
+    const targetExclusions = Math.floor(playlist.songs.length * 0.20);
+    const allSongIds = playlist.songs.map(s => s.id);
+    const excludedSongIds = calculateSafeExclusions(activeCards, allSongIds, targetExclusions, 2);
+
+    // Create pacing entry for state
+    const pacingEntry = {
+      groupSize: activeCards.length,
+      excludeCount: excludedSongIds.size,
+      excludedSongIds: Array.from(excludedSongIds),
+      expectedSongsToWin: 0, // Not calculated
+    };
+
+    // Filter songs and shuffle
+    const activeSongs = playlist.songs.filter(s => !excludedSongIds.has(s.id));
+    const shuffledOrder = shuffleSongOrder(activeSongs);
     const firstSongId = shuffledOrder[0];
 
     const game: GameState = {
@@ -275,8 +296,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       cardRangeStart: cardRange?.cardRangeStart,
       cardRangeEnd: cardRange?.cardRangeEnd,
     };
-
-    const cards = await getCardsForPlaylist(playlist.id);
     await saveGame(game);
     dispatch({ type: 'SET_GAME', payload: { game, playlist, cards, pacingEntry } });
   }, []);
