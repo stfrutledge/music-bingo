@@ -1,0 +1,10 @@
+{
+  "playlists": [
+    {
+      "id": "sample-2000s",
+      "name": "2000s Hits",
+      "songCount": 55,
+      "path": "sample-2000s/playlist.json"
+    }
+  ]
+}

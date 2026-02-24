@@ -1,0 +1,91 @@
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  audioFile: string;
+  startTime?: number; // Seconds to seek to when playing (e.g., chorus start)
+}
+
+export interface Playlist {
+  id: string;
+  name: string;
+  description?: string;
+  baseAudioUrl: string;
+  songs: Song[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface BingoCard {
+  id: string;
+  playlistId: string;
+  cardNumber: number;
+  slots: string[]; // 24 song IDs (5x5 minus free space)
+  createdAt: number;
+}
+
+export interface BingoPattern {
+  id: string;
+  name: string;
+  description: string;
+  grid: boolean[][]; // 5x5 grid, true = required for win
+}
+
+export interface GameRound {
+  roundNumber: number;
+  patternId: string;
+  winners: WinRecord[];
+  startedAt: number;
+  endedAt?: number;
+}
+
+export interface WinRecord {
+  cardNumber: number;
+  verifiedAt: number;
+  songIndex: number; // Which song was playing when they won
+}
+
+export interface GameState {
+  id: string;
+  playlistId: string;
+  rounds: GameRound[];
+  currentRound: number;
+  calledSongIds: string[];
+  shuffledSongOrder: string[];
+  currentSongIndex: number;
+  isPlaying: boolean;
+  startedAt: number;
+  endedAt?: number;
+}
+
+export interface GameSettings {
+  roundPatterns: string[]; // Pattern IDs for each round
+  autoAdvanceDelay: number; // ms before auto-advancing to next song
+}
+
+export interface PlaylistManifest {
+  playlists: PlaylistInfo[];
+}
+
+export interface PlaylistInfo {
+  id: string;
+  name: string;
+  songCount: number;
+  path: string;
+}
+
+export interface CacheStatus {
+  playlistId: string;
+  totalSongs: number;
+  cachedSongs: number;
+  isComplete: boolean;
+  lastUpdated?: number;
+}
+
+export type AppMode = 'admin' | 'host';
+
+export interface AppSettings {
+  mode: AppMode;
+  lastPlaylistId?: string;
+  darkMode: boolean;
+}
