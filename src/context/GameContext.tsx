@@ -1,17 +1,26 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
-import type { GameState, Playlist, GameRound, WinRecord, Song } from '../types';
-import { saveGame, getGame, getActiveGame, getPlaylist } from '../lib/db';
+import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
+import type { GameState, Playlist, GameRound, WinRecord, Song, BingoCard } from '../types';
+import { saveGame, getGame, getActiveGame, getPlaylist, getCardsForPlaylist } from '../lib/db';
 import { shuffleSongOrder } from '../lib/cardGenerator';
+import { checkWin } from '../lib/winChecker';
+import { getPatternById } from '../lib/patterns';
+
+interface PotentialWinner {
+  cardNumber: number;
+  missingCount: number;
+  missingSongIds: string[];
+}
 
 interface GameContextState {
   game: GameState | null;
   playlist: Playlist | null;
+  cards: BingoCard[];
   currentSong: Song | null;
   isLoading: boolean;
 }
 
 type GameAction =
-  | { type: 'SET_GAME'; payload: { game: GameState; playlist: Playlist } }
+  | { type: 'SET_GAME'; payload: { game: GameState; playlist: Playlist; cards: BingoCard[] } }
   | { type: 'CLEAR_GAME' }
   | { type: 'CALL_SONG'; payload: string }
   | { type: 'NEXT_SONG' }
@@ -25,6 +34,7 @@ type GameAction =
 const initialState: GameContextState = {
   game: null,
   playlist: null,
+  cards: [],
   currentSong: null,
   isLoading: false,
 };
@@ -40,18 +50,19 @@ function getCurrentSong(game: GameState | null, playlist: Playlist | null): Song
 function gameReducer(state: GameContextState, action: GameAction): GameContextState {
   switch (action.type) {
     case 'SET_GAME': {
-      const { game, playlist } = action.payload;
+      const { game, playlist, cards } = action.payload;
       return {
         ...state,
         game,
         playlist,
+        cards,
         currentSong: getCurrentSong(game, playlist),
         isLoading: false,
       };
     }
 
     case 'CLEAR_GAME':
-      return { ...initialState };
+      return { ...initialState, cards: [] };
 
     case 'CALL_SONG': {
       if (!state.game) return state;
@@ -180,6 +191,8 @@ interface GameContextValue extends GameContextState {
   advanceRound: (newPatternId: string) => void;
   endGame: () => void;
   clearGame: () => void;
+  potentialWinners: PotentialWinner[];
+  confirmedWinners: number[];
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -200,7 +213,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (activeGame) {
         const playlist = await getPlaylist(activeGame.playlistId);
         if (playlist) {
-          dispatch({ type: 'SET_GAME', payload: { game: activeGame, playlist } });
+          const cards = await getCardsForPlaylist(playlist.id);
+          dispatch({ type: 'SET_GAME', payload: { game: activeGame, playlist, cards } });
           return;
         }
       }
@@ -243,15 +257,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       startedAt: Date.now(),
     };
 
+    const cards = await getCardsForPlaylist(playlist.id);
     await saveGame(game);
-    dispatch({ type: 'SET_GAME', payload: { game, playlist } });
+    dispatch({ type: 'SET_GAME', payload: { game, playlist, cards } });
   }, []);
 
   const loadGame = useCallback(async (gameId: string, playlist: Playlist) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     const game = await getGame(gameId);
     if (game) {
-      dispatch({ type: 'SET_GAME', payload: { game, playlist } });
+      const cards = await getCardsForPlaylist(playlist.id);
+      dispatch({ type: 'SET_GAME', payload: { game, playlist, cards } });
     }
     dispatch({ type: 'SET_LOADING', payload: false });
   }, []);
@@ -290,6 +306,42 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_GAME' });
   }, []);
 
+  // Compute potential winners based on current called songs and pattern
+  const potentialWinners = useMemo((): PotentialWinner[] => {
+    if (!state.game || !state.cards.length) return [];
+
+    const currentRound = state.game.rounds[state.game.currentRound];
+    const pattern = getPatternById(currentRound.patternId);
+    const calledSet = new Set(state.game.calledSongIds);
+
+    const winners: PotentialWinner[] = [];
+
+    for (const card of state.cards) {
+      const result = checkWin(card, pattern, calledSet);
+
+      // Include cards that have won (0 missing) or are close (1-2 missing)
+      if (result.missingSlots.length <= 2) {
+        winners.push({
+          cardNumber: card.cardNumber,
+          missingCount: result.missingSlots.length,
+          missingSongIds: result.missingSongs.map(m => m.songId),
+        });
+      }
+    }
+
+    // Sort by missing count (winners first, then close ones)
+    winners.sort((a, b) => a.missingCount - b.missingCount);
+
+    return winners;
+  }, [state.game?.calledSongIds, state.game?.currentRound, state.cards]);
+
+  // Get confirmed winners for current round
+  const confirmedWinners = useMemo((): number[] => {
+    if (!state.game) return [];
+    const currentRound = state.game.rounds[state.game.currentRound];
+    return currentRound.winners.map(w => w.cardNumber);
+  }, [state.game?.rounds, state.game?.currentRound]);
+
   const value: GameContextValue = {
     ...state,
     startNewGame,
@@ -301,6 +353,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     advanceRound,
     endGame,
     clearGame,
+    potentialWinners,
+    confirmedWinners,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

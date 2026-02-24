@@ -11,11 +11,12 @@ import { PatternDisplay } from '../shared/PatternDisplay';
 
 export function GameScreen() {
   const navigate = useNavigate();
-  const { game, playlist, currentSong, nextSong, prevSong, setPlaying, isLoading } = useGame();
+  const { game, playlist, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners } = useGame();
   const audio = useAudioPlayer();
   const wakeLock = useWakeLock();
 
   const [showCalledList, setShowCalledList] = useState(false);
+  const [showWinnerTracker, setShowWinnerTracker] = useState(true);
   const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
 
   // Acquire wake lock when game starts
@@ -78,14 +79,14 @@ export function GameScreen() {
     }
   };
 
-  const handleNextSong = () => {
-    audio.stop();
+  const handleNextSong = async () => {
+    await audio.stopWithFade();
     setShouldAutoPlay(true);
     nextSong();
   };
 
-  const handlePrevSong = () => {
-    audio.stop();
+  const handlePrevSong = async () => {
+    await audio.stopWithFade();
     setShouldAutoPlay(true);
     prevSong();
   };
@@ -112,6 +113,89 @@ export function GameScreen() {
           </div>
         </div>
       </header>
+
+      {/* Winner Tracker */}
+      {potentialWinners.length > 0 && (
+        <div className="px-4 pt-2">
+          <button
+            onClick={() => setShowWinnerTracker(!showWinnerTracker)}
+            className="w-full flex items-center justify-between p-2 bg-navy-800 rounded-lg"
+          >
+            <span className="text-sm font-medium text-white flex items-center gap-2">
+              {potentialWinners.some(w => w.missingCount === 0) ? (
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              ) : potentialWinners.some(w => w.missingCount === 1) ? (
+                <span className="w-2 h-2 bg-yellow-500 rounded-full" />
+              ) : (
+                <span className="w-2 h-2 bg-blue-500 rounded-full" />
+              )}
+              Expect Bingo: {potentialWinners.filter(w => w.missingCount === 0).length} won, {potentialWinners.filter(w => w.missingCount === 1).length} need 1
+            </span>
+            <span className="text-slate-400 text-sm">{showWinnerTracker ? '▼' : '▶'}</span>
+          </button>
+
+          {showWinnerTracker && (
+            <div className="mt-2 p-3 bg-navy-800/50 rounded-lg space-y-2">
+              {/* Winners (0 missing) */}
+              {potentialWinners.filter(w => w.missingCount === 0).length > 0 && (
+                <div>
+                  <div className="text-xs text-green-400 font-medium mb-1">BINGO!</div>
+                  <div className="flex flex-wrap gap-1">
+                    {potentialWinners.filter(w => w.missingCount === 0).map(w => (
+                      <span
+                        key={w.cardNumber}
+                        className={`px-2 py-1 rounded text-sm font-medium ${
+                          confirmedWinners.includes(w.cardNumber)
+                            ? 'bg-green-600 text-white'
+                            : 'bg-green-900 text-green-300 animate-pulse'
+                        }`}
+                      >
+                        #{w.cardNumber}
+                        {confirmedWinners.includes(w.cardNumber) && ' ✓'}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Need 1 song */}
+              {potentialWinners.filter(w => w.missingCount === 1).length > 0 && (
+                <div>
+                  <div className="text-xs text-yellow-400 font-medium mb-1">Need 1 song</div>
+                  <div className="flex flex-wrap gap-1">
+                    {potentialWinners.filter(w => w.missingCount === 1).map(w => (
+                      <span
+                        key={w.cardNumber}
+                        className="px-2 py-1 bg-yellow-900/50 text-yellow-300 rounded text-sm"
+                        title={`Needs: ${w.missingSongIds.join(', ')}`}
+                      >
+                        #{w.cardNumber}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Need 2 songs */}
+              {potentialWinners.filter(w => w.missingCount === 2).length > 0 && (
+                <div>
+                  <div className="text-xs text-blue-400 font-medium mb-1">Need 2 songs</div>
+                  <div className="flex flex-wrap gap-1">
+                    {potentialWinners.filter(w => w.missingCount === 2).map(w => (
+                      <span
+                        key={w.cardNumber}
+                        className="px-2 py-1 bg-blue-900/30 text-blue-300 rounded text-sm"
+                      >
+                        #{w.cardNumber}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col p-4">

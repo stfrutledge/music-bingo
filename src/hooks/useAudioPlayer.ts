@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
+const FADE_DURATION = 500; // ms for fade in/out
+
 interface AudioPlayerState {
   isPlaying: boolean;
   currentTime: number;
@@ -7,12 +9,14 @@ interface AudioPlayerState {
   isLoading: boolean;
   error: string | null;
   startOffset: number; // The startTime offset for display purposes
+  isFading: boolean;
 }
 
 interface UseAudioPlayerReturn extends AudioPlayerState {
   play: () => Promise<void>;
   pause: () => void;
   stop: () => void;
+  stopWithFade: () => Promise<void>;
   seek: (time: number) => void;
   loadAudio: (url: string, startTime?: number, autoPlay?: boolean) => Promise<void>;
 }
@@ -20,6 +24,7 @@ interface UseAudioPlayerReturn extends AudioPlayerState {
 export function useAudioPlayer(): UseAudioPlayerReturn {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const startTimeRef = useRef<number>(0);
+  const fadeIntervalRef = useRef<number | null>(null);
   const [state, setState] = useState<AudioPlayerState>({
     isPlaying: false,
     currentTime: 0,
@@ -27,6 +32,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     isLoading: false,
     error: null,
     startOffset: 0,
+    isFading: false,
   });
 
   // Initialize audio element
@@ -81,6 +87,36 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     };
   }, []);
 
+  const fadeIn = useCallback((audio: HTMLAudioElement) => {
+    audio.volume = 0;
+
+    const steps = 20;
+    const stepDuration = FADE_DURATION / steps;
+    const volumeStep = 1 / steps;
+    let currentStep = 0;
+
+    // Clear any existing fade
+    if (fadeIntervalRef.current) {
+      clearInterval(fadeIntervalRef.current);
+    }
+
+    setState(prev => ({ ...prev, isFading: true }));
+
+    fadeIntervalRef.current = window.setInterval(() => {
+      currentStep++;
+      audio.volume = Math.min(1, volumeStep * currentStep);
+
+      if (currentStep >= steps) {
+        if (fadeIntervalRef.current) {
+          clearInterval(fadeIntervalRef.current);
+          fadeIntervalRef.current = null;
+        }
+        audio.volume = 1;
+        setState(prev => ({ ...prev, isFading: false }));
+      }
+    }, stepDuration);
+  }, []);
+
   const loadAudio = useCallback(async (url: string, startTime: number = 0, autoPlay: boolean = false) => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -100,17 +136,20 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     audio.load();
 
     if (autoPlay) {
-      // Wait for audio to be ready, then play
+      // Wait for audio to be ready, then play with fade in
       audio.addEventListener('canplay', async function onCanPlay() {
         audio.removeEventListener('canplay', onCanPlay);
         try {
+          audio.volume = 0;
           await audio.play();
+          fadeIn(audio);
         } catch (err) {
           console.warn('Auto-play failed:', err);
+          audio.volume = 1;
         }
       }, { once: true });
     }
-  }, []);
+  }, [fadeIn]);
 
   const play = useCallback(async () => {
     const audio = audioRef.current;
@@ -133,10 +172,56 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
   const stop = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
+      // Clear any ongoing fade
+      if (fadeIntervalRef.current) {
+        clearInterval(fadeIntervalRef.current);
+        fadeIntervalRef.current = null;
+      }
       audio.pause();
+      audio.volume = 1;
       audio.currentTime = startTimeRef.current;
-      setState(prev => ({ ...prev, currentTime: startTimeRef.current }));
+      setState(prev => ({ ...prev, currentTime: startTimeRef.current, isFading: false }));
     }
+  }, []);
+
+  const stopWithFade = useCallback((): Promise<void> => {
+    return new Promise((resolve) => {
+      const audio = audioRef.current;
+      if (!audio || audio.paused) {
+        resolve();
+        return;
+      }
+
+      setState(prev => ({ ...prev, isFading: true }));
+
+      const startVolume = audio.volume;
+      const steps = 20;
+      const stepDuration = FADE_DURATION / steps;
+      const volumeStep = startVolume / steps;
+      let currentStep = 0;
+
+      // Clear any existing fade
+      if (fadeIntervalRef.current) {
+        clearInterval(fadeIntervalRef.current);
+      }
+
+      fadeIntervalRef.current = window.setInterval(() => {
+        currentStep++;
+        audio.volume = Math.max(0, startVolume - (volumeStep * currentStep));
+
+        if (currentStep >= steps) {
+          if (fadeIntervalRef.current) {
+            clearInterval(fadeIntervalRef.current);
+            fadeIntervalRef.current = null;
+          }
+          audio.pause();
+          audio.volume = 1; // Reset volume for next play
+          audio.currentTime = startTimeRef.current;
+          setState(prev => ({ ...prev, currentTime: startTimeRef.current, isFading: false }));
+          resolve();
+        }
+      }, stepDuration);
+    });
   }, []);
 
   const seek = useCallback((time: number) => {
@@ -151,6 +236,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     play,
     pause,
     stop,
+    stopWithFade,
     seek,
     loadAudio,
   };
