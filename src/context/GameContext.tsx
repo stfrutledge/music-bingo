@@ -30,6 +30,7 @@ type GameAction =
   | { type: 'SET_PLAYING'; payload: boolean }
   | { type: 'ADD_WINNER'; payload: WinRecord }
   | { type: 'NEXT_ROUND'; payload: string }
+  | { type: 'RESET_CALLED_SONGS' }
   | { type: 'END_GAME' }
   | { type: 'SET_LOADING'; payload: boolean };
 
@@ -172,6 +173,20 @@ function gameReducer(state: GameContextState, action: GameAction): GameContextSt
       };
     }
 
+    case 'RESET_CALLED_SONGS': {
+      if (!state.game) return state;
+      // Clear called songs but keep current position in playlist
+      // The current song becomes the first "called" song again
+      const currentSongId = state.game.shuffledSongOrder[state.game.currentSongIndex];
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          calledSongIds: [currentSongId],
+        },
+      };
+    }
+
     case 'END_GAME': {
       if (!state.game) return state;
       return {
@@ -202,6 +217,7 @@ interface GameContextValue extends GameContextState {
   setPlaying: (playing: boolean) => void;
   recordWinner: (cardNumber: number) => void;
   advanceRound: (newPatternId: string) => void;
+  resetCalledSongs: () => void;
   endGame: () => void;
   clearGame: () => void;
   potentialWinners: PotentialWinner[];
@@ -331,6 +347,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'NEXT_ROUND', payload: newPatternId });
   }, []);
 
+  const resetCalledSongs = useCallback(() => {
+    dispatch({ type: 'RESET_CALLED_SONGS' });
+  }, []);
+
   const endGame = useCallback(() => {
     dispatch({ type: 'END_GAME' });
   }, []);
@@ -405,6 +425,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setPlaying,
     recordWinner,
     advanceRound,
+    resetCalledSongs,
     endGame,
     clearGame,
     potentialWinners,

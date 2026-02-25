@@ -15,7 +15,7 @@ interface PatternStatus {
 
 export function RoundEnd() {
   const navigate = useNavigate();
-  const { game, playlist, advanceRound, endGame, cards, excludedSongIds } = useGame();
+  const { game, playlist, advanceRound, endGame, resetCalledSongs, cards, excludedSongIds } = useGame();
 
   const [selectedNextPattern, setSelectedNextPattern] = useState<string | null>(null);
 
@@ -156,6 +156,26 @@ export function RoundEnd() {
           <Button variant="secondary" fullWidth onClick={handleResume}>
             Resume Round
           </Button>
+        </div>
+
+        {/* Reset Cards Option */}
+        <div className="card mb-6">
+          <div className="text-sm text-slate-400 mb-2">
+            Players keeping marks? Or fresh start?
+          </div>
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => {
+              resetCalledSongs();
+              alert('Cards reset! Tell players to clear their marks.');
+            }}
+          >
+            Reset All Cards
+          </Button>
+          <div className="text-xs text-slate-500 mt-2 text-center">
+            Clears all called songs - players wipe their cards
+          </div>
         </div>
 
         <div className="border-t border-navy-700 pt-6 mb-6">
