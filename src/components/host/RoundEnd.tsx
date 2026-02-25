@@ -83,22 +83,26 @@ export function RoundEnd() {
       };
     }
 
+    const cardLabel = status.closestCards.length > 0
+      ? `#${status.closestCards[0]}`
+      : '';
+
     if (status.closestMissing === 1) {
       return {
-        text: `1 away (${status.closestCards.length} cards)`,
+        text: `${cardLabel} is 1 away`,
         color: 'text-yellow-400',
       };
     }
 
     if (status.closestMissing <= 3) {
       return {
-        text: `${status.closestMissing} away`,
+        text: `${cardLabel} is ${status.closestMissing} away`,
         color: 'text-blue-400',
       };
     }
 
     return {
-      text: `${status.closestMissing} away`,
+      text: `${cardLabel} is ${status.closestMissing} away`,
       color: 'text-slate-500',
     };
   };
