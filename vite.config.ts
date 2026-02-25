@@ -64,7 +64,7 @@ export default defineConfig({
       name: 'serve-mp3s',
       configureServer(server) {
         server.middlewares.use('/audio', (req, res, next) => {
-          const audioPath = path.join('C:/Users/sfrut/OneDrive/Desktop/Music Bingo MP3s', decodeURIComponent(req.url || '').slice(1))
+          const audioPath = path.join("C:/Users/sfrut/OneDrive/Desktop/Music Bingo MP3's", decodeURIComponent(req.url || '').slice(1))
 
           // Add CORS headers for jsmediatags to read ID3 tags
           res.setHeader('Access-Control-Allow-Origin', '*')

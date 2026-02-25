@@ -35,7 +35,7 @@ export function Button({
       className={`
         inline-flex items-center justify-center
         font-semibold tracking-wide
-        rounded transition-all duration-150
+        rounded-lg transition-all duration-150
         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)]
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variantClasses[variant]}

@@ -33,6 +33,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const preloadStartTimeRef = useRef<number>(0);
   const fadeIntervalRef = useRef<number | null>(null);
   const preloadUrlRef = useRef<string>('');
+  const currentUrlRef = useRef<string>('');
 
   const [state, setState] = useState<AudioContextState>({
     isPlaying: false,
@@ -136,9 +137,15 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const audio = audioRef.current;
     if (!audio) return;
 
+    // Skip if the same URL is already loaded (don't interrupt playback)
+    if (currentUrlRef.current === url) {
+      return;
+    }
+
     // Stop any current playback and reset state
     audio.pause();
     startTimeRef.current = startTime;
+    currentUrlRef.current = url;
 
     setState(prev => ({
       ...prev,
@@ -205,6 +212,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     // Swap the audio elements
     startTimeRef.current = preloadStartTimeRef.current;
+    currentUrlRef.current = preloadUrlRef.current;
     audio.src = preloadUrlRef.current;
     audio.load();
 

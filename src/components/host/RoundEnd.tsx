@@ -166,8 +166,10 @@ export function RoundEnd() {
               variant="secondary"
               fullWidth
               onClick={() => {
-                resetCalledSongs();
-                alert('Cards reset! Tell players to clear their marks.');
+                if (confirm('Reset all cards? This will clear all called songs and players will need to wipe their cards.')) {
+                  resetCalledSongs();
+                  alert('Cards reset! Tell players to clear their marks.');
+                }
               }}
             >
               Reset All Cards

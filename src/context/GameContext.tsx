@@ -56,7 +56,7 @@ function gameReducer(state: GameContextState, action: GameAction): GameContextSt
   switch (action.type) {
     case 'SET_GAME': {
       const { game, playlist, cards, pacingEntry } = action.payload;
-      const excludedSongIds = new Set(pacingEntry?.excludedSongIds || []);
+      // Don't use excluded songs - all songs must be called to count
       return {
         ...state,
         game,
@@ -65,7 +65,7 @@ function gameReducer(state: GameContextState, action: GameAction): GameContextSt
         currentSong: getCurrentSong(game, playlist),
         isLoading: false,
         pacingEntry,
-        excludedSongIds,
+        excludedSongIds: new Set(),
       };
     }
 
@@ -175,15 +175,22 @@ function gameReducer(state: GameContextState, action: GameAction): GameContextSt
 
     case 'RESET_CALLED_SONGS': {
       if (!state.game) return state;
-      // Clear called songs but keep current position in playlist
-      // The current song becomes the first "called" song again
-      const currentSongId = state.game.shuffledSongOrder[state.game.currentSongIndex];
+      // Clear all called songs, reset position, and reshuffle
+      const songIds = [...state.game.shuffledSongOrder];
+      // Fisher-Yates shuffle
+      for (let i = songIds.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [songIds[i], songIds[j]] = [songIds[j], songIds[i]];
+      }
       return {
         ...state,
         game: {
           ...state.game,
-          calledSongIds: [currentSongId],
+          calledSongIds: [],
+          shuffledSongOrder: songIds,
+          currentSongIndex: 0,
         },
+        currentSong: state.playlist?.songs.find(s => s.id === songIds[0]) || null,
       };
     }
 
