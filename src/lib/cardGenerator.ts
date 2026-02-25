@@ -411,6 +411,96 @@ export function shuffleSongOrder(songs: Song[]): string[] {
 }
 
 /**
+ * Filter playlist to minimize callable songs while ensuring all cards can still win.
+ * Removes songs that appear on few cards, as long as every card still has at least
+ * one completable winning line.
+ *
+ * @param activeCards Cards currently in play
+ * @param allSongIds All song IDs in the playlist
+ * @returns Set of song IDs that should be called (excludes removable songs)
+ */
+export function filterPlaylistForActiveCards(
+  activeCards: BingoCard[],
+  allSongIds: string[]
+): { callableSongIds: Set<string>; removedCount: number } {
+  // Build set of songs that appear on any active card
+  const songsOnCards = new Set<string>();
+  for (const card of activeCards) {
+    for (const songId of card.slots) {
+      songsOnCards.add(songId);
+    }
+  }
+
+  // Songs not on any active card are automatically excluded
+  const relevantSongs = allSongIds.filter(id => songsOnCards.has(id));
+
+  // Count appearances across active cards
+  const songAppearances = new Map<string, number>();
+  for (const card of activeCards) {
+    for (const songId of card.slots) {
+      songAppearances.set(songId, (songAppearances.get(songId) || 0) + 1);
+    }
+  }
+
+  // Sort by appearances (ascending) - try to remove least-appearing first
+  const sortedSongs = [...relevantSongs].sort((a, b) => {
+    return (songAppearances.get(a) || 0) - (songAppearances.get(b) || 0);
+  });
+
+  // Track which songs are currently callable
+  const callableSongs = new Set(relevantSongs);
+
+  // Try to remove low-appearing songs one at a time
+  for (const songId of sortedSongs) {
+    // Don't try to remove songs that appear on many cards (diminishing returns)
+    const appearances = songAppearances.get(songId) || 0;
+    if (appearances > activeCards.length * 0.3) break;
+
+    // Test if we can remove this song
+    callableSongs.delete(songId);
+
+    // Check if all cards still have at least one completable winning line
+    let allCardsCanWin = true;
+    for (const card of activeCards) {
+      if (!cardCanStillWin(card, callableSongs)) {
+        allCardsCanWin = false;
+        break;
+      }
+    }
+
+    if (!allCardsCanWin) {
+      // Put it back - this song is needed
+      callableSongs.add(songId);
+    }
+  }
+
+  return {
+    callableSongIds: callableSongs,
+    removedCount: allSongIds.length - callableSongs.size,
+  };
+}
+
+/**
+ * Check if a card has at least one winning line that can be completed
+ * using only the callable songs.
+ */
+function cardCanStillWin(card: BingoCard, callableSongs: Set<string>): boolean {
+  for (const line of WINNING_LINES) {
+    let lineCompletable = true;
+    for (const slotIdx of line) {
+      if (slotIdx === -1) continue; // Free space always works
+      const songId = card.slots[slotIdx];
+      if (!callableSongs.has(songId)) {
+        lineCompletable = false;
+        break;
+      }
+    }
+    if (lineCompletable) return true;
+  }
+  return false;
+}
+
+/**
  * Get pacing entry for a specific group size.
  * Interpolates between entries if exact match not found.
  */

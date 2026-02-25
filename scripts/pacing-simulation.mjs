@@ -1,6 +1,6 @@
 /**
  * Pacing Simulation Script
- * Simulates bingo games to find optimal song exclusion count
+ * Simulates bingo games with dynamic playlist filtering
  */
 
 // Winning lines in a 5x5 bingo grid (slot indices 0-23, skipping center)
@@ -31,14 +31,13 @@ function shuffleArray(array) {
   return shuffled;
 }
 
-function checkSingleLineWin(cardSlots, calledSongIds, excludedSongIds) {
+function checkSingleLineWin(cardSlots, calledSongIds) {
   for (const line of WINNING_LINES) {
     let lineComplete = true;
     for (const slotIdx of line) {
       if (slotIdx === -1) continue; // Free space
       const songId = cardSlots[slotIdx];
-      const isMarked = calledSongIds.has(songId) || excludedSongIds.has(songId);
-      if (!isMarked) {
+      if (!calledSongIds.has(songId)) {
         lineComplete = false;
         break;
       }
@@ -48,16 +47,15 @@ function checkSingleLineWin(cardSlots, calledSongIds, excludedSongIds) {
   return false;
 }
 
-function simulateGame(cards, allSongIds, excludedSongIds) {
-  const activeSongIds = allSongIds.filter(id => !excludedSongIds.has(id));
-  const songOrder = shuffleArray(activeSongIds);
+function simulateGame(cards, callableSongIds) {
+  const songOrder = shuffleArray([...callableSongIds]);
   const calledSet = new Set();
 
   for (let i = 0; i < songOrder.length; i++) {
     calledSet.add(songOrder[i]);
 
     for (const card of cards) {
-      if (checkSingleLineWin(card.slots, calledSet, excludedSongIds)) {
+      if (checkSingleLineWin(card.slots, calledSet)) {
         return i + 1; // Songs called to first winner
       }
     }
@@ -66,17 +64,11 @@ function simulateGame(cards, allSongIds, excludedSongIds) {
   return songOrder.length; // No winner (shouldn't happen)
 }
 
-function runSimulations(cards, allSongIds, songAppearances, excludeCount, numSimulations = 1000) {
-  // Sort songs by appearance count (ascending) - exclude least appearing first
-  const sortedSongs = [...allSongIds].sort((a, b) => {
-    return (songAppearances.get(a) || 0) - (songAppearances.get(b) || 0);
-  });
-
-  const excludedSongIds = new Set(sortedSongs.slice(0, excludeCount));
+function runSimulations(cards, callableSongIds, numSimulations = 1000) {
   const results = [];
 
   for (let i = 0; i < numSimulations; i++) {
-    results.push(simulateGame(cards, allSongIds, excludedSongIds));
+    results.push(simulateGame(cards, callableSongIds));
   }
 
   results.sort((a, b) => a - b);
@@ -88,7 +80,7 @@ function runSimulations(cards, allSongIds, songAppearances, excludeCount, numSim
   const p10 = results[Math.floor(results.length * 0.1)];
   const p90 = results[Math.floor(results.length * 0.9)];
 
-  return { median, mean, min, max, p10, p90, excludeCount };
+  return { median, mean, min, max, p10, p90 };
 }
 
 // Generate cards similar to the app's algorithm
@@ -143,60 +135,43 @@ function generateTestCards(numCards, numSongs, slotsPerCard = 24) {
   return { cards, songs, songAppearances };
 }
 
-// Main simulation
-console.log('=== Pacing Simulation ===\n');
-
-const NUM_CARDS = 80;
-const NUM_SONGS = 75; // Typical playlist size
-const CARDS_IN_PLAY = parseInt(process.argv[2]) || 25;
-const TARGET_MEDIAN = parseInt(process.argv[3]) || 13;
-const SIMULATIONS_PER_TEST = 2000;
-
-console.log(`Generating ${NUM_CARDS} cards with ${NUM_SONGS} songs...`);
-const { cards, songs, songAppearances } = generateTestCards(NUM_CARDS, NUM_SONGS);
-
-// Use only first 25 cards (cards #1-#25)
-const activeCards = cards.slice(0, CARDS_IN_PLAY);
-console.log(`Using cards #1-#${CARDS_IN_PLAY}\n`);
-
-console.log('Song appearance distribution:');
-const appearances = Array.from(songAppearances.values());
-console.log(`  Min: ${Math.min(...appearances)}, Max: ${Math.max(...appearances)}, Avg: ${(appearances.reduce((a,b) => a+b, 0) / appearances.length).toFixed(1)}\n`);
-
-console.log(`Running ${SIMULATIONS_PER_TEST} simulations per exclusion count...\n`);
-
-console.log('Exclude | Median | Mean  | Min | Max | P10 | P90');
-console.log('--------|--------|-------|-----|-----|-----|----');
-
-let bestExclude = 0;
-let bestDiff = Infinity;
-
-for (let excludeCount = 0; excludeCount <= 35; excludeCount += 1) {
-  const result = runSimulations(activeCards, songs, songAppearances, excludeCount, SIMULATIONS_PER_TEST);
-
-  const diff = Math.abs(result.median - TARGET_MEDIAN);
-  if (diff < bestDiff) {
-    bestDiff = diff;
-    bestExclude = excludeCount;
+// Get songs that appear on active cards (dynamic filtering)
+function getSongsOnActiveCards(activeCards) {
+  const songsOnCards = new Set();
+  for (const card of activeCards) {
+    for (const songId of card.slots) {
+      songsOnCards.add(songId);
+    }
   }
-
-  const marker = result.median === TARGET_MEDIAN ? ' <-- TARGET' :
-                 excludeCount === bestExclude ? ' <-- BEST' : '';
-
-  console.log(`   ${String(excludeCount).padStart(2)}   |   ${String(result.median).padStart(2)}   | ${result.mean.toFixed(1).padStart(5)} |  ${String(result.min).padStart(2)} |  ${String(result.max).padStart(2)} |  ${String(result.p10).padStart(2)} |  ${String(result.p90).padStart(2)}${marker}`);
+  return songsOnCards;
 }
 
-console.log('\n=== Recommendation ===');
-console.log(`To achieve median of ~${TARGET_MEDIAN} songs to winner with ${CARDS_IN_PLAY} players:`);
-console.log(`  Exclude ${bestExclude} songs from the call list`);
-console.log(`  Active songs: ${NUM_SONGS - bestExclude}`);
+// Main simulation
+console.log('=== Dynamic Playlist Filtering Simulation ===\n');
 
-// Run more detailed analysis at the best point
-console.log('\n=== Detailed Analysis at Best Point ===');
-const detailed = runSimulations(activeCards, songs, songAppearances, bestExclude, 5000);
-console.log(`Exclude ${bestExclude} songs:`);
-console.log(`  Median: ${detailed.median} songs`);
-console.log(`  Mean: ${detailed.mean.toFixed(2)} songs`);
-console.log(`  Range: ${detailed.min} - ${detailed.max} songs`);
-console.log(`  10th percentile: ${detailed.p10} songs`);
-console.log(`  90th percentile: ${detailed.p90} songs`);
+const NUM_CARDS = 80;
+const NUM_SONGS = 75;
+const SIMULATIONS = 3000;
+
+console.log(`Generating ${NUM_CARDS} cards with ${NUM_SONGS} songs...\n`);
+const { cards, songs } = generateTestCards(NUM_CARDS, NUM_SONGS);
+
+console.log('Players | Songs on Cards | Filtered Out | Median | Mean  | P10 | P90');
+console.log('--------|----------------|--------------|--------|-------|-----|----');
+
+for (const playerCount of [10, 15, 20, 25, 30, 35, 40, 50, 60, 80]) {
+  const activeCards = cards.slice(0, playerCount);
+  const songsOnCards = getSongsOnActiveCards(activeCards);
+  const filteredOut = NUM_SONGS - songsOnCards.size;
+
+  const results = runSimulations(activeCards, songsOnCards, SIMULATIONS);
+
+  console.log(
+    `   ${String(playerCount).padStart(2)}   |       ${String(songsOnCards.size).padStart(2)}       |      ${String(filteredOut).padStart(2)}      |   ${String(results.median).padStart(2)}   | ${results.mean.toFixed(1).padStart(5)} |  ${String(results.p10).padStart(2)} |  ${String(results.p90).padStart(2)}`
+  );
+}
+
+console.log('\n=== Analysis ===');
+console.log('With dynamic filtering, songs not on ANY active card are automatically excluded.');
+console.log('This reduces the callable playlist without affecting any player.');
+console.log('\nFewer players = fewer unique songs needed = shorter games');

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { GameState, Playlist, GameRound, WinRecord, Song, BingoCard, PacingEntry } from '../types';
 import { saveGame, getGame, getActiveGame, getPlaylist, getCardsForPlaylist } from '../lib/db';
-import { shuffleSongOrder } from '../lib/cardGenerator';
+import { shuffleSongOrder, filterPlaylistForActiveCards } from '../lib/cardGenerator';
 import { checkWin } from '../lib/winChecker';
 import { getPatternById } from '../lib/patterns';
 
@@ -249,10 +249,25 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const startNewGame = useCallback(async (playlist: Playlist, patternIds: string[], cardRange?: CardRangeOptions) => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
-    // Song exclusion disabled - it causes unfair head starts when excluded songs
-    // cluster on winning lines. Games naturally take ~20 songs which is fine.
-    const pacingEntry = null;
-    const shuffledOrder = shuffleSongOrder(playlist.songs);
+    const cards = await getCardsForPlaylist(playlist.id);
+
+    // Filter to only cards in play
+    const activeCards = cardRange
+      ? cards.filter(c => c.cardNumber >= cardRange.cardRangeStart && c.cardNumber <= cardRange.cardRangeEnd)
+      : cards;
+
+    // Smart playlist filtering:
+    // 1. Remove songs not on any active card
+    // 2. Remove low-appearing songs if doing so doesn't block any card from winning
+    const allSongIds = playlist.songs.map(s => s.id);
+    const { callableSongIds, removedCount } = filterPlaylistForActiveCards(activeCards, allSongIds);
+
+    // Filter playlist to only callable songs
+    const relevantSongs = playlist.songs.filter(s => callableSongIds.has(s.id));
+
+    console.log(`Playlist filtering: ${playlist.songs.length} total songs, ${relevantSongs.length} callable (${removedCount} removed, ${activeCards.length} cards in play)`);
+
+    const shuffledOrder = shuffleSongOrder(relevantSongs);
     const firstSongId = shuffledOrder[0];
 
     const game: GameState = {
@@ -276,9 +291,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       cardRangeEnd: cardRange?.cardRangeEnd,
     };
 
-    const cards = await getCardsForPlaylist(playlist.id);
     await saveGame(game);
-    dispatch({ type: 'SET_GAME', payload: { game, playlist, cards, pacingEntry } });
+    dispatch({ type: 'SET_GAME', payload: { game, playlist, cards, pacingEntry: null } });
   }, []);
 
   const loadGame = useCallback(async (gameId: string, playlist: Playlist) => {
