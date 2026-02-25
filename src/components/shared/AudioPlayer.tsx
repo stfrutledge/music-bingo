@@ -45,24 +45,26 @@ export function AudioPlayer({
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-[var(--text-secondary)]">{formatTime(currentTime)}</span>
+      <div className="flex items-center">
+        <span className="text-sm text-[var(--text-secondary)] w-12">{formatTime(currentTime)}</span>
 
-        <button
-          onClick={onPlayPause}
-          disabled={isLoading}
-          className="w-12 h-12 flex items-center justify-center bg-[var(--accent-green)] rounded-full hover:bg-[var(--accent-green-light)] disabled:opacity-50 transition-colors"
-        >
-          {isLoading ? (
-            <LoadingSpinner />
-          ) : isPlaying ? (
-            <PauseIcon />
-          ) : (
-            <PlayIcon />
-          )}
-        </button>
+        <div className="flex-1 flex justify-center">
+          <button
+            onClick={onPlayPause}
+            disabled={isLoading}
+            className="w-12 h-12 flex items-center justify-center bg-[var(--accent-green)] rounded-full hover:bg-[var(--accent-green-light)] disabled:opacity-50 transition-colors"
+          >
+            {isLoading ? (
+              <LoadingSpinner />
+            ) : isPlaying ? (
+              <PauseIcon />
+            ) : (
+              <PlayIcon />
+            )}
+          </button>
+        </div>
 
-        <span className="text-sm text-[var(--text-secondary)]">{formatTime(duration)}</span>
+        <span className="text-sm text-[var(--text-secondary)] w-12 text-right">{formatTime(duration)}</span>
       </div>
     </div>
   );
