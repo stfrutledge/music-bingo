@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
-import { useAudioPlayer } from '../../hooks/useAudioPlayer';
+import { useAudio } from '../../context/AudioContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { getAudioUrl } from '../../lib/audioCache';
 import { getPatternById } from '../../lib/patterns';
@@ -12,11 +12,12 @@ import { PatternDisplay } from '../shared/PatternDisplay';
 export function GameScreen() {
   const navigate = useNavigate();
   const { game, playlist, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners, cardsInPlay } = useGame();
-  const audio = useAudioPlayer();
+  const audio = useAudio();
   const wakeLock = useWakeLock();
 
   const [showCalledList, setShowCalledList] = useState(false);
   const [showWinnerTracker, setShowWinnerTracker] = useState(true);
+  const [hasLoadedCurrentSong, setHasLoadedCurrentSong] = useState(false);
   const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
 
   // Acquire wake lock when game starts
@@ -27,14 +28,30 @@ export function GameScreen() {
     };
   }, []);
 
-  // Load audio when song changes
+  // Load audio when song changes (only if not already playing the right song)
   useEffect(() => {
-    if (currentSong && playlist) {
+    if (currentSong && playlist && !hasLoadedCurrentSong) {
       const url = getAudioUrl(playlist.baseAudioUrl, currentSong.audioFile);
       audio.loadAudio(url, currentSong.startTime || 0, shouldAutoPlay);
-      setShouldAutoPlay(false); // Reset after use
+      setHasLoadedCurrentSong(true);
+      setShouldAutoPlay(false);
     }
-  }, [currentSong?.id, playlist?.baseAudioUrl]);
+  }, [currentSong?.id, playlist?.baseAudioUrl, hasLoadedCurrentSong, shouldAutoPlay]);
+
+  // Preload next song when current song is loaded
+  useEffect(() => {
+    if (currentSong && playlist && game && !audio.isLoading) {
+      const nextIndex = game.currentSongIndex + 1;
+      if (nextIndex < game.shuffledSongOrder.length) {
+        const nextSongId = game.shuffledSongOrder[nextIndex];
+        const nextSongData = playlist.songs.find(s => s.id === nextSongId);
+        if (nextSongData) {
+          const nextUrl = getAudioUrl(playlist.baseAudioUrl, nextSongData.audioFile);
+          audio.preloadAudio(nextUrl, nextSongData.startTime || 0);
+        }
+      }
+    }
+  }, [currentSong?.id, game?.currentSongIndex, audio.isLoading]);
 
   // Sync playing state
   useEffect(() => {
@@ -80,14 +97,18 @@ export function GameScreen() {
   };
 
   const handleNextSong = async () => {
-    await audio.stopWithFade();
-    setShouldAutoPlay(true);
+    // Use preloaded audio for seamless transition
+    await audio.transitionToPreloaded();
+    // Mark as loaded BEFORE state change so useEffect doesn't reload
+    setHasLoadedCurrentSong(true);
     nextSong();
   };
 
   const handlePrevSong = async () => {
+    // For previous, we need to load fresh (no preload for going backwards)
     await audio.stopWithFade();
     setShouldAutoPlay(true);
+    setHasLoadedCurrentSong(false);
     prevSong();
   };
 

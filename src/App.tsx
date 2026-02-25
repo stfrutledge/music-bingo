@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GameProvider } from './context/GameContext';
+import { AudioProvider } from './context/AudioContext';
 
 // Host components
 import { HomeScreen } from './components/host/HomeScreen';
@@ -21,8 +22,9 @@ import { AudioTester } from './components/admin/AudioTester';
 function App() {
   return (
     <BrowserRouter>
-      <GameProvider>
-        <Routes>
+      <AudioProvider>
+        <GameProvider>
+          <Routes>
           {/* Host Mode Routes */}
           <Route path="/" element={<HomeScreen />} />
           <Route path="/host/playlists" element={<PlaylistSelect />} />
@@ -42,8 +44,9 @@ function App() {
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </GameProvider>
+          </Routes>
+        </GameProvider>
+      </AudioProvider>
     </BrowserRouter>
   );
 }
