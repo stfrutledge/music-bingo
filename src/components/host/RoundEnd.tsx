@@ -85,20 +85,20 @@ export function RoundEnd() {
 
     if (status.closestMissing === 1) {
       return {
-        text: `${status.closestCards.length} need 1`,
+        text: `1 away (${status.closestCards.length} cards)`,
         color: 'text-yellow-400',
       };
     }
 
     if (status.closestMissing <= 3) {
       return {
-        text: `Closest: ${status.closestMissing} away`,
+        text: `${status.closestMissing} away`,
         color: 'text-blue-400',
       };
     }
 
     return {
-      text: `${status.closestMissing}+ away`,
+      text: `${status.closestMissing} away`,
       color: 'text-slate-500',
     };
   };
