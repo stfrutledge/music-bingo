@@ -1,15 +1,65 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
 import { BINGO_PATTERNS, getPatternById } from '../../lib/patterns';
+import { checkWin } from '../../lib/winChecker';
 import { Button } from '../shared/Button';
 import { PatternDisplay } from '../shared/PatternDisplay';
+import type { BingoPattern } from '../../types';
+
+interface PatternStatus {
+  bingos: number;
+  closestMissing: number;
+  closestCards: number[];
+}
 
 export function RoundEnd() {
   const navigate = useNavigate();
-  const { game, playlist, advanceRound, endGame } = useGame();
+  const { game, playlist, advanceRound, endGame, cards, excludedSongIds } = useGame();
 
   const [selectedNextPattern, setSelectedNextPattern] = useState<string | null>(null);
+
+  // Calculate status for each pattern based on current called songs
+  const patternStatuses = useMemo(() => {
+    if (!game || !cards.length) return new Map<string, PatternStatus>();
+
+    const calledSet = new Set(game.calledSongIds);
+    const statuses = new Map<string, PatternStatus>();
+
+    // Get active cards based on game range
+    const activeCards = game.cardRangeStart && game.cardRangeEnd
+      ? cards.filter(c => c.cardNumber >= game.cardRangeStart! && c.cardNumber <= game.cardRangeEnd!)
+      : cards;
+
+    for (const pattern of BINGO_PATTERNS) {
+      let bingos = 0;
+      let closestMissing = Infinity;
+      const closestCards: number[] = [];
+
+      for (const card of activeCards) {
+        const result = checkWin(card, pattern, calledSet, excludedSongIds);
+        const missing = result.missingSlots.length;
+
+        if (missing === 0) {
+          bingos++;
+        } else if (missing < closestMissing) {
+          closestMissing = missing;
+          closestCards.length = 0;
+          closestCards.push(card.cardNumber);
+        } else if (missing === closestMissing && closestCards.length < 3) {
+          closestCards.push(card.cardNumber);
+        }
+      }
+
+      statuses.set(pattern.id, {
+        bingos,
+        closestMissing: closestMissing === Infinity ? 0 : closestMissing,
+        closestCards,
+      });
+    }
+
+    return statuses;
+  }, [game?.calledSongIds, cards, game?.cardRangeStart, game?.cardRangeEnd, excludedSongIds]);
 
   if (!game || !playlist) {
     return (
@@ -21,6 +71,37 @@ export function RoundEnd() {
 
   const currentRound = game.rounds[game.currentRound];
   const pattern = getPatternById(currentRound.patternId);
+
+  const getStatusLabel = (p: BingoPattern): { text: string; color: string } => {
+    const status = patternStatuses.get(p.id);
+    if (!status) return { text: '', color: 'text-slate-500' };
+
+    if (status.bingos > 0) {
+      return {
+        text: `${status.bingos} BINGO!`,
+        color: 'text-green-400',
+      };
+    }
+
+    if (status.closestMissing === 1) {
+      return {
+        text: `${status.closestCards.length} need 1`,
+        color: 'text-yellow-400',
+      };
+    }
+
+    if (status.closestMissing <= 3) {
+      return {
+        text: `Closest: ${status.closestMissing} away`,
+        color: 'text-blue-400',
+      };
+    }
+
+    return {
+      text: `${status.closestMissing}+ away`,
+      color: 'text-slate-500',
+    };
+  };
 
   const handleNextRound = () => {
     if (!selectedNextPattern) {
@@ -80,19 +161,25 @@ export function RoundEnd() {
 
           {/* Pattern Selection */}
           <div className="grid grid-cols-3 gap-3 mb-6">
-            {BINGO_PATTERNS.map(p => (
-              <div
-                key={p.id}
-                onClick={() => setSelectedNextPattern(p.id)}
-                className="cursor-pointer"
-              >
-                <PatternDisplay
-                  pattern={p}
-                  size="sm"
-                  selected={selectedNextPattern === p.id}
-                />
-              </div>
-            ))}
+            {BINGO_PATTERNS.map(p => {
+              const statusLabel = getStatusLabel(p);
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedNextPattern(p.id)}
+                  className="cursor-pointer"
+                >
+                  <PatternDisplay
+                    pattern={p}
+                    size="sm"
+                    selected={selectedNextPattern === p.id}
+                  />
+                  <div className={`text-xs text-center mt-1 ${statusLabel.color}`}>
+                    {statusLabel.text}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <Button
