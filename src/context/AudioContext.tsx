@@ -136,10 +136,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const audio = audioRef.current;
     if (!audio) return;
 
+    // Stop any current playback and reset state
+    audio.pause();
     startTimeRef.current = startTime;
 
     setState(prev => ({
       ...prev,
+      isPlaying: false,
       isLoading: true,
       error: null,
       currentTime: startTime,
