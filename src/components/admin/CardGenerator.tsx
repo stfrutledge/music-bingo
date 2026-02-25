@@ -56,15 +56,15 @@ export function CardGenerator() {
     setGenerating(false);
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!playlist || cards.length === 0) return;
-    const pdf = generateCardsPDF(cards, playlist);
+    const pdf = await generateCardsPDF(cards, playlist);
     downloadPDF(pdf, `${playlist.name.toLowerCase().replace(/\s+/g, '-')}-cards.pdf`);
   };
 
-  const handleDownloadSinglePDF = (card: BingoCard) => {
+  const handleDownloadSinglePDF = async (card: BingoCard) => {
     if (!playlist) return;
-    const pdf = generateCardsPDF([card], playlist);
+    const pdf = await generateCardsPDF([card], playlist);
     downloadPDF(pdf, `card-${card.cardNumber}.pdf`);
   };
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
 import { useAudio } from '../../context/AudioContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
@@ -10,10 +10,11 @@ import { Button } from '../shared/Button';
 import { AudioPlayer } from '../shared/AudioPlayer';
 import { PatternDisplay } from '../shared/PatternDisplay';
 import { ThemeToggle } from '../shared/ThemeToggle';
+import { CardPreviewModal } from './CardPreviewModal';
 
 export function GameScreen() {
   const navigate = useNavigate();
-  const { game, playlist, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners, cardsInPlay, endGame } = useGame();
+  const { game, playlist, cards, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners, cardsInPlay, endGame } = useGame();
   const audio = useAudio();
   const wakeLock = useWakeLock();
 
@@ -21,6 +22,8 @@ export function GameScreen() {
   const [showWinnerTracker, setShowWinnerTracker] = useState(true);
   const [hasLoadedCurrentSong, setHasLoadedCurrentSong] = useState(false);
   const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
+  const [loopEnabled, setLoopEnabled] = useState(false);
+  const [previewCardNumber, setPreviewCardNumber] = useState<number | null>(null);
 
   // Get the current audio URL for artwork extraction
   const currentAudioUrl = currentSong && playlist
@@ -60,6 +63,14 @@ export function GameScreen() {
     setPlaying(audio.isPlaying);
   }, [audio.isPlaying]);
 
+  // Handle loop: restart from 0:00 when song ends if loop is enabled
+  useEffect(() => {
+    if (loopEnabled && audio.duration > 0 && audio.currentTime >= audio.duration - 0.5 && !audio.isPlaying) {
+      audio.seek(0);
+      audio.play();
+    }
+  }, [loopEnabled, audio.currentTime, audio.duration, audio.isPlaying]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
@@ -73,7 +84,9 @@ export function GameScreen() {
       <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
         <div className="text-center">
           <p className="text-[var(--text-secondary)] mb-4">No active game</p>
-          <Button variant="primary" onClick={() => navigate('/')}>Go Home</Button>
+          <Link to="/">
+            <Button variant="primary">Go Home</Button>
+          </Link>
         </div>
       </div>
     );
@@ -84,6 +97,9 @@ export function GameScreen() {
   const songNumber = game.currentSongIndex + 1;
   const totalSongs = game.shuffledSongOrder.length;
   const calledSongs = game.calledSongIds.map(id => playlist.songs.find(s => s.id === id)).filter(Boolean);
+  const songMap = new Map(playlist.songs.map(s => [s.id, s]));
+  const calledSongIdsSet = new Set(game.calledSongIds);
+  const previewCard = previewCardNumber ? cards.find(c => c.cardNumber === previewCardNumber) : null;
 
   const handlePlayPause = () => audio.isPlaying ? audio.pause() : audio.play();
 
@@ -194,6 +210,8 @@ export function GameScreen() {
                 isLoading={audio.isLoading}
                 onPlayPause={handlePlayPause}
                 onSeek={audio.seek}
+                loopEnabled={loopEnabled}
+                onLoopToggle={() => setLoopEnabled(!loopEnabled)}
               />
             </div>
 
@@ -265,7 +283,16 @@ export function GameScreen() {
                         <div className="text-xs text-[var(--status-success-text)] font-medium mb-1">BINGO!</div>
                         <div className="flex flex-wrap gap-1">
                           {potentialWinners.filter(w => w.missingCount === 0).map(w => (
-                            <span key={w.cardNumber} className={`px-2 py-1 rounded text-sm font-medium ${confirmedWinners.includes(w.cardNumber) ? 'bg-[var(--accent-green)] text-white' : 'bg-[var(--status-success-bg)] text-[var(--status-success-text)] animate-pulse'}`}>
+                            <button
+                              key={w.cardNumber}
+                              onClick={() => setPreviewCardNumber(w.cardNumber)}
+                              className={`px-2 py-1 rounded text-sm font-medium hidden lg:inline-block hover:ring-2 hover:ring-offset-1 hover:ring-[var(--accent-green)] transition-all ${confirmedWinners.includes(w.cardNumber) ? 'bg-[var(--accent-green)] text-white' : 'bg-[var(--status-success-bg)] text-[var(--status-success-text)] animate-pulse'}`}
+                            >
+                              #{w.cardNumber}{confirmedWinners.includes(w.cardNumber) && ' ✓'}
+                            </button>
+                          ))}
+                          {potentialWinners.filter(w => w.missingCount === 0).map(w => (
+                            <span key={w.cardNumber} className={`px-2 py-1 rounded text-sm font-medium lg:hidden ${confirmedWinners.includes(w.cardNumber) ? 'bg-[var(--accent-green)] text-white' : 'bg-[var(--status-success-bg)] text-[var(--status-success-text)] animate-pulse'}`}>
                               #{w.cardNumber}{confirmedWinners.includes(w.cardNumber) && ' ✓'}
                             </span>
                           ))}
@@ -277,7 +304,16 @@ export function GameScreen() {
                         <div className="text-xs text-[var(--status-warning-text)] font-medium mb-1">Need 1 song</div>
                         <div className="flex flex-wrap gap-1">
                           {potentialWinners.filter(w => w.missingCount === 1).map(w => (
-                            <span key={w.cardNumber} className="px-2 py-1 bg-[var(--status-warning-bg)] text-[var(--status-warning-text)] rounded text-sm">#{w.cardNumber}</span>
+                            <button
+                              key={w.cardNumber}
+                              onClick={() => setPreviewCardNumber(w.cardNumber)}
+                              className="px-2 py-1 bg-[var(--status-warning-bg)] text-[var(--status-warning-text)] rounded text-sm hidden lg:inline-block hover:ring-2 hover:ring-offset-1 hover:ring-[var(--accent-amber)] transition-all"
+                            >
+                              #{w.cardNumber}
+                            </button>
+                          ))}
+                          {potentialWinners.filter(w => w.missingCount === 1).map(w => (
+                            <span key={w.cardNumber} className="px-2 py-1 bg-[var(--status-warning-bg)] text-[var(--status-warning-text)] rounded text-sm lg:hidden">#{w.cardNumber}</span>
                           ))}
                         </div>
                       </div>
@@ -287,7 +323,16 @@ export function GameScreen() {
                         <div className="text-xs text-[var(--status-info-text)] font-medium mb-1">Need 2 songs</div>
                         <div className="flex flex-wrap gap-1">
                           {potentialWinners.filter(w => w.missingCount === 2).map(w => (
-                            <span key={w.cardNumber} className="px-2 py-1 bg-[var(--status-info-bg)] text-[var(--status-info-text)] rounded text-sm">#{w.cardNumber}</span>
+                            <button
+                              key={w.cardNumber}
+                              onClick={() => setPreviewCardNumber(w.cardNumber)}
+                              className="px-2 py-1 bg-[var(--status-info-bg)] text-[var(--status-info-text)] rounded text-sm hidden lg:inline-block hover:ring-2 hover:ring-offset-1 hover:ring-[var(--accent-teal)] transition-all"
+                            >
+                              #{w.cardNumber}
+                            </button>
+                          ))}
+                          {potentialWinners.filter(w => w.missingCount === 2).map(w => (
+                            <span key={w.cardNumber} className="px-2 py-1 bg-[var(--status-info-bg)] text-[var(--status-info-text)] rounded text-sm lg:hidden">#{w.cardNumber}</span>
                           ))}
                         </div>
                       </div>
@@ -346,6 +391,16 @@ export function GameScreen() {
         <div className="fixed bottom-2 left-2 text-xs text-[var(--text-muted)]">
           {wakeLock.isActive ? '🔒 Screen on' : ''}
         </div>
+      )}
+
+      {/* Card Preview Modal (Desktop only) */}
+      {previewCard && (
+        <CardPreviewModal
+          card={previewCard}
+          songMap={songMap}
+          calledSongIds={calledSongIdsSet}
+          onClose={() => setPreviewCardNumber(null)}
+        />
       )}
     </div>
   );
