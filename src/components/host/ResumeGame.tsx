@@ -4,6 +4,7 @@ import type { GameState, Playlist } from '../../types';
 import { getAllGames, getPlaylist } from '../../lib/db';
 import { useGame } from '../../context/GameContext';
 import { Button } from '../shared/Button';
+import { AppShell } from '../shared/AppShell';
 
 interface GameWithPlaylist {
   game: GameState;
@@ -49,66 +50,74 @@ export function ResumeGame() {
   };
 
   return (
-    <div className="min-h-screen bg-navy-950 p-4 safe-area-inset">
-      <div className="max-w-md mx-auto">
-        <header className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-white">Resume Game</h1>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
-            Cancel
-          </Button>
-        </header>
-
-        {loading ? (
-          <div className="text-center py-12 text-slate-400">
-            Loading...
-          </div>
-        ) : games.length === 0 ? (
-          <div className="card text-center py-12">
-            <p className="text-slate-400 mb-4">No active games to resume</p>
-            <Button variant="primary" onClick={() => navigate('/host/playlists')}>
-              Start New Game
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {games.map(({ game, playlist }) => (
-              <button
-                key={game.id}
-                onClick={() => playlist && handleResume(game, playlist)}
-                disabled={!playlist}
-                className="w-full card text-left hover:bg-navy-800 transition-colors disabled:opacity-50"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      {playlist?.name || 'Unknown Playlist'}
-                    </h3>
-                    <p className="text-sm text-slate-400">
-                      Round {game.currentRound + 1} • {game.calledSongIds.length} songs played
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Started {formatDate(game.startedAt)}
-                    </p>
-                  </div>
-                  <svg
-                    className="w-5 h-5 text-slate-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+    <AppShell title="Resume Game" maxWidth="lg">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">Resume Game</h1>
+          <p className="text-[var(--text-secondary)] mt-1">Continue a previous session</p>
+        </div>
+        <Button variant="ghost" onClick={() => navigate('/')}>
+          Cancel
+        </Button>
       </div>
-    </div>
+
+      {loading ? (
+        <div className="text-center py-12 text-[var(--text-secondary)]">
+          Loading...
+        </div>
+      ) : games.length === 0 ? (
+        <div className="card text-center py-16 max-w-md mx-auto">
+          <div className="w-16 h-16 rounded-full bg-[var(--bg-hover)] flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">No Active Games</h2>
+          <p className="text-[var(--text-secondary)] mb-6">Start a new game to get playing</p>
+          <Button variant="primary" onClick={() => navigate('/host/playlists')}>
+            Start New Game
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {games.map(({ game, playlist }) => (
+            <button
+              key={game.id}
+              onClick={() => playlist && handleResume(game, playlist)}
+              disabled={!playlist}
+              className="card text-left hover:border-[var(--accent-green)] hover:shadow-md transition-all group disabled:opacity-50"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-green)] transition-colors">
+                    {playlist?.name || 'Unknown Playlist'}
+                  </h3>
+                  <p className="text-sm text-[var(--text-secondary)] mt-1">
+                    Round {game.currentRound + 1} &bull; {game.calledSongIds.length} songs played
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] mt-2">
+                    Started {formatDate(game.startedAt)}
+                  </p>
+                </div>
+                <svg
+                  className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--accent-green)] transition-colors flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </AppShell>
   );
 }

@@ -4,6 +4,7 @@ import type { Playlist, Song } from '../../types';
 import { getPlaylist } from '../../lib/db';
 import { getAudioUrl } from '../../lib/audioCache';
 import { Button } from '../shared/Button';
+import { AppShell } from '../shared/AppShell';
 
 interface SongStatus {
   song: Song;
@@ -111,88 +112,45 @@ export function AudioTester() {
   const pendingCount = songStatuses.filter(s => s.status === 'pending').length;
 
   if (!playlist) {
-    return (
-      <div className="min-h-screen bg-navy-950 p-4 flex items-center justify-center">
-        <div className="text-slate-400">Loading...</div>
-      </div>
-    );
+    return <AppShell centered><div className="text-[var(--text-secondary)]">Loading...</div></AppShell>;
   }
 
   return (
-    <div className="min-h-screen bg-navy-950 p-4">
-      <div className="max-w-4xl mx-auto">
-        <header className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Audio Tester</h1>
-            <p className="text-slate-400">{playlist.name}</p>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
-            Back to Admin
-          </Button>
-        </header>
-
-        {/* Summary */}
-        <div className="card mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex gap-6">
-              <div>
-                <span className="text-2xl font-bold text-white">{playlist.songs.length}</span>
-                <span className="text-slate-400 ml-2">total songs</span>
-              </div>
-              {successCount > 0 && (
-                <div>
-                  <span className="text-2xl font-bold text-green-400">{successCount}</span>
-                  <span className="text-slate-400 ml-2">found</span>
-                </div>
-              )}
-              {errorCount > 0 && (
-                <div>
-                  <span className="text-2xl font-bold text-red-400">{errorCount}</span>
-                  <span className="text-slate-400 ml-2">missing</span>
-                </div>
-              )}
-              {pendingCount > 0 && pendingCount !== playlist.songs.length && (
-                <div>
-                  <span className="text-2xl font-bold text-slate-400">{pendingCount}</span>
-                  <span className="text-slate-400 ml-2">pending</span>
-                </div>
-              )}
-            </div>
-            <Button
-              variant="primary"
-              onClick={testAllSongs}
-              disabled={testing}
-            >
-              {testing ? 'Testing...' : 'Test All Files'}
-            </Button>
-          </div>
+    <AppShell title="Audio Tester" subtitle={playlist.name} maxWidth="xl">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">Audio Tester</h1>
+          <p className="text-[var(--text-secondary)] mt-1">{playlist.name}</p>
         </div>
+        <Button variant="ghost" onClick={() => navigate('/admin')}>
+          Back to Admin
+        </Button>
+      </div>
 
-        {/* Base URL Info */}
-        <div className="card mb-6">
-          <h3 className="text-sm font-semibold text-white mb-2">Base Audio URL</h3>
-          <code className="text-sm text-indigo-400 break-all">{playlist.baseAudioUrl}</code>
-        </div>
-
-        {/* Song List */}
-        <div className="space-y-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Content - Song List */}
+        <div className="lg:col-span-8 xl:col-span-9">
+          <div className="card">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Songs ({playlist.songs.length})</h2>
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
           {songStatuses.map(({ song, status, error }, index) => (
             <div
               key={song.id}
               className="card flex items-center gap-4"
             >
-              <span className="text-slate-500 w-8 text-center">{index + 1}</span>
+              <span className="text-[var(--text-muted)] w-8 text-center">{index + 1}</span>
 
               {/* Status indicator */}
               <div className="w-8">
                 {status === 'pending' && (
-                  <div className="w-3 h-3 rounded-full bg-slate-600" />
+                  <div className="w-3 h-3 rounded-full bg-[var(--text-muted)]" />
                 )}
                 {status === 'loading' && (
-                  <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse" />
+                  <div className="w-3 h-3 rounded-full bg-[var(--accent-amber)] animate-pulse" />
                 )}
                 {status === 'success' && (
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                  <div className="w-3 h-3 rounded-full bg-[var(--accent-green)]" />
                 )}
                 {status === 'error' && (
                   <div className="w-3 h-3 rounded-full bg-red-500" />
@@ -201,18 +159,18 @@ export function AudioTester() {
 
               {/* Song info */}
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-white truncate">{song.title}</div>
-                <div className="text-sm text-slate-400 truncate">{song.artist}</div>
+                <div className="font-medium text-[var(--text-primary)] truncate">{song.title}</div>
+                <div className="text-sm text-[var(--text-secondary)] truncate">{song.artist}</div>
               </div>
 
               {/* Filename */}
-              <div className="hidden md:block text-xs text-slate-500 truncate max-w-[200px]">
+              <div className="hidden md:block text-xs text-[var(--text-muted)] truncate max-w-[200px]">
                 {song.audioFile}
               </div>
 
               {/* Error message */}
               {error && (
-                <div className="text-sm text-red-400">{error}</div>
+                <div className="text-sm text-[var(--status-error-text)]">{error}</div>
               )}
 
               {/* Play button */}
@@ -225,8 +183,61 @@ export function AudioTester() {
               </Button>
             </div>
           ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="lg:col-span-4 xl:col-span-3 space-y-6">
+          {/* Test Actions */}
+          <div className="card">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Test Audio</h3>
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={testAllSongs}
+              disabled={testing}
+            >
+              {testing ? 'Testing...' : 'Test All Files'}
+            </Button>
+          </div>
+
+          {/* Summary */}
+          <div className="card">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 uppercase tracking-wide">Summary</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-[var(--bg-hover)] rounded-lg">
+                <span className="text-[var(--text-secondary)]">Total</span>
+                <span className="text-2xl font-bold text-[var(--text-primary)]">{playlist.songs.length}</span>
+              </div>
+              {successCount > 0 && (
+                <div className="flex justify-between items-center p-3 bg-[var(--status-success-bg)] rounded-lg">
+                  <span className="text-[var(--status-success-text)]">Found</span>
+                  <span className="text-2xl font-bold text-[var(--status-success-text)]">{successCount}</span>
+                </div>
+              )}
+              {errorCount > 0 && (
+                <div className="flex justify-between items-center p-3 bg-[var(--status-error-bg)] rounded-lg">
+                  <span className="text-[var(--status-error-text)]">Missing</span>
+                  <span className="text-2xl font-bold text-[var(--status-error-text)]">{errorCount}</span>
+                </div>
+              )}
+              {pendingCount > 0 && pendingCount !== playlist.songs.length && (
+                <div className="flex justify-between items-center p-3 bg-[var(--bg-hover)] rounded-lg">
+                  <span className="text-[var(--text-secondary)]">Pending</span>
+                  <span className="text-2xl font-bold text-[var(--text-secondary)]">{pendingCount}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Base URL Info */}
+          <div className="card">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2 uppercase tracking-wide">Base Audio URL</h3>
+            <code className="text-sm text-[var(--accent-teal)] break-all">{playlist.baseAudioUrl}</code>
+          </div>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

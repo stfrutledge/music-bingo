@@ -5,6 +5,7 @@ import { BINGO_PATTERNS, getPatternById } from '../../lib/patterns';
 import { checkWin } from '../../lib/winChecker';
 import { Button } from '../shared/Button';
 import { PatternDisplay } from '../shared/PatternDisplay';
+import { AppShell } from '../shared/AppShell';
 import type { BingoPattern } from '../../types';
 
 interface PatternStatus {
@@ -62,11 +63,7 @@ export function RoundEnd() {
   }, [game?.calledSongIds, cards, game?.cardRangeStart, game?.cardRangeEnd, excludedSongIds]);
 
   if (!game || !playlist) {
-    return (
-      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
-        <div className="text-slate-400">No active game</div>
-      </div>
-    );
+    return <AppShell centered><div className="text-[var(--text-secondary)]">No active game</div></AppShell>;
   }
 
   const currentRound = game.rounds[game.currentRound];
@@ -74,12 +71,12 @@ export function RoundEnd() {
 
   const getStatusLabel = (p: BingoPattern): { text: string; color: string } => {
     const status = patternStatuses.get(p.id);
-    if (!status) return { text: '', color: 'text-slate-500' };
+    if (!status) return { text: '', color: 'text-[var(--text-muted)]' };
 
     if (status.bingos > 0) {
       return {
         text: `${status.bingos} BINGO!`,
-        color: 'text-green-400',
+        color: 'text-[var(--status-success-text)]',
       };
     }
 
@@ -90,20 +87,20 @@ export function RoundEnd() {
     if (status.closestMissing === 1) {
       return {
         text: `${cardLabel} is 1 away`,
-        color: 'text-yellow-400',
+        color: 'text-[var(--status-warning-text)]',
       };
     }
 
     if (status.closestMissing <= 3) {
       return {
         text: `${cardLabel} is ${status.closestMissing} away`,
-        color: 'text-blue-400',
+        color: 'text-[var(--status-info-text)]',
       };
     }
 
     return {
       text: `${cardLabel} is ${status.closestMissing} away`,
-      color: 'text-slate-500',
+      color: 'text-[var(--text-muted)]',
     };
   };
 
@@ -126,107 +123,111 @@ export function RoundEnd() {
   };
 
   return (
-    <div className="min-h-screen bg-navy-950 p-4 safe-area-inset">
-      <div className="max-w-md mx-auto">
-        <header className="mb-8">
-          <h1 className="text-2xl font-bold text-white text-center">
-            End of Round {currentRound.roundNumber}
+    <AppShell title={`Round ${currentRound.roundNumber} Complete`} maxWidth="xl">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">
+            Round {currentRound.roundNumber} Complete
           </h1>
-        </header>
-
-        {/* Round Summary */}
-        <div className="card mb-6 text-center">
-          <div className="text-slate-400 mb-2">Pattern</div>
-          <div className="text-white font-semibold text-lg mb-4">{pattern.name}</div>
-
-          {currentRound.winners.length > 0 ? (
-            <div className="text-green-400">
-              {currentRound.winners.length} winner{currentRound.winners.length !== 1 ? 's' : ''}
-              <div className="text-sm text-slate-400 mt-1">
-                Cards: {currentRound.winners.map(w => `#${w.cardNumber}`).join(', ')}
-              </div>
-            </div>
-          ) : (
-            <div className="text-slate-500">No winners yet</div>
-          )}
+          <p className="text-[var(--text-secondary)] mt-1">Pattern: {pattern.name}</p>
         </div>
+        <Button variant="secondary" onClick={handleResume}>
+          Resume Round
+        </Button>
+      </div>
 
-        {/* Resume option */}
-        <div className="mb-6">
-          <Button variant="secondary" fullWidth onClick={handleResume}>
-            Resume Round
-          </Button>
-        </div>
-
-        {/* Reset Cards Option */}
-        <div className="card mb-6">
-          <div className="text-sm text-slate-400 mb-2">
-            Players keeping marks? Or fresh start?
-          </div>
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => {
-              resetCalledSongs();
-              alert('Cards reset! Tell players to clear their marks.');
-            }}
-          >
-            Reset All Cards
-          </Button>
-          <div className="text-xs text-slate-500 mt-2 text-center">
-            Clears all called songs - players wipe their cards
-          </div>
-        </div>
-
-        <div className="border-t border-navy-700 pt-6 mb-6">
-          <h2 className="text-lg font-semibold text-white mb-4 text-center">
-            Start Next Round
-          </h2>
-
-          {/* Pattern Selection */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            {BINGO_PATTERNS.map(p => {
-              const statusLabel = getStatusLabel(p);
-              return (
-                <div
-                  key={p.id}
-                  onClick={() => setSelectedNextPattern(p.id)}
-                  className="cursor-pointer"
-                >
-                  <PatternDisplay
-                    pattern={p}
-                    size="sm"
-                    selected={selectedNextPattern === p.id}
-                  />
-                  <div className={`text-xs text-center mt-1 ${statusLabel.color}`}>
-                    {statusLabel.text}
-                  </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Round Summary & Actions */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Round Summary */}
+          <div className="card text-center">
+            <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-2 uppercase tracking-wide">Round Summary</h2>
+            {currentRound.winners.length > 0 ? (
+              <div className="text-[var(--status-success-text)]">
+                <div className="text-3xl font-bold">{currentRound.winners.length}</div>
+                <div className="text-sm">winner{currentRound.winners.length !== 1 ? 's' : ''}</div>
+                <div className="text-sm text-[var(--text-secondary)] mt-2">
+                  Cards: {currentRound.winners.map(w => `#${w.cardNumber}`).join(', ')}
                 </div>
-              );
-            })}
+              </div>
+            ) : (
+              <div className="text-[var(--text-muted)]">No winners yet</div>
+            )}
           </div>
 
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            onClick={handleNextRound}
-            disabled={!selectedNextPattern}
-          >
-            Start Round {currentRound.roundNumber + 1}
-          </Button>
-        </div>
+          {/* Reset Cards Option */}
+          <div className="card">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Card Reset</h3>
+            <div className="text-sm text-[var(--text-secondary)] mb-3">
+              Players keeping marks? Or fresh start?
+            </div>
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => {
+                resetCalledSongs();
+                alert('Cards reset! Tell players to clear their marks.');
+              }}
+            >
+              Reset All Cards
+            </Button>
+            <div className="text-xs text-[var(--text-muted)] mt-2 text-center">
+              Clears all called songs - players wipe their cards
+            </div>
+          </div>
 
-        <div className="border-t border-navy-700 pt-6">
-          <Button
-            variant="danger"
-            fullWidth
-            onClick={handleEndGame}
-          >
+          {/* End Game */}
+          <Button variant="danger" fullWidth onClick={handleEndGame}>
             End Game
           </Button>
         </div>
+
+        {/* Right Column - Next Round Setup */}
+        <div className="lg:col-span-2">
+          <div className="card">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+              Start Next Round
+            </h2>
+            <p className="text-sm text-[var(--text-secondary)] mb-6">
+              Select a pattern for Round {currentRound.roundNumber + 1}
+            </p>
+
+            {/* Pattern Selection */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+              {BINGO_PATTERNS.map(p => {
+                const statusLabel = getStatusLabel(p);
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => setSelectedNextPattern(p.id)}
+                    className="cursor-pointer"
+                  >
+                    <PatternDisplay
+                      pattern={p}
+                      size="sm"
+                      selected={selectedNextPattern === p.id}
+                    />
+                    <div className={`text-xs text-center mt-1 ${statusLabel.color}`}>
+                      {statusLabel.text}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onClick={handleNextRound}
+              disabled={!selectedNextPattern}
+            >
+              Start Round {currentRound.roundNumber + 1}
+            </Button>
+          </div>
+        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

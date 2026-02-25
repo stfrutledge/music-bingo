@@ -4,6 +4,7 @@ import type { Playlist } from '../../types';
 import { getPlaylist } from '../../lib/db';
 import { downloadPlaylistAudio, getCacheStatus, clearPlaylistCache, checkAudioAvailability } from '../../lib/audioCache';
 import { Button } from '../shared/Button';
+import { AppShell } from '../shared/AppShell';
 
 export function AudioDownload() {
   const { id } = useParams<{ id: string }>();
@@ -91,9 +92,9 @@ export function AudioDownload() {
 
   if (!playlist || checking) {
     return (
-      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
-        <div className="text-slate-400">{checking ? 'Checking audio files...' : 'Loading...'}</div>
-      </div>
+      <AppShell centered>
+        <div className="text-[var(--text-secondary)]">{checking ? 'Checking audio files...' : 'Loading...'}</div>
+      </AppShell>
     );
   }
 
@@ -104,22 +105,21 @@ export function AudioDownload() {
   const isComplete = progress.downloaded === progress.total && progress.total > 0;
 
   return (
-    <div className="min-h-screen bg-navy-950 p-4 flex flex-col items-center justify-center safe-area-inset">
-      <div className="max-w-md w-full">
-        <div className="card text-center">
-          <h2 className="text-xl font-bold text-white mb-2">{playlist.name}</h2>
-          <p className="text-slate-400 mb-6">Download audio for offline play</p>
+    <AppShell title="Download Audio" maxWidth="sm" centered>
+      <div className="card text-center">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">{playlist.name}</h2>
+          <p className="text-[var(--text-secondary)] mb-6">Download audio for offline play</p>
 
           {/* Progress */}
           <div className="mb-6">
-            <div className="flex justify-between text-sm text-slate-400 mb-2">
+            <div className="flex justify-between text-sm text-[var(--text-secondary)] mb-2">
               <span>{progress.downloaded} of {progress.total} songs</span>
               <span>{progressPercent}%</span>
             </div>
-            <div className="h-3 bg-navy-700 rounded-full overflow-hidden">
+            <div className="h-3 bg-[var(--bg-hover)] rounded-full overflow-hidden">
               <div
                 className={`h-full transition-all duration-300 ${
-                  isComplete ? 'bg-green-500' : 'bg-indigo-500'
+                  isComplete ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-teal)]'
                 }`}
                 style={{ width: `${progressPercent}%` }}
               />
@@ -183,21 +183,20 @@ export function AudioDownload() {
             </Button>
           </div>
 
-          {/* Info */}
-          <p className="mt-6 text-xs text-slate-500">
-            {isLocal ? (
-              'Files appear to be hosted locally. Download to cache for offline use, or skip if you have a local server running.'
-            ) : (
-              'Downloaded audio will be cached for offline use.'
-            )}
-            {cachedCount > 0 && cachedCount < progress.total && (
-              <span className="block mt-1 text-yellow-400">
-                Some files may have failed to download.
-              </span>
-            )}
-          </p>
-        </div>
+        {/* Info */}
+        <p className="mt-6 text-xs text-[var(--text-muted)]">
+          {isLocal ? (
+            'Files appear to be hosted locally. Download to cache for offline use, or skip if you have a local server running.'
+          ) : (
+            'Downloaded audio will be cached for offline use.'
+          )}
+          {cachedCount > 0 && cachedCount < progress.total && (
+            <span className="block mt-1 text-[var(--status-warning-text)]">
+              Some files may have failed to download.
+            </span>
+          )}
+        </p>
       </div>
-    </div>
+    </AppShell>
   );
 }

@@ -4,6 +4,7 @@ import type { Playlist, Song } from '../../types';
 import { getPlaylist, savePlaylist } from '../../lib/db';
 import { generateAudioFilename } from '../../lib/audioCache';
 import { Button } from '../shared/Button';
+import { AppShell } from '../shared/AppShell';
 
 const DEFAULT_BASE_URL = 'https://yourusername.github.io/music-bingo/packs/';
 
@@ -170,24 +171,31 @@ export function PlaylistEditor() {
   };
 
   return (
-    <div className="min-h-screen bg-navy-950 p-4">
-      <div className="max-w-4xl mx-auto">
-        <header className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-white">
+    <AppShell title={isNew ? 'Create Playlist' : 'Edit Playlist'} maxWidth="xl">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">
             {isNew ? 'Create Playlist' : 'Edit Playlist'}
           </h1>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
-            Cancel
-          </Button>
-        </header>
+          {!isNew && name && (
+            <p className="text-[var(--text-secondary)] mt-1">{name}</p>
+          )}
+        </div>
+        <Button variant="ghost" onClick={() => navigate('/admin')}>
+          Cancel
+        </Button>
+      </div>
 
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content - 2 columns on desktop */}
+        <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-white mb-4">Playlist Info</h2>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 uppercase tracking-wide">Playlist Info</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Name *</label>
+                <label className="block text-sm text-[var(--text-secondary)] mb-1">Name *</label>
                 <input
                   type="text"
                   value={name}
@@ -197,7 +205,7 @@ export function PlaylistEditor() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Description</label>
+                <label className="block text-sm text-[var(--text-secondary)] mb-1">Description</label>
                 <input
                   type="text"
                   value={description}
@@ -207,7 +215,7 @@ export function PlaylistEditor() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Base Audio URL</label>
+                <label className="block text-sm text-[var(--text-secondary)] mb-1">Base Audio URL</label>
                 <input
                   type="text"
                   value={baseAudioUrl}
@@ -215,7 +223,7 @@ export function PlaylistEditor() {
                   className="input"
                   placeholder={DEFAULT_BASE_URL}
                 />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   Audio files will be loaded from this URL + filename
                 </p>
               </div>
@@ -225,10 +233,10 @@ export function PlaylistEditor() {
           {/* Songs */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 Songs ({songs.length})
                 {songs.length < 24 && (
-                  <span className="text-yellow-400 text-sm ml-2">
+                  <span className="text-[var(--status-warning-text)] text-sm ml-2">
                     (minimum 24 required)
                   </span>
                 )}
@@ -255,8 +263,8 @@ export function PlaylistEditor() {
             </div>
 
             {showJsonImport && (
-              <div className="mb-4 p-4 bg-navy-800 rounded-lg">
-                <label className="block text-sm text-slate-400 mb-2">
+              <div className="mb-4 p-4 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-lg">
+                <label className="block text-sm text-[var(--text-secondary)] mb-2">
                   Paste JSON from detect_start_times.py script
                 </label>
                 <textarea
@@ -277,8 +285,8 @@ export function PlaylistEditor() {
             )}
 
             {showBulkInput && (
-              <div className="mb-4 p-4 bg-navy-800 rounded-lg">
-                <label className="block text-sm text-slate-400 mb-2">
+              <div className="mb-4 p-4 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-lg">
+                <label className="block text-sm text-[var(--text-secondary)] mb-2">
                   Paste songs (one per line, format: "Title - Artist")
                 </label>
                 <textarea
@@ -302,9 +310,9 @@ export function PlaylistEditor() {
               {songs.map((song, index) => (
                 <div
                   key={song.id}
-                  className="flex items-center gap-2 p-2 bg-navy-800 rounded"
+                  className="flex items-center gap-2 p-2 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded"
                 >
-                  <span className="text-slate-500 w-8 text-center">{index + 1}</span>
+                  <span className="text-[var(--text-muted)] w-8 text-center">{index + 1}</span>
                   <input
                     type="text"
                     value={song.title}
@@ -332,20 +340,20 @@ export function PlaylistEditor() {
                     <button
                       onClick={() => moveSong(index, 'up')}
                       disabled={index === 0}
-                      className="p-1 text-slate-400 hover:text-white disabled:opacity-30"
+                      className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30"
                     >
                       ↑
                     </button>
                     <button
                       onClick={() => moveSong(index, 'down')}
                       disabled={index === songs.length - 1}
-                      className="p-1 text-slate-400 hover:text-white disabled:opacity-30"
+                      className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30"
                     >
                       ↓
                     </button>
                     <button
                       onClick={() => removeSong(index)}
-                      className="p-1 text-red-400 hover:text-red-300"
+                      className="p-1 text-[var(--status-error-text)] hover:opacity-80"
                     >
                       ×
                     </button>
@@ -355,21 +363,48 @@ export function PlaylistEditor() {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-4">
-            <Button variant="secondary" onClick={() => navigate('/admin')}>
-              Cancel
-            </Button>
-            <Button
-              variant="success"
-              onClick={handleSave}
-              disabled={saving || !name.trim() || songs.length < 24}
-            >
-              {saving ? 'Saving...' : 'Save Playlist'}
-            </Button>
+        </div>
+
+        {/* Sidebar - Actions and Info */}
+        <div className="space-y-6">
+          {/* Save Card */}
+          <div className="card">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Actions</h3>
+            <div className="space-y-3">
+              <Button
+                variant="success"
+                fullWidth
+                onClick={handleSave}
+                disabled={saving || !name.trim() || songs.length < 24}
+              >
+                {saving ? 'Saving...' : 'Save Playlist'}
+              </Button>
+              <Button variant="secondary" fullWidth onClick={() => navigate('/admin')}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+
+          {/* Info Card */}
+          <div className="card">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 uppercase tracking-wide">Info</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[var(--text-secondary)]">Songs:</span>
+                <span className={`font-medium ${songs.length >= 24 ? 'text-[var(--status-success-text)]' : 'text-[var(--status-warning-text)]'}`}>
+                  {songs.length}/24 minimum
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--text-secondary)]">Status:</span>
+                <span className={`font-medium ${songs.length >= 24 && name.trim() ? 'text-[var(--status-success-text)]' : 'text-[var(--text-muted)]'}`}>
+                  {songs.length >= 24 && name.trim() ? 'Ready to save' : 'Incomplete'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

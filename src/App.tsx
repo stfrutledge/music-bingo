@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GameProvider } from './context/GameContext';
 import { AudioProvider } from './context/AudioContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Host components
 import { HomeScreen } from './components/host/HomeScreen';
@@ -22,31 +23,33 @@ import { AudioTester } from './components/admin/AudioTester';
 function App() {
   return (
     <BrowserRouter>
-      <AudioProvider>
-        <GameProvider>
-          <Routes>
-          {/* Host Mode Routes */}
-          <Route path="/" element={<HomeScreen />} />
-          <Route path="/host/playlists" element={<PlaylistSelect />} />
-          <Route path="/host/download/:id" element={<AudioDownload />} />
-          <Route path="/host/setup/:id" element={<GameSetup />} />
-          <Route path="/host/game" element={<GameScreen />} />
-          <Route path="/host/verify" element={<WinnerVerification />} />
-          <Route path="/host/round-end" element={<RoundEnd />} />
-          <Route path="/host/game-over" element={<GameOver />} />
-          <Route path="/host/resume" element={<ResumeGame />} />
+      <ThemeProvider>
+        <AudioProvider>
+          <GameProvider>
+            <Routes>
+            {/* Host Mode Routes */}
+            <Route path="/" element={<HomeScreen />} />
+            <Route path="/host/playlists" element={<PlaylistSelect />} />
+            <Route path="/host/download/:id" element={<AudioDownload />} />
+            <Route path="/host/setup/:id" element={<GameSetup />} />
+            <Route path="/host/game" element={<GameScreen />} />
+            <Route path="/host/verify" element={<WinnerVerification />} />
+            <Route path="/host/round-end" element={<RoundEnd />} />
+            <Route path="/host/game-over" element={<GameOver />} />
+            <Route path="/host/resume" element={<ResumeGame />} />
 
-          {/* Admin Mode Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/playlist/:id" element={<PlaylistEditor />} />
-          <Route path="/admin/cards/:id" element={<CardGenerator />} />
-          <Route path="/admin/audio/:id" element={<AudioTester />} />
+            {/* Admin Mode Routes */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/playlist/:id" element={<PlaylistEditor />} />
+            <Route path="/admin/cards/:id" element={<CardGenerator />} />
+            <Route path="/admin/audio/:id" element={<AudioTester />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </GameProvider>
-      </AudioProvider>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </GameProvider>
+        </AudioProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

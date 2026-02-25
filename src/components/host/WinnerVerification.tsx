@@ -7,6 +7,7 @@ import { getPatternById } from '../../lib/patterns';
 import { checkWin } from '../../lib/winChecker';
 import { Button } from '../shared/Button';
 import { BingoGrid } from '../shared/BingoGrid';
+import { AppShell } from '../shared/AppShell';
 
 export function WinnerVerification() {
   const navigate = useNavigate();
@@ -28,11 +29,7 @@ export function WinnerVerification() {
   }, [cardNumber]);
 
   if (!game || !playlist) {
-    return (
-      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
-        <div className="text-slate-400">No active game</div>
-      </div>
-    );
+    return <AppShell centered><div className="text-[var(--text-secondary)]">No active game</div></AppShell>;
   }
 
   const currentRound = game.rounds[game.currentRound];
@@ -79,118 +76,135 @@ export function WinnerVerification() {
   const calledSet = new Set(game.calledSongIds);
 
   return (
-    <div className="min-h-screen bg-navy-950 p-4 safe-area-inset">
-      <div className="max-w-md mx-auto">
-        <header className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-white">Verify Winner</h1>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/host/game')}>
-            Cancel
-          </Button>
-        </header>
-
-        {/* Pattern Info */}
-        <div className="card mb-6 text-center">
-          <div className="text-slate-400 text-sm mb-2">Current Pattern</div>
-          <div className="text-white font-semibold">{pattern.name}</div>
+    <AppShell title="Verify Winner" maxWidth="lg">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">Verify Winner</h1>
+          <p className="text-[var(--text-secondary)] mt-1">Pattern: {pattern.name}</p>
         </div>
-
-        {/* Card Number Input */}
-        <div className="card mb-6">
-          <label className="block text-sm text-slate-400 mb-2">
-            Enter Card Number
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={cardNumber}
-              onChange={e => setCardNumber(e.target.value)}
-              className="input flex-1 text-2xl text-center"
-              placeholder="#"
-              min="1"
-              inputMode="numeric"
-            />
-            <Button
-              variant="primary"
-              onClick={handleCheckCard}
-              disabled={loading || !cardNumber}
-            >
-              {loading ? 'Checking...' : 'Check'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Result */}
-        {result && card && (
-          <div className="space-y-4">
-            {/* Verdict */}
-            <div
-              className={`card text-center ${
-                result.isWin ? 'bg-green-900/50 border-green-500' : 'bg-red-900/50 border-red-500'
-              } border-2`}
-            >
-              <div className={`text-3xl font-bold ${result.isWin ? 'text-green-400' : 'text-red-400'}`}>
-                {result.isWin ? 'WINNER!' : 'NOT A WINNER'}
-              </div>
-              {!result.isWin && result.missingSlots.length > 0 && (
-                <div className="text-slate-400 mt-2">
-                  Missing {result.missingSlots.length} song{result.missingSlots.length !== 1 ? 's' : ''}
-                </div>
-              )}
-            </div>
-
-            {/* Card Display */}
-            <div className="card">
-              <div className="text-center mb-4">
-                <span className="text-lg font-bold text-white">Card #{card.cardNumber}</span>
-              </div>
-              <BingoGrid
-                slots={card.slots}
-                songMap={songMap}
-                calledSongIds={calledSet}
-                excludedSongIds={excludedSongIds}
-                highlightedSlots={result.isWin ? result.matchedSlots : []}
-                patternSlots={result.isWin ? [] : result.matchedSlots}
-                size="sm"
-              />
-              <div className="mt-4 flex gap-2 text-sm justify-center">
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-indigo-600 rounded" /> Called
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-green-600 rounded" /> Win
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 border-2 border-yellow-400 rounded" /> Needed
-                </span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            {result.isWin && (
-              <Button
-                variant="success"
-                size="lg"
-                fullWidth
-                onClick={handleConfirmWinner}
-              >
-                Confirm Winner
-              </Button>
-            )}
-
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={() => {
-                setCardNumber('');
-                setCard(null);
-                setResult(null);
-              }}
-            >
-              Check Another Card
-            </Button>
-          </div>
-        )}
+        <Button variant="ghost" onClick={() => navigate('/host/game')}>
+          Back to Game
+        </Button>
       </div>
-    </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Column - Input */}
+        <div className="space-y-6">
+          {/* Card Number Input */}
+          <div className="card">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Enter Card Number</h2>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={cardNumber}
+                onChange={e => setCardNumber(e.target.value)}
+                className="input flex-1 text-2xl text-center"
+                placeholder="#"
+                min="1"
+                inputMode="numeric"
+              />
+              <Button
+                variant="primary"
+                onClick={handleCheckCard}
+                disabled={loading || !cardNumber}
+              >
+                {loading ? 'Checking...' : 'Check'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Pattern Info - Mobile */}
+          <div className="card lg:hidden text-center">
+            <div className="text-[var(--text-secondary)] text-sm mb-2 uppercase tracking-wide">Current Pattern</div>
+            <div className="text-[var(--text-primary)] font-semibold">{pattern.name}</div>
+          </div>
+        </div>
+
+        {/* Right Column - Result */}
+        <div className="space-y-6">
+          {result && card ? (
+            <>
+              {/* Verdict */}
+              <div
+                className={`card text-center ${
+                  result.isWin
+                    ? 'bg-[var(--status-success-bg)] border-[var(--accent-green)]'
+                    : 'bg-[var(--status-error-bg)] border-red-500'
+                } border-2`}
+              >
+                <div className={`text-3xl font-bold ${result.isWin ? 'text-[var(--status-success-text)]' : 'text-[var(--status-error-text)]'}`}>
+                  {result.isWin ? 'WINNER!' : 'NOT A WINNER'}
+                </div>
+                {!result.isWin && result.missingSlots.length > 0 && (
+                  <div className="text-[var(--text-secondary)] mt-2">
+                    Missing {result.missingSlots.length} song{result.missingSlots.length !== 1 ? 's' : ''}
+                  </div>
+                )}
+              </div>
+
+              {/* Card Display */}
+              <div className="card">
+                <div className="text-center mb-4">
+                  <span className="text-lg font-bold text-[var(--text-primary)]">Card #{card.cardNumber}</span>
+                </div>
+                <div className="max-w-sm mx-auto">
+                  <BingoGrid
+                    slots={card.slots}
+                    songMap={songMap}
+                    calledSongIds={calledSet}
+                    excludedSongIds={excludedSongIds}
+                    highlightedSlots={result.isWin ? result.matchedSlots : []}
+                    patternSlots={result.isWin ? [] : result.matchedSlots}
+                    size="sm"
+                  />
+                </div>
+                <div className="mt-4 flex gap-2 text-sm justify-center flex-wrap">
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-3 bg-[var(--accent-teal)] rounded" /> Called
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-3 bg-[var(--accent-green)] rounded" /> Win
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-3 border-2 border-[var(--accent-amber)] rounded" /> Needed
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-3">
+                {result.isWin && (
+                  <Button
+                    variant="success"
+                    size="lg"
+                    fullWidth
+                    onClick={handleConfirmWinner}
+                  >
+                    Confirm Winner
+                  </Button>
+                )}
+
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => {
+                    setCardNumber('');
+                    setCard(null);
+                    setResult(null);
+                  }}
+                >
+                  Check Another Card
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="card text-center py-16 text-[var(--text-muted)]">
+              Enter a card number to verify
+            </div>
+          )}
+        </div>
+      </div>
+    </AppShell>
   );
 }

@@ -31,7 +31,7 @@ export function BingoGrid({
   const patternSet = new Set(patternSlots);
 
   return (
-    <div className="grid grid-cols-5 gap-0.5 bg-navy-600 p-0.5 rounded-lg">
+    <div className="grid grid-cols-5 gap-0.5 bg-[var(--border-strong)] p-0.5 rounded-lg">
       {Array.from({ length: 25 }).map((_, gridIndex) => {
         const isFreeSpace = gridIndex === 12;
         const slotIndex = gridIndex > 12 ? gridIndex - 1 : gridIndex;
@@ -42,7 +42,7 @@ export function BingoGrid({
               key={gridIndex}
               className={`
                 flex items-center justify-center
-                bg-indigo-600 rounded
+                bg-[var(--accent-green)] rounded
                 aspect-square
                 ${sizeClasses[size]}
               `}
@@ -60,13 +60,13 @@ export function BingoGrid({
         const isHighlighted = highlightSet.has(slotIndex);
         const isPatternCell = patternSet.has(slotIndex);
 
-        let bgClass = 'bg-navy-800';
+        let bgClass = 'bg-[var(--bg-card)]';
         if (isHighlighted) {
-          bgClass = 'bg-green-600';
+          bgClass = 'bg-[var(--accent-green)]';
         } else if (isCalled) {
-          bgClass = 'bg-indigo-600';
+          bgClass = 'bg-[var(--accent-teal)]';
         } else if (isExcluded) {
-          bgClass = 'bg-indigo-800'; // Darker shade for dead squares
+          bgClass = 'bg-[var(--bg-hover)]';
         }
 
         return (
@@ -76,7 +76,7 @@ export function BingoGrid({
             className={`
               flex flex-col items-center justify-center
               ${bgClass}
-              ${isPatternCell && !isMarked ? 'ring-2 ring-yellow-400 ring-inset' : ''}
+              ${isPatternCell && !isMarked ? 'ring-2 ring-[var(--accent-amber)] ring-inset' : ''}
               rounded aspect-square overflow-hidden
               ${sizeClasses[size]}
               ${onCellClick ? 'cursor-pointer hover:opacity-80' : ''}
@@ -84,10 +84,10 @@ export function BingoGrid({
           >
             {song && (
               <>
-                <span className="font-medium text-white text-center leading-tight line-clamp-2">
+                <span className={`font-medium text-center leading-tight line-clamp-2 ${isHighlighted || isCalled ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                   {song.title}
                 </span>
-                <span className="text-slate-400 text-center leading-tight line-clamp-1 mt-0.5">
+                <span className={`text-center leading-tight line-clamp-1 mt-0.5 ${isHighlighted || isCalled ? 'text-white/80' : 'text-[var(--text-secondary)]'}`}>
                   {song.artist}
                 </span>
               </>

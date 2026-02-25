@@ -7,6 +7,7 @@ import { BINGO_PATTERNS } from '../../lib/patterns';
 import { useGame } from '../../context/GameContext';
 import { Button } from '../shared/Button';
 import { PatternDisplay } from '../shared/PatternDisplay';
+import { AppShell } from '../shared/AppShell';
 
 export function GameSetup() {
   const { id } = useParams<{ id: string }>();
@@ -20,13 +21,11 @@ export function GameSetup() {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
 
-  // Player count determines cards in play (always cards #1 through #playerCount)
   const [playerCount, setPlayerCount] = useState(30);
   const cardRangeStart = 1;
   const cardRangeEnd = Math.min(playerCount, allCards.length);
   const cardsInPlay = cardRangeEnd - cardRangeStart + 1;
 
-  // Get pacing info for current player count
   const pacingEntry = useMemo((): PacingEntry | null => {
     if (!pacingTable) return null;
     return getPacingForGroupSize(pacingTable, cardsInPlay);
@@ -50,7 +49,6 @@ export function GameSetup() {
       setPlaylist(playlistData);
       setAllCards(cards);
       setPacingTable(pacing || null);
-      // Default player count to 30 or total cards if fewer available
       if (cards.length > 0) {
         setPlayerCount(Math.min(30, cards.length));
       }
@@ -63,7 +61,6 @@ export function GameSetup() {
   const togglePattern = (patternId: string) => {
     setSelectedPatterns(prev => {
       if (prev.includes(patternId)) {
-        // Don't allow removing last pattern
         if (prev.length === 1) return prev;
         return prev.filter(p => p !== patternId);
       }
@@ -73,7 +70,6 @@ export function GameSetup() {
 
   const handleStartGame = async () => {
     if (!playlist) return;
-
     setStarting(true);
     await startNewGame(playlist, selectedPatterns, { cardRangeStart, cardRangeEnd });
     navigate('/host/game');
@@ -81,180 +77,164 @@ export function GameSetup() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
-        <div className="text-slate-400">Loading...</div>
-      </div>
+      <AppShell centered>
+        <div className="text-[var(--text-secondary)]">Loading...</div>
+      </AppShell>
     );
   }
 
   if (!playlist) {
     return (
-      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
-        <div className="text-red-400">Playlist not found</div>
-      </div>
+      <AppShell centered>
+        <div className="text-[var(--status-error-text)]">Playlist not found</div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-navy-950 p-4 safe-area-inset">
-      <div className="max-w-lg mx-auto">
-        <header className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-white">Game Setup</h1>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/host/playlists')}>
-            Cancel
-          </Button>
-        </header>
-
-        {/* Playlist Info */}
-        <div className="card mb-6">
-          <h2 className="text-lg font-semibold text-white">{playlist.name}</h2>
-          <p className="text-slate-400">{playlist.songs.length} songs</p>
-          {totalCards === 0 && (
-            <p className="text-yellow-400 text-sm mt-2">
-              No cards generated for this playlist. Generate cards in Admin mode for winner verification.
-            </p>
-          )}
+    <AppShell title={playlist.name} subtitle="Game Setup" maxWidth="xl">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">Game Setup</h1>
+          <p className="text-[var(--text-secondary)] mt-1">
+            {playlist.name} &bull; {playlist.songs.length} songs
+          </p>
         </div>
+        <Button variant="ghost" onClick={() => navigate('/host/playlists')}>
+          Cancel
+        </Button>
+      </div>
 
-        {/* Player Count */}
-        {totalCards > 0 && (
-          <div className="card mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              How Many Players?
-            </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Pattern Selection - Takes 2 columns on desktop */}
+        <div className="lg:col-span-2">
+          <div className="card">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+              Select Patterns for Rounds
+            </h2>
+            <p className="text-sm text-[var(--text-secondary)] mb-6">
+              Click patterns in the order you want to play them. First selected = Round 1.
+            </p>
 
-            <div className="mb-4">
-              <input
-                type="number"
-                value={playerCount}
-                onChange={e => {
-                  const val = Math.max(1, Math.min(parseInt(e.target.value) || 1, totalCards));
-                  setPlayerCount(val);
-                }}
-                className="input w-full text-center text-2xl font-bold"
-                min="1"
-                max={totalCards}
-              />
-            </div>
-
-            {/* Quick select buttons */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {[10, 20, 30, 50].filter(n => n <= totalCards).map(count => (
-                <button
-                  key={count}
-                  onClick={() => setPlayerCount(count)}
-                  className={`px-3 py-1 rounded text-sm ${
-                    playerCount === count
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-navy-700 text-slate-300 hover:bg-navy-600'
-                  }`}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {BINGO_PATTERNS.map(pattern => (
+                <div
+                  key={pattern.id}
+                  onClick={() => togglePattern(pattern.id)}
+                  className="cursor-pointer"
                 >
-                  {count}
-                </button>
+                  <PatternDisplay
+                    pattern={pattern}
+                    size="sm"
+                    selected={selectedPatterns.includes(pattern.id)}
+                  />
+                  {selectedPatterns.includes(pattern.id) && (
+                    <div className="text-center text-xs text-[var(--accent-green)] mt-1 font-medium">
+                      Round {selectedPatterns.indexOf(pattern.id) + 1}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
 
-            {/* Distribution instructions */}
-            <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 text-center">
-              <div className="text-sm text-green-400 mb-1">Distribute to players:</div>
-              <div className="text-2xl font-bold text-white">
-                Cards #1 through #{cardsInPlay}
-              </div>
-              <div className="text-sm text-slate-400 mt-1">
-                {cardsInPlay} card{cardsInPlay !== 1 ? 's' : ''} total
-              </div>
-            </div>
-
-            {/* Pacing info */}
-            {pacingEntry && (
-              <div className="mt-4 bg-indigo-900/30 border border-indigo-700 rounded-lg p-4">
-                <div className="text-sm text-indigo-400 mb-2">Game Pacing</div>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-white">
-                      ~{pacingEntry.expectedSongsToWin}
-                    </div>
-                    <div className="text-xs text-slate-400">songs to winner</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-white">
-                      {playlist ? playlist.songs.length - pacingEntry.excludeCount : 0}
-                    </div>
-                    <div className="text-xs text-slate-400">active songs</div>
-                  </div>
+            {/* Selected Order */}
+            {selectedPatterns.length > 1 && (
+              <div className="mt-6 pt-6 border-t border-[var(--border-color)]">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Round Order</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedPatterns.map((patternId, idx) => {
+                    const pattern = BINGO_PATTERNS.find(p => p.id === patternId);
+                    return (
+                      <span
+                        key={patternId}
+                        className="px-3 py-1.5 bg-[var(--bg-accent)] border border-[var(--accent-green)] rounded-full text-sm text-[var(--accent-green)] font-medium"
+                      >
+                        {idx + 1}. {pattern?.name}
+                      </span>
+                    );
+                  })}
                 </div>
-                {pacingEntry.excludeCount > 0 && (
-                  <div className="mt-3 text-xs text-yellow-400 text-center">
-                    {pacingEntry.excludeCount} songs excluded for balanced pacing
-                  </div>
-                )}
               </div>
             )}
           </div>
-        )}
-
-        {/* Pattern Selection */}
-        <div className="card mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Select Patterns for Rounds
-          </h3>
-          <p className="text-sm text-slate-400 mb-4">
-            Select patterns in order. First pattern is Round 1, etc.
-          </p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {BINGO_PATTERNS.map(pattern => (
-              <div
-                key={pattern.id}
-                onClick={() => togglePattern(pattern.id)}
-                className="cursor-pointer"
-              >
-                <PatternDisplay
-                  pattern={pattern}
-                  size="sm"
-                  selected={selectedPatterns.includes(pattern.id)}
-                />
-                {selectedPatterns.includes(pattern.id) && (
-                  <div className="text-center text-xs text-indigo-400 mt-1">
-                    Round {selectedPatterns.indexOf(pattern.id) + 1}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Selected Order */}
-        {selectedPatterns.length > 1 && (
-          <div className="card mb-6">
-            <h3 className="text-sm font-semibold text-white mb-2">Round Order</h3>
-            <div className="flex flex-wrap gap-2">
-              {selectedPatterns.map((patternId, idx) => {
-                const pattern = BINGO_PATTERNS.find(p => p.id === patternId);
-                return (
-                  <span
-                    key={patternId}
-                    className="px-3 py-1 bg-navy-700 rounded-full text-sm text-white"
-                  >
-                    R{idx + 1}: {pattern?.name}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Sidebar - Player count and start */}
+        <div className="space-y-6">
+          {/* Player Count */}
+          {totalCards > 0 ? (
+            <div className="card">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+                Player Count
+              </h3>
 
-        {/* Start Button */}
-        <Button
-          variant="success"
-          size="lg"
-          fullWidth
-          onClick={handleStartGame}
-          disabled={starting || selectedPatterns.length === 0}
-        >
-          {starting ? 'Starting...' : 'Start Game'}
-        </Button>
+              <div className="mb-4">
+                <input
+                  type="number"
+                  value={playerCount}
+                  onChange={e => {
+                    const val = Math.max(1, Math.min(parseInt(e.target.value) || 1, totalCards));
+                    setPlayerCount(val);
+                  }}
+                  className="input w-full text-center text-2xl font-bold"
+                  min="1"
+                  max={totalCards}
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                {[10, 20, 30, 50].filter(n => n <= totalCards).map(count => (
+                  <button
+                    key={count}
+                    onClick={() => setPlayerCount(count)}
+                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                      playerCount === count
+                        ? 'bg-[var(--accent-green)] text-white'
+                        : 'bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)] border border-[var(--border-color)]'
+                    }`}
+                  >
+                    {count}
+                  </button>
+                ))}
+              </div>
+
+              <div className="bg-[var(--status-success-bg)] border border-[var(--accent-green)] rounded-lg p-4 text-center">
+                <div className="text-sm text-[var(--status-success-text)] mb-1 font-medium">Distribute cards:</div>
+                <div className="text-2xl font-bold text-[var(--text-primary)]">
+                  #1 - #{cardsInPlay}
+                </div>
+              </div>
+
+              {pacingEntry && (
+                <div className="mt-4 p-4 bg-[var(--bg-hover)] rounded-lg">
+                  <div className="text-sm text-[var(--text-secondary)] mb-2">Expected pacing:</div>
+                  <div className="text-lg font-semibold text-[var(--text-primary)]">
+                    ~{pacingEntry.expectedSongsToWin} songs to first winner
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="card">
+              <p className="text-[var(--status-warning-text)] text-sm">
+                No cards generated for this playlist. Generate cards in Admin mode for winner verification.
+              </p>
+            </div>
+          )}
+
+          {/* Start Button */}
+          <Button
+            variant="success"
+            size="lg"
+            fullWidth
+            onClick={handleStartGame}
+            disabled={starting || selectedPatterns.length === 0}
+          >
+            {starting ? 'Starting...' : 'Start Game'}
+          </Button>
+        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

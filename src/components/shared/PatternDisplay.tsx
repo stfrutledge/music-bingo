@@ -33,14 +33,14 @@ export function PatternDisplay({
       className={`
         flex flex-col items-center gap-1
         ${onClick ? 'cursor-pointer hover:opacity-80' : ''}
-        ${selected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-navy-950 rounded-lg p-1' : ''}
+        ${selected ? 'ring-2 ring-[var(--accent-green)] ring-offset-2 ring-offset-[var(--ring-offset)] rounded-lg p-1' : ''}
       `}
     >
       <div
         className={`
           ${sizeMap[size]}
           grid grid-cols-5 gap-px
-          bg-navy-700 p-0.5 rounded
+          bg-[var(--border-color)] p-0.5 rounded
         `}
       >
         {pattern.grid.flat().map((isActive, idx) => (
@@ -49,13 +49,13 @@ export function PatternDisplay({
             className={`
               ${cellSizeMap[size]}
               rounded-sm
-              ${idx === 12 ? 'bg-indigo-600' : isActive ? 'bg-green-500' : 'bg-navy-800'}
+              ${idx === 12 ? 'bg-[var(--accent-teal)]' : isActive ? 'bg-[var(--accent-green)]' : 'bg-[var(--bg-card)]'}
             `}
           />
         ))}
       </div>
       {showLabel && (
-        <span className="text-xs text-slate-300 text-center">{pattern.name}</span>
+        <span className="text-xs text-[var(--text-secondary)] text-center">{pattern.name}</span>
       )}
     </div>
   );

@@ -35,23 +35,23 @@ export function AudioPlayer({
     <div className="flex flex-col gap-2 w-full">
       {/* Progress bar */}
       <div
-        className="h-2 bg-navy-700 rounded-full cursor-pointer"
+        className="h-2 bg-[var(--bg-hover)] rounded-full cursor-pointer"
         onClick={handleProgressClick}
       >
         <div
-          className="h-full bg-indigo-500 rounded-full transition-all"
+          className="h-full bg-[var(--accent-green)] rounded-full transition-all"
           style={{ width: `${progress}%` }}
         />
       </div>
 
       {/* Controls */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-slate-400">{formatTime(currentTime)}</span>
+        <span className="text-sm text-[var(--text-secondary)]">{formatTime(currentTime)}</span>
 
         <button
           onClick={onPlayPause}
           disabled={isLoading}
-          className="w-12 h-12 flex items-center justify-center bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:opacity-50"
+          className="w-12 h-12 flex items-center justify-center bg-[var(--accent-green)] rounded-full hover:bg-[var(--accent-green-light)] disabled:opacity-50 transition-colors"
         >
           {isLoading ? (
             <LoadingSpinner />
@@ -62,7 +62,7 @@ export function AudioPlayer({
           )}
         </button>
 
-        <span className="text-sm text-slate-400">{formatTime(duration)}</span>
+        <span className="text-sm text-[var(--text-secondary)]">{formatTime(duration)}</span>
       </div>
     </div>
   );
