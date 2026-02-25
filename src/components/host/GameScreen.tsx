@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
 import { useAudio } from '../../context/AudioContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
+import { useArtwork } from '../../hooks/useArtwork';
 import { getAudioUrl } from '../../lib/audioCache';
 import { getPatternById } from '../../lib/patterns';
 import { Button } from '../shared/Button';
@@ -20,6 +21,12 @@ export function GameScreen() {
   const [showWinnerTracker, setShowWinnerTracker] = useState(true);
   const [hasLoadedCurrentSong, setHasLoadedCurrentSong] = useState(false);
   const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
+
+  // Get the current audio URL for artwork extraction
+  const currentAudioUrl = currentSong && playlist
+    ? getAudioUrl(playlist.baseAudioUrl, currentSong.audioFile)
+    : null;
+  const { artworkUrl, isLoading: artworkLoading } = useArtwork(currentAudioUrl);
 
   useEffect(() => {
     wakeLock.request();
@@ -106,12 +113,20 @@ export function GameScreen() {
       <header className="bg-[var(--bg-card)] border-b border-[var(--border-color)] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 lg:px-6 h-14 lg:h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+            <button
+              onClick={() => {
+                if (confirm('Exit the game? You can resume it later from the home screen.')) {
+                  audio.pause();
+                  navigate('/', { state: { fromGame: true } });
+                }
+              }}
+              className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span className="hidden sm:inline">Exit</span>
-            </Link>
+            </button>
             <div className="h-6 w-px bg-[var(--border-color)]" />
             <div className="flex items-center gap-3">
               <PatternDisplay pattern={pattern} size="sm" showLabel={false} />
@@ -138,14 +153,36 @@ export function GameScreen() {
           {/* Left Column - Now Playing */}
           <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             {/* Current Song Card */}
-            <div className="card py-8 lg:py-12 text-center">
-              <div className="text-sm text-[var(--accent-green)] font-medium uppercase tracking-wider mb-3">Now Playing</div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)] mb-2">
-                {currentSong.title}
-              </h1>
-              <p className="text-lg lg:text-xl text-[var(--text-secondary)]">
-                {currentSong.artist}
-              </p>
+            <div className="card py-8 lg:py-12">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                {/* Album Artwork */}
+                <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 flex-shrink-0 rounded-lg overflow-hidden bg-[var(--bg-hover)] flex items-center justify-center">
+                  {artworkLoading ? (
+                    <div className="w-8 h-8 border-2 border-[var(--accent-green)] border-t-transparent rounded-full animate-spin" />
+                  ) : artworkUrl ? (
+                    <img
+                      src={artworkUrl}
+                      alt={`${currentSong.title} album art`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <svg className="w-16 h-16 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                    </svg>
+                  )}
+                </div>
+
+                {/* Song Info */}
+                <div className="flex-1 text-center sm:text-left">
+                  <div className="text-sm text-[var(--accent-green)] font-medium uppercase tracking-wider mb-2">Now Playing</div>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)] mb-2">
+                    {currentSong.title}
+                  </h1>
+                  <p className="text-lg lg:text-xl text-[var(--text-secondary)]">
+                    {currentSong.artist}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Audio Player */}

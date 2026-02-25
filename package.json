@@ -12,6 +12,7 @@
   "dependencies": {
     "dexie": "^4.3.0",
     "jspdf": "^4.2.0",
+    "music-metadata": "^11.12.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1",

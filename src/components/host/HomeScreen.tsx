@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
 import { useOfflineStatus } from '../../hooks/useOfflineStatus';
@@ -8,14 +8,18 @@ import { useGame } from '../../context/GameContext';
 export function HomeScreen() {
   const isOffline = useOfflineStatus();
   const navigate = useNavigate();
+  const location = useLocation();
   const { game, isLoading } = useGame();
 
-  // Auto-redirect to game screen if there's an active game
+  // Check if user intentionally exited the game
+  const fromGame = (location.state as { fromGame?: boolean })?.fromGame;
+
+  // Auto-redirect to game screen if there's an active game (unless user explicitly exited)
   useEffect(() => {
-    if (!isLoading && game && !game.endedAt) {
+    if (!isLoading && game && !game.endedAt && !fromGame) {
       navigate('/host/game', { replace: true });
     }
-  }, [game, isLoading, navigate]);
+  }, [game, isLoading, navigate, fromGame]);
 
   // Show loading while checking for active game
   if (isLoading) {
@@ -43,7 +47,7 @@ export function HomeScreen() {
             Host Your Music Bingo Game
           </h1>
           <p className="text-lg text-[var(--text-secondary)] mb-8 max-w-md mx-auto lg:mx-0">
-            Play songs, track winners, and manage rounds with ease. Perfect for bars, parties, and events.
+            Play songs, track winners, and manage rounds with ease.
           </p>
 
           {/* Main Actions */}
