@@ -104,8 +104,9 @@ export function GameScreen() {
   const handlePlayPause = () => audio.isPlaying ? audio.pause() : audio.play();
 
   const handleNextSong = async () => {
-    await audio.transitionToPreloaded();
-    setHasLoadedCurrentSong(true);
+    await audio.stopWithFade();
+    setShouldAutoPlay(true);
+    setHasLoadedCurrentSong(false);
     nextSong();
   };
 
