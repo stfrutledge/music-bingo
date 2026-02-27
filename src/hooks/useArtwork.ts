@@ -68,12 +68,33 @@ async function fetchItunesArtwork(artist: string, title: string): Promise<string
     let bestMatch: ItunesResult | null = null;
     let bestScore = 0;
 
+    // Words that indicate remixes/covers/versions - penalize these
+    const penaltyWords = ['remix', 'cover', 'version', 'mixed', 'workout', 'karaoke', 'tribute', 'instrumental'];
+
     for (const result of data.results as ItunesResult[]) {
       const artistScore = stringSimilarity(artist, result.artistName);
       const titleScore = stringSimilarity(title, result.trackName);
 
       // Weight title slightly higher since artist names can vary
-      const score = (artistScore * 0.4) + (titleScore * 0.6);
+      let score = (artistScore * 0.4) + (titleScore * 0.6);
+
+      // Penalize remixes, covers, workout versions - but only if artist doesn't match well
+      // (DJ mixes from the same artist often have correct album artwork)
+      const trackLower = result.trackName.toLowerCase();
+      const artistLower = result.artistName.toLowerCase();
+      const isGoodArtistMatch = artistScore >= 0.8;
+
+      for (const word of penaltyWords) {
+        if (trackLower.includes(word) || artistLower.includes(word)) {
+          score *= isGoodArtistMatch ? 0.85 : 0.4; // Light penalty if artist matches, heavy if not
+          break;
+        }
+      }
+
+      // Bonus for exact artist match
+      if (normalizeString(artist) === normalizeString(result.artistName)) {
+        score *= 1.2;
+      }
 
       if (score > bestScore) {
         bestScore = score;
@@ -81,8 +102,9 @@ async function fetchItunesArtwork(artist: string, title: string): Promise<string
       }
     }
 
-    // Only use result if it's a reasonable match (score > 0.5)
-    if (bestMatch && bestScore > 0.5) {
+    // Only use result if it's a good match (score > 0.6) AND artist is reasonably similar
+    const artistSim = bestMatch ? stringSimilarity(artist, bestMatch.artistName) : 0;
+    if (bestMatch && bestScore > 0.6 && artistSim > 0.3) {
       const artworkUrl = bestMatch.artworkUrl100?.replace('100x100', '600x600') || null;
       itunesCache.set(cacheKey, artworkUrl);
       return artworkUrl;
