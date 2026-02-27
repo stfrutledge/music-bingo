@@ -8,7 +8,7 @@ interface ArtworkResult {
 // Cache extracted artwork to avoid re-fetching
 const artworkCache = new Map<string, ArtworkResult | null>();
 
-async function fetchAudioBlob(audioUrl: string): Promise<Blob | null> {
+async function fetchAudioBlob(audioUrl: string, cacheOnly = false): Promise<Blob | null> {
   // Try service worker cache first (avoids CORS issues for cached files)
   try {
     const cache = await caches.open('audio-cache');
@@ -18,6 +18,11 @@ async function fetchAudioBlob(audioUrl: string): Promise<Blob | null> {
     }
   } catch {
     // Cache API not available or error
+  }
+
+  // If cacheOnly mode, don't try to download
+  if (cacheOnly) {
+    return null;
   }
 
   // Fall back to direct fetch (may fail due to CORS for cross-origin URLs)
@@ -33,14 +38,14 @@ async function fetchAudioBlob(audioUrl: string): Promise<Blob | null> {
   return null;
 }
 
-export async function extractArtwork(audioUrl: string): Promise<ArtworkResult | null> {
+export async function extractArtwork(audioUrl: string, cacheOnly = false): Promise<ArtworkResult | null> {
   // Check cache first
   if (artworkCache.has(audioUrl)) {
     return artworkCache.get(audioUrl) || null;
   }
 
   try {
-    const blob = await fetchAudioBlob(audioUrl);
+    const blob = await fetchAudioBlob(audioUrl, cacheOnly);
     if (!blob) {
       artworkCache.set(audioUrl, null);
       return null;

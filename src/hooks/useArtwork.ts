@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { extractArtwork } from '../lib/artworkExtractor';
+import { isLocalUrl } from '../lib/audioCache';
 
 interface UseArtworkReturn {
   artworkUrl: string | null;
@@ -137,8 +138,9 @@ export function useArtwork(
     setIsLoading(true);
 
     (async () => {
-      // Try extracting from the audio file first (works for cached/local files)
-      const extracted = await extractArtwork(audioUrl);
+      // Try extracting from the audio file (use cacheOnly for remote URLs to avoid slow downloads)
+      const isLocal = isLocalUrl(audioUrl);
+      const extracted = await extractArtwork(audioUrl, !isLocal);
 
       if (cancelled) return;
 
