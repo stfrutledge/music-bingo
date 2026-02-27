@@ -8,6 +8,31 @@ interface ArtworkResult {
 // Cache extracted artwork to avoid re-fetching
 const artworkCache = new Map<string, ArtworkResult | null>();
 
+async function fetchAudioBlob(audioUrl: string): Promise<Blob | null> {
+  // Try service worker cache first (avoids CORS issues for cached files)
+  try {
+    const cache = await caches.open('audio-cache');
+    const cachedResponse = await cache.match(audioUrl);
+    if (cachedResponse) {
+      return await cachedResponse.blob();
+    }
+  } catch {
+    // Cache API not available or error
+  }
+
+  // Fall back to direct fetch (may fail due to CORS for cross-origin URLs)
+  try {
+    const response = await fetch(audioUrl);
+    if (response.ok) {
+      return await response.blob();
+    }
+  } catch {
+    // CORS or network error
+  }
+
+  return null;
+}
+
 export async function extractArtwork(audioUrl: string): Promise<ArtworkResult | null> {
   // Check cache first
   if (artworkCache.has(audioUrl)) {
@@ -15,13 +40,12 @@ export async function extractArtwork(audioUrl: string): Promise<ArtworkResult | 
   }
 
   try {
-    // Fetch the audio file
-    const response = await fetch(audioUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch: ${response.status}`);
+    const blob = await fetchAudioBlob(audioUrl);
+    if (!blob) {
+      artworkCache.set(audioUrl, null);
+      return null;
     }
 
-    const blob = await response.blob();
     const metadata = await parseBlob(blob);
 
     const picture = metadata.common.picture?.[0];

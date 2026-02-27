@@ -29,7 +29,11 @@ export function GameScreen() {
   const currentAudioUrl = currentSong && playlist
     ? getAudioUrl(playlist.baseAudioUrl, currentSong.audioFile)
     : null;
-  const { artworkUrl, isLoading: artworkLoading } = useArtwork(currentAudioUrl);
+  const { artworkUrl, isLoading: artworkLoading } = useArtwork(
+    currentAudioUrl,
+    currentSong?.artist,
+    currentSong?.title
+  );
 
   useEffect(() => {
     wakeLock.request();
