@@ -2,7 +2,7 @@
   "id": "music-bingo-2025",
   "name": "Music Bingo 2025",
   "description": "Custom playlist for music bingo night",
-  "baseAudioUrl": "/audio/",
+  "baseAudioUrl": "https://pub-808e302e1ac64e4daac4342d53d6ce19.r2.dev/",
   "songs": [
     {
       "id": "sombr-12-to-12",
