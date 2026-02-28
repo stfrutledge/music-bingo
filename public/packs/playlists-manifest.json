@@ -1,10 +1,10 @@
 {
   "playlists": [
     {
-      "id": "sample-2000s",
-      "name": "2000s Hits",
-      "songCount": 55,
-      "path": "sample-2000s/playlist.json"
+      "id": "music-bingo-2025",
+      "name": "Music Bingo 2025",
+      "songCount": 61,
+      "path": "music-bingo-2025/playlist.json"
     }
   ]
 }
