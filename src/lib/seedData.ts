@@ -1,29 +1,30 @@
 import type { Playlist, BingoCard, PacingTable } from '../types';
-import { db, savePlaylist, getAllPlaylists, saveCards, savePacingTable, getCardsForPlaylist } from './db';
+import { db, savePlaylist, getAllPlaylists, saveCards, savePacingTable, getCardsForPlaylist, deletePlaylist } from './db';
 
 export async function seedDatabaseIfEmpty(): Promise<void> {
-  // Check if we already have playlists
-  const existingPlaylists = await getAllPlaylists();
-  if (existingPlaylists.length > 0) {
-    console.log('Database already has playlists, checking for cards...');
-    // Still check if we need to seed cards for existing playlists
-    for (const playlist of existingPlaylists) {
-      await seedCardsIfMissing(playlist.id);
-    }
-    return;
-  }
-
-  console.log('Seeding database with initial playlist...');
+  console.log('Syncing database with static playlists...');
 
   try {
     // Try loading from packs manifest first
     const manifestResponse = await fetch(`${import.meta.env.BASE_URL}packs/playlists-manifest.json`);
     if (manifestResponse.ok) {
       const manifest = await manifestResponse.json();
+      const manifestIds = new Set<string>();
+
+      // Seed all playlists from manifest (will update existing ones)
       for (const pack of manifest.playlists || []) {
-        // Handle both object format { id, name, ... } and simple string format
         const packId = typeof pack === 'string' ? pack : pack.id;
+        manifestIds.add(packId);
         await seedPlaylistFromPack(packId);
+      }
+
+      // Remove playlists that are no longer in the manifest
+      const existingPlaylists = await getAllPlaylists();
+      for (const playlist of existingPlaylists) {
+        if (!manifestIds.has(playlist.id)) {
+          console.log(`Removing outdated playlist: ${playlist.name}`);
+          await deletePlaylist(playlist.id);
+        }
       }
       return;
     }
@@ -54,8 +55,10 @@ async function seedPlaylistFromPack(packId: string): Promise<void> {
 
     const data = await response.json();
     const playlist = parsePlaylistData(data);
+
+    // Always update/save the playlist from static data (source of truth)
     await savePlaylist(playlist);
-    console.log(`Seeded playlist: ${playlist.name}`);
+    console.log(`Synced playlist: ${playlist.name} (${playlist.songs.length} songs)`);
 
     // Seed cards for this playlist
     await seedCardsIfMissing(playlist.id);
