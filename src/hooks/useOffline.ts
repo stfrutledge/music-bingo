@@ -7,6 +7,7 @@ import {
   checkCacheStatus,
   clearOfflineStatus,
 } from '../lib/offlineManager';
+import { clearAllAudioCache } from '../lib/audioCache';
 
 interface UseOfflineReturn {
   isReady: boolean;
@@ -68,7 +69,7 @@ export function useOffline(): UseOfflineReturn {
     setLastDownload(null);
     setCacheStatus(null);
     // Also clear the actual cache
-    caches.delete('audio-cache').catch(console.error);
+    clearAllAudioCache().catch(console.error);
   }, []);
 
   return {

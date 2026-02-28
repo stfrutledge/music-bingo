@@ -102,31 +102,58 @@ export async function getCacheStatus(playlist: Playlist): Promise<CacheStatus> {
 
 export async function downloadPlaylistAudio(
   playlist: Playlist,
-  onProgress?: (downloaded: number, total: number) => void
-): Promise<void> {
+  onProgress?: (downloaded: number, total: number, error?: string) => void
+): Promise<{ success: number; failed: number }> {
   const cache = await openAudioCache();
   const total = playlist.songs.length;
   let downloaded = 0;
+  let success = 0;
+  let failed = 0;
 
   for (const song of playlist.songs) {
     const url = getAudioUrl(playlist.baseAudioUrl, song.audioFile);
 
     // Check if already cached
     const existing = await cache.match(url);
-    if (!existing) {
-      try {
-        const response = await fetch(url);
-        if (response.ok) {
-          await cache.put(url, response);
+    if (existing) {
+      success++;
+      downloaded++;
+      onProgress?.(downloaded, total);
+      continue;
+    }
+
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      if (response.ok) {
+        // Clone the response since we can only read it once
+        const clone = response.clone();
+        await cache.put(url, clone);
+
+        // Verify it was cached
+        const verify = await cache.match(url);
+        if (verify) {
+          success++;
+        } else {
+          console.warn(`Cache put succeeded but verify failed for ${song.title}`);
+          failed++;
         }
-      } catch (error) {
-        console.warn(`Failed to cache ${song.title}:`, error);
+      } else {
+        console.warn(`HTTP ${response.status} for ${song.title}`);
+        failed++;
+        onProgress?.(downloaded, total, `HTTP ${response.status}: ${song.audioFile}`);
       }
+    } catch (error) {
+      console.error(`Failed to download ${song.title}:`, error);
+      failed++;
+      onProgress?.(downloaded, total, `Error: ${song.audioFile}`);
     }
 
     downloaded++;
     onProgress?.(downloaded, total);
   }
+
+  console.log(`Download complete: ${success} success, ${failed} failed out of ${total}`);
+  return { success, failed };
 }
 
 export async function getAudioFromCache(url: string): Promise<Response | undefined> {

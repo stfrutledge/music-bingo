@@ -1,31 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
-import { OfflineDownloader } from '../shared/OfflineDownloader';
 import { useOfflineStatus } from '../../hooks/useOfflineStatus';
 import { useGame } from '../../context/GameContext';
-import { getAllPlaylists } from '../../lib/db';
-import type { Playlist } from '../../types';
 
 export function HomeScreen() {
   const isOffline = useOfflineStatus();
   const navigate = useNavigate();
   const location = useLocation();
   const { game, isLoading } = useGame();
-  const [playlist, setPlaylist] = useState<Playlist | null>(null);
 
   // Check if user intentionally exited the game
   const fromGame = (location.state as { fromGame?: boolean })?.fromGame;
-
-  // Load playlist for offline downloader
-  useEffect(() => {
-    getAllPlaylists().then((playlists) => {
-      if (playlists.length > 0) {
-        setPlaylist(playlists[0]);
-      }
-    });
-  }, []);
 
   // Auto-redirect to game screen if there's an active game (unless user explicitly exited)
   useEffect(() => {
@@ -77,12 +64,6 @@ export function HomeScreen() {
             </Link>
           </div>
 
-          {/* Offline Download */}
-          {playlist && (
-            <div className="mt-8">
-              <OfflineDownloader playlistId={playlist.id} />
-            </div>
-          )}
         </div>
 
         {/* Right - Feature Cards */}

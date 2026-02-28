@@ -1,5 +1,5 @@
 import { getPlaylist } from './db';
-import { getAudioUrl } from './audioCache';
+import { getAudioUrl, openAudioCache } from './audioCache';
 
 export interface OfflineProgress {
   total: number;
@@ -55,8 +55,8 @@ export async function downloadAllAudio(
       status: 'downloading',
     });
 
-    // Open or create a cache for audio files
-    const cache = await caches.open('audio-cache');
+    // Use shared audio cache
+    const cache = await openAudioCache();
 
     for (let i = 0; i < songs.length; i++) {
       const song = songs[i];
@@ -121,7 +121,7 @@ export async function checkCacheStatus(playlistId: string): Promise<{
       return { total: 0, cached: 0 };
     }
 
-    const cache = await caches.open('audio-cache');
+    const cache = await openAudioCache();
     let cached = 0;
 
     for (const song of playlist.songs) {
