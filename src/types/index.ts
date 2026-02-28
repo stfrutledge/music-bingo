@@ -4,6 +4,7 @@ export interface Song {
   artist: string;
   audioFile: string;
   startTime?: number; // Seconds to seek to when playing (e.g., chorus start)
+  startTimeManual?: boolean; // If true, start time was manually set and should not be overwritten by imports
 }
 
 export interface Playlist {
