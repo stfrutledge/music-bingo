@@ -4,6 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import fs from 'fs'
 
+// Base path for GitHub Pages deployment
+const base = process.env.NODE_ENV === 'production' ? '/music-bingo/' : '/'
+
 export default defineConfig({
   plugins: [
     react(),
@@ -18,8 +21,8 @@ export default defineConfig({
         background_color: '#0a1128',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        scope: base,
+        start_url: base,
         icons: [
           {
             src: 'icons/icon-192.png',
@@ -106,5 +109,5 @@ export default defineConfig({
       },
     },
   ],
-  base: './',
+  base,
 })

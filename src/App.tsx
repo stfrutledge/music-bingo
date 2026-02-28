@@ -22,7 +22,7 @@ import { AudioTester } from './components/admin/AudioTester';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ThemeProvider>
         <AudioProvider>
           <GameProvider>

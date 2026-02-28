@@ -32,8 +32,9 @@ export function AudioDownload() {
       const availability = await checkAudioAvailability(data);
       setIsLocal(availability.isLocal);
 
-      if (availability.allAvailable) {
-        // Files are accessible, skip download screen
+      // Only auto-skip for LOCAL files (localhost dev server)
+      // Remote files (Cloudflare) should still show download option for offline use
+      if (availability.allAvailable && availability.isLocal) {
         navigate(`/host/setup/${data.id}`, { replace: true });
         return;
       }

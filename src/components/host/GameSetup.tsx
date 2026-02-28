@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import type { Playlist, BingoCard, PacingTable, PacingEntry } from '../../types';
+import type { Playlist, BingoCard, PacingTable, PacingEntry, CacheStatus } from '../../types';
 import { getPlaylist, getCardsForPlaylist, getPacingTable } from '../../lib/db';
 import { getPacingForGroupSize } from '../../lib/cardGenerator';
 import { BINGO_PATTERNS } from '../../lib/patterns';
+import { getCacheStatus, downloadPlaylistAudio, isLocalUrl } from '../../lib/audioCache';
 import { useGame } from '../../context/GameContext';
 import { Button } from '../shared/Button';
 import { PatternDisplay } from '../shared/PatternDisplay';
@@ -20,6 +21,12 @@ export function GameSetup() {
   const [selectedPatterns, setSelectedPatterns] = useState<string[]>(['single-line-h']);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+
+  // Offline cache state
+  const [cacheStatus, setCacheStatus] = useState<CacheStatus | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState({ downloaded: 0, total: 0 });
+  const [isLocal, setIsLocal] = useState(false);
 
   const [playerCount, setPlayerCount] = useState(30);
   const cardRangeStart = 1;
@@ -52,8 +59,27 @@ export function GameSetup() {
       if (cards.length > 0) {
         setPlayerCount(Math.min(30, cards.length));
       }
+
+      // Check cache status for offline indicator
+      setIsLocal(isLocalUrl(playlistData.baseAudioUrl));
+      const status = await getCacheStatus(playlistData);
+      setCacheStatus(status);
     }
     setLoading(false);
+  };
+
+  const handleOfflineDownload = async () => {
+    if (!playlist || isDownloading) return;
+    setIsDownloading(true);
+    setDownloadProgress({ downloaded: 0, total: playlist.songs.length });
+
+    await downloadPlaylistAudio(playlist, (downloaded, total) => {
+      setDownloadProgress({ downloaded, total });
+    });
+
+    const status = await getCacheStatus(playlist);
+    setCacheStatus(status);
+    setIsDownloading(false);
   };
 
   const totalCards = allCards.length;
@@ -220,6 +246,60 @@ export function GameSetup() {
               <p className="text-[var(--status-warning-text)] text-sm">
                 No cards generated for this playlist. Generate cards in Admin mode for winner verification.
               </p>
+            </div>
+          )}
+
+          {/* Offline Download - only show for remote playlists */}
+          {!isLocal && cacheStatus && (
+            <div className="card">
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  cacheStatus.isComplete
+                    ? 'bg-[var(--status-success-bg)] text-[var(--status-success-text)]'
+                    : 'bg-[var(--bg-accent)] text-[var(--accent-teal)]'
+                }`}>
+                  {cacheStatus.isComplete ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                    {cacheStatus.isComplete ? 'Offline Ready' : 'Offline Mode'}
+                  </h3>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {cacheStatus.cachedSongs}/{cacheStatus.totalSongs} songs cached
+                  </p>
+                </div>
+              </div>
+
+              {isDownloading ? (
+                <div className="space-y-2">
+                  <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[var(--accent-teal)] transition-all duration-300"
+                      style={{ width: `${downloadProgress.total > 0 ? (downloadProgress.downloaded / downloadProgress.total) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)] text-center">
+                    Downloading {downloadProgress.downloaded}/{downloadProgress.total}...
+                  </p>
+                </div>
+              ) : (
+                <Button
+                  variant={cacheStatus.isComplete ? 'ghost' : 'secondary'}
+                  size="sm"
+                  fullWidth
+                  onClick={handleOfflineDownload}
+                >
+                  {cacheStatus.isComplete ? 'Re-download' : 'Download for Offline'}
+                </Button>
+              )}
             </div>
           )}
 
