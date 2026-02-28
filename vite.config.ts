@@ -66,8 +66,8 @@ export default defineConfig({
     {
       name: 'admin-api',
       configureServer(server) {
-        // Save cards to public/packs/{playlistId}/cards.json
-        server.middlewares.use('/api/save-cards', (req, res) => {
+        // Save card pack to public/packs/{playlistId}/card-packs/{packId}.json
+        server.middlewares.use('/api/save-card-pack', (req, res) => {
           if (req.method !== 'POST') {
             res.statusCode = 405
             res.end('Method not allowed')
@@ -78,27 +78,104 @@ export default defineConfig({
           req.on('data', chunk => body += chunk)
           req.on('end', () => {
             try {
-              const { playlistId, cards, pacingTable } = JSON.parse(body)
-              const packDir = path.join(__dirname, 'public', 'packs', playlistId)
+              const { playlistId, packId, packName, cards, pacingTable } = JSON.parse(body)
+              const cardPacksDir = path.join(__dirname, 'public', 'packs', playlistId, 'card-packs')
 
               // Create directory if needed
-              if (!fs.existsSync(packDir)) {
-                fs.mkdirSync(packDir, { recursive: true })
+              if (!fs.existsSync(cardPacksDir)) {
+                fs.mkdirSync(cardPacksDir, { recursive: true })
               }
 
-              // Save cards
+              // Create pack metadata
+              const pack = {
+                id: packId,
+                name: packName,
+                playlistId,
+                cardCount: cards.length,
+                createdAt: Date.now()
+              }
+
+              // Save card pack data
               fs.writeFileSync(
-                path.join(packDir, 'cards.json'),
-                JSON.stringify({ cards, pacingTable }, null, 2)
+                path.join(cardPacksDir, `${packId}.json`),
+                JSON.stringify({ pack, cards, pacingTable }, null, 2)
               )
 
+              // Update playlist manifest with card pack info
+              const manifestPath = path.join(__dirname, 'public', 'packs', 'playlists-manifest.json')
+              if (fs.existsSync(manifestPath)) {
+                const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+                const playlistEntry = manifest.playlists.find((p: { id: string }) => p.id === playlistId)
+                if (playlistEntry) {
+                  if (!playlistEntry.cardPacks) {
+                    playlistEntry.cardPacks = []
+                  }
+                  // Update or add pack info
+                  const existingIdx = playlistEntry.cardPacks.findIndex((p: { id: string }) => p.id === packId)
+                  const packInfo = {
+                    id: packId,
+                    name: packName,
+                    cardCount: cards.length,
+                    path: `${playlistId}/card-packs/${packId}.json`
+                  }
+                  if (existingIdx >= 0) {
+                    playlistEntry.cardPacks[existingIdx] = packInfo
+                  } else {
+                    playlistEntry.cardPacks.push(packInfo)
+                  }
+                  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
+                }
+              }
+
               res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: true, path: `public/packs/${playlistId}/cards.json` }))
+              res.end(JSON.stringify({ success: true, path: `public/packs/${playlistId}/card-packs/${packId}.json` }))
             } catch (err) {
               res.statusCode = 500
               res.end(JSON.stringify({ error: String(err) }))
             }
           })
+        })
+
+        // List available card packs for a playlist
+        server.middlewares.use('/api/list-card-packs', (req, res) => {
+          if (req.method !== 'GET') {
+            res.statusCode = 405
+            res.end('Method not allowed')
+            return
+          }
+
+          try {
+            const url = new URL(req.url || '', `http://${req.headers.host}`)
+            const playlistId = url.searchParams.get('playlistId')
+            if (!playlistId) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: 'playlistId required' }))
+              return
+            }
+
+            const cardPacksDir = path.join(__dirname, 'public', 'packs', playlistId, 'card-packs')
+            const packs: Array<{ id: string; name: string; cardCount: number }> = []
+
+            if (fs.existsSync(cardPacksDir)) {
+              const files = fs.readdirSync(cardPacksDir).filter(f => f.endsWith('.json'))
+              for (const file of files) {
+                const data = JSON.parse(fs.readFileSync(path.join(cardPacksDir, file), 'utf-8'))
+                if (data.pack) {
+                  packs.push({
+                    id: data.pack.id,
+                    name: data.pack.name,
+                    cardCount: data.pack.cardCount
+                  })
+                }
+              }
+            }
+
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ packs }))
+          } catch (err) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: String(err) }))
+          }
         })
 
         // Save playlist to public/packs/{playlistId}/playlist.json

@@ -20,9 +20,31 @@ export interface Playlist {
 export interface BingoCard {
   id: string;
   playlistId: string;
+  packId?: string; // Which card pack this belongs to
   cardNumber: number;
   slots: string[]; // 24 song IDs (5x5 minus free space)
   createdAt: number;
+}
+
+/**
+ * A named set of cards for a specific event/venue.
+ * Multiple packs can exist for the same playlist.
+ */
+export interface CardPack {
+  id: string;           // URL-safe slug, e.g., "dead-rabbit"
+  name: string;         // Display name, e.g., "Dead Rabbit Event"
+  playlistId: string;   // Links to the playlist these cards use
+  cardCount: number;    // Number of cards in this pack
+  createdAt: number;
+}
+
+/**
+ * Full card pack data including cards and pacing (stored in JSON files).
+ */
+export interface CardPackData {
+  pack: CardPack;
+  cards: BingoCard[];
+  pacingTable: PacingTable;
 }
 
 export interface BingoPattern {
@@ -49,6 +71,7 @@ export interface WinRecord {
 export interface GameState {
   id: string;
   playlistId: string;
+  packId?: string; // Which card pack is being used
   rounds: GameRound[];
   currentRound: number;
   calledSongIds: string[];
@@ -74,6 +97,14 @@ export interface PlaylistInfo {
   id: string;
   name: string;
   songCount: number;
+  path: string;
+  cardPacks?: CardPackInfo[]; // Available card packs for this playlist
+}
+
+export interface CardPackInfo {
+  id: string;
+  name: string;
+  cardCount: number;
   path: string;
 }
 

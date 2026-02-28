@@ -8,6 +8,12 @@ import { Button } from '../shared/Button';
 import { BingoGrid } from '../shared/BingoGrid';
 import { AppShell } from '../shared/AppShell';
 
+interface ExistingPack {
+  id: string;
+  name: string;
+  cardCount: number;
+}
+
 export function CardGenerator() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -23,8 +29,16 @@ export function CardGenerator() {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // Card pack state
+  const [packName, setPackName] = useState('');
+  const [existingPacks, setExistingPacks] = useState<ExistingPack[]>([]);
+  const [loadingPacks, setLoadingPacks] = useState(false);
+
   useEffect(() => {
-    if (id) loadData(id);
+    if (id) {
+      loadData(id);
+      loadExistingPacks(id);
+    }
   }, [id]);
 
   const loadData = async (playlistId: string) => {
@@ -40,6 +54,53 @@ export function CardGenerator() {
       setCards(cardsData);
       if (pacingData) setPacingTable(pacingData);
       if (cardsData.length > 0) setPreviewCard(cardsData[0]);
+    }
+    setLoading(false);
+  };
+
+  const loadExistingPacks = async (playlistId: string) => {
+    setLoadingPacks(true);
+    try {
+      // Try dev API first (for local development)
+      const response = await fetch(`/api/list-card-packs?playlistId=${playlistId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setExistingPacks(data.packs || []);
+      }
+    } catch {
+      // In production, load from manifest
+      try {
+        const manifestResponse = await fetch(`${import.meta.env.BASE_URL}packs/playlists-manifest.json`);
+        if (manifestResponse.ok) {
+          const manifest = await manifestResponse.json();
+          const playlistInfo = manifest.playlists?.find((p: { id: string }) => p.id === playlistId);
+          if (playlistInfo?.cardPacks) {
+            setExistingPacks(playlistInfo.cardPacks);
+          }
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+    setLoadingPacks(false);
+  };
+
+  const loadPackFromFile = async (packId: string) => {
+    if (!playlist) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}packs/${playlist.id}/card-packs/${packId}.json`);
+      if (response.ok) {
+        const data = await response.json();
+        setCards(data.cards || []);
+        setPacingTable(data.pacingTable || null);
+        setPackName(data.pack?.name || '');
+        if (data.cards?.length > 0) {
+          setPreviewCard(data.cards[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load pack:', error);
     }
     setLoading(false);
   };
@@ -65,17 +126,22 @@ export function CardGenerator() {
   };
 
   const handleSaveCards = async () => {
-    if (!playlist || cards.length === 0 || !pacingTable) return;
+    if (!playlist || cards.length === 0 || !pacingTable || !packName.trim()) return;
     setSaving(true);
     setSaveStatus('idle');
 
     try {
-      // Save cards via dev API
-      const response = await fetch('/api/save-cards', {
+      // Generate pack ID from name (URL-safe slug)
+      const packId = packName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      // Save card pack via dev API
+      const response = await fetch('/api/save-card-pack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           playlistId: playlist.id,
+          packId,
+          packName: packName.trim(),
           cards,
           pacingTable,
         }),
@@ -83,6 +149,8 @@ export function CardGenerator() {
 
       if (response.ok) {
         setSaveStatus('success');
+        // Reload existing packs list
+        await loadExistingPacks(playlist.id);
       } else {
         setSaveStatus('error');
       }
@@ -176,19 +244,48 @@ export function CardGenerator() {
             </div>
           )}
 
+          {/* Existing Card Packs */}
+          {existingPacks.length > 0 && (
+            <div className="card">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Saved Card Packs</h3>
+              <div className="space-y-2">
+                {existingPacks.map(pack => (
+                  <button
+                    key={pack.id}
+                    onClick={() => loadPackFromFile(pack.id)}
+                    className="w-full text-left p-3 bg-[var(--bg-hover)] rounded-lg hover:bg-[var(--bg-card)] transition-colors"
+                  >
+                    <div className="font-medium text-[var(--text-primary)]">{pack.name}</div>
+                    <div className="text-xs text-[var(--text-secondary)]">{pack.cardCount} cards</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {cards.length > 0 && (
             <div className="space-y-3">
+              <div>
+                <label className="block text-sm text-[var(--text-secondary)] mb-1">Pack Name</label>
+                <input
+                  type="text"
+                  value={packName}
+                  onChange={e => setPackName(e.target.value)}
+                  placeholder="e.g., Dead Rabbit Event"
+                  className="input w-full"
+                />
+              </div>
               <Button
                 variant="primary"
                 onClick={handleSaveCards}
-                disabled={saving || !pacingTable}
+                disabled={saving || !pacingTable || !packName.trim()}
                 fullWidth
               >
-                {saving ? 'Saving...' : 'Save Cards for Deployment'}
+                {saving ? 'Saving...' : 'Save Card Pack'}
               </Button>
               {saveStatus === 'success' && (
                 <p className="text-sm text-[var(--status-success-text)] text-center">
-                  Saved to public/packs/{playlist?.id}/
+                  Saved to public/packs/{playlist?.id}/card-packs/
                 </p>
               )}
               {saveStatus === 'error' && (

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import type { Playlist, BingoCard, PacingTable, PacingEntry, CacheStatus } from '../../types';
-import { getPlaylist, getCardsForPlaylist, getPacingTable } from '../../lib/db';
+import type { Playlist, BingoCard, PacingTable, PacingEntry, CacheStatus, CardPackInfo } from '../../types';
+import { getPlaylist, getCardsForPlaylist, getPacingTable, saveCards, savePacingTable, deleteCardsForPlaylist } from '../../lib/db';
 import { getPacingForGroupSize } from '../../lib/cardGenerator';
 import { BINGO_PATTERNS } from '../../lib/patterns';
 import { getCacheStatus, isLocalUrl } from '../../lib/audioCache';
@@ -26,6 +26,11 @@ export function GameSetup() {
   const [cacheStatus, setCacheStatus] = useState<CacheStatus | null>(null);
   const [isLocal, setIsLocal] = useState(false);
 
+  // Card pack state
+  const [availablePacks, setAvailablePacks] = useState<CardPackInfo[]>([]);
+  const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
+  const [loadingPacks, setLoadingPacks] = useState(false);
+
   const [playerCount, setPlayerCount] = useState(30);
   const cardRangeStart = 1;
   const cardRangeEnd = Math.min(playerCount, allCards.length);
@@ -39,8 +44,72 @@ export function GameSetup() {
   useEffect(() => {
     if (id) {
       loadPlaylist(id);
+      loadAvailablePacks(id);
     }
   }, [id]);
+
+  const loadAvailablePacks = async (playlistId: string) => {
+    setLoadingPacks(true);
+    try {
+      // Try dev API first (for local development)
+      const response = await fetch(`/api/list-card-packs?playlistId=${playlistId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAvailablePacks(data.packs || []);
+        setLoadingPacks(false);
+        return;
+      }
+    } catch {
+      // Fall through to manifest
+    }
+
+    // In production, load from manifest
+    try {
+      const manifestResponse = await fetch(`${import.meta.env.BASE_URL}packs/playlists-manifest.json`);
+      if (manifestResponse.ok) {
+        const manifest = await manifestResponse.json();
+        const playlistInfo = manifest.playlists?.find((p: { id: string }) => p.id === playlistId);
+        if (playlistInfo?.cardPacks) {
+          setAvailablePacks(playlistInfo.cardPacks);
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
+    setLoadingPacks(false);
+  };
+
+  const loadCardPack = async (packId: string) => {
+    if (!playlist) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}packs/${playlist.id}/card-packs/${packId}.json`);
+      if (response.ok) {
+        const data = await response.json();
+        const cards = data.cards || [];
+        const pacing = data.pacingTable || null;
+
+        // Clear existing cards and save new ones to IndexedDB
+        await deleteCardsForPlaylist(playlist.id);
+        await saveCards(cards);
+        if (pacing) {
+          await savePacingTable(pacing);
+        }
+
+        // Update state
+        setAllCards(cards);
+        setPacingTable(pacing);
+        setSelectedPackId(packId);
+
+        if (cards.length > 0) {
+          setPlayerCount(Math.min(30, cards.length));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load card pack:', error);
+    }
+    setLoading(false);
+  };
 
   const loadPlaylist = async (playlistId: string) => {
     setLoading(true);
@@ -170,8 +239,44 @@ export function GameSetup() {
           </div>
         </div>
 
-        {/* Sidebar - Player count and start */}
+        {/* Sidebar - Card pack, player count, and start */}
         <div className="space-y-6">
+          {/* Card Pack Selection */}
+          {availablePacks.length > 0 && (
+            <div className="card">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+                Card Pack
+              </h3>
+              <select
+                value={selectedPackId || ''}
+                onChange={e => e.target.value && loadCardPack(e.target.value)}
+                className="input w-full"
+                disabled={loading}
+              >
+                <option value="">Select a card pack...</option>
+                {availablePacks.map(pack => (
+                  <option key={pack.id} value={pack.id}>
+                    {pack.name} ({pack.cardCount} cards)
+                  </option>
+                ))}
+              </select>
+              {selectedPackId && (
+                <p className="text-sm text-[var(--status-success-text)] mt-2">
+                  Loaded: {availablePacks.find(p => p.id === selectedPackId)?.name}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* No card packs warning */}
+          {!loadingPacks && availablePacks.length === 0 && (
+            <div className="card">
+              <p className="text-sm text-[var(--status-warning-text)]">
+                No card packs available. Generate and save card packs in Admin mode.
+              </p>
+            </div>
+          )}
+
           {/* Player Count */}
           {totalCards > 0 ? (
             <div className="card">
@@ -279,10 +384,15 @@ export function GameSetup() {
             size="lg"
             fullWidth
             onClick={handleStartGame}
-            disabled={starting || selectedPatterns.length === 0}
+            disabled={starting || selectedPatterns.length === 0 || (availablePacks.length > 0 && !selectedPackId) || totalCards === 0}
           >
             {starting ? 'Starting...' : 'Start Game'}
           </Button>
+          {availablePacks.length > 0 && !selectedPackId && (
+            <p className="text-sm text-[var(--text-muted)] text-center mt-2">
+              Select a card pack to start
+            </p>
+          )}
         </div>
       </div>
     </AppShell>

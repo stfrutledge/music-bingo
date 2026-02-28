@@ -4,7 +4,15 @@
       "id": "music-bingo-2026",
       "name": "Music Bingo 2026",
       "songCount": 61,
-      "path": "music-bingo-2026/playlist.json"
+      "path": "music-bingo-2026/playlist.json",
+      "cardPacks": [
+        {
+          "id": "test-event",
+          "name": "Test event",
+          "cardCount": 80,
+          "path": "music-bingo-2026/card-packs/test-event.json"
+        }
+      ]
     }
   ]
 }
