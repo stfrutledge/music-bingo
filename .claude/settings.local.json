@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(wc:*)",
+      "WebFetch(domain:stfrutledge.github.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(node set-start-times.js:*)",
+      "Bash(start http://localhost:5177/)",
+      "Bash(npm run build:*)"
+    ]
+  }
+}
