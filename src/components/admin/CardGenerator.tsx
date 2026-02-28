@@ -20,6 +20,8 @@ export function CardGenerator() {
   const [pacingTable, setPacingTable] = useState<PacingTable | null>(null);
   const [cardCount, setCardCount] = useState(80);
   const [previewCard, setPreviewCard] = useState<BingoCard | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     if (id) loadData(id);
@@ -60,6 +62,35 @@ export function CardGenerator() {
     if (!playlist || cards.length === 0) return;
     const pdf = await generateCardsPDF(cards, playlist);
     downloadPDF(pdf, `${playlist.name.toLowerCase().replace(/\s+/g, '-')}-cards.pdf`);
+  };
+
+  const handleSaveCards = async () => {
+    if (!playlist || cards.length === 0 || !pacingTable) return;
+    setSaving(true);
+    setSaveStatus('idle');
+
+    try {
+      // Save cards via dev API
+      const response = await fetch('/api/save-cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playlistId: playlist.id,
+          cards,
+          pacingTable,
+        }),
+      });
+
+      if (response.ok) {
+        setSaveStatus('success');
+      } else {
+        setSaveStatus('error');
+      }
+    } catch {
+      setSaveStatus('error');
+    }
+
+    setSaving(false);
   };
 
   const handleDownloadSinglePDF = async (card: BingoCard) => {
@@ -146,9 +177,29 @@ export function CardGenerator() {
           )}
 
           {cards.length > 0 && (
-            <Button variant="success" onClick={handleDownloadPDF} fullWidth>
-              Download All Cards (PDF)
-            </Button>
+            <div className="space-y-3">
+              <Button
+                variant="primary"
+                onClick={handleSaveCards}
+                disabled={saving || !pacingTable}
+                fullWidth
+              >
+                {saving ? 'Saving...' : 'Save Cards for Deployment'}
+              </Button>
+              {saveStatus === 'success' && (
+                <p className="text-sm text-[var(--status-success-text)] text-center">
+                  Saved to public/packs/{playlist?.id}/
+                </p>
+              )}
+              {saveStatus === 'error' && (
+                <p className="text-sm text-[var(--status-error-text)] text-center">
+                  Save failed (dev server required)
+                </p>
+              )}
+              <Button variant="success" onClick={handleDownloadPDF} fullWidth>
+                Download All Cards (PDF)
+              </Button>
+            </div>
           )}
         </div>
 

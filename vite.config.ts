@@ -62,6 +62,105 @@ export default defineConfig({
         ],
       },
     }),
+    // Dev-only API for saving cards/playlists to filesystem
+    {
+      name: 'admin-api',
+      configureServer(server) {
+        // Save cards to public/packs/{playlistId}/cards.json
+        server.middlewares.use('/api/save-cards', (req, res) => {
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end('Method not allowed')
+            return
+          }
+
+          let body = ''
+          req.on('data', chunk => body += chunk)
+          req.on('end', () => {
+            try {
+              const { playlistId, cards, pacingTable } = JSON.parse(body)
+              const packDir = path.join(__dirname, 'public', 'packs', playlistId)
+
+              // Create directory if needed
+              if (!fs.existsSync(packDir)) {
+                fs.mkdirSync(packDir, { recursive: true })
+              }
+
+              // Save cards
+              fs.writeFileSync(
+                path.join(packDir, 'cards.json'),
+                JSON.stringify({ cards, pacingTable }, null, 2)
+              )
+
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: true, path: `public/packs/${playlistId}/cards.json` }))
+            } catch (err) {
+              res.statusCode = 500
+              res.end(JSON.stringify({ error: String(err) }))
+            }
+          })
+        })
+
+        // Save playlist to public/packs/{playlistId}/playlist.json
+        server.middlewares.use('/api/save-playlist', (req, res) => {
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end('Method not allowed')
+            return
+          }
+
+          let body = ''
+          req.on('data', chunk => body += chunk)
+          req.on('end', () => {
+            try {
+              const { playlist } = JSON.parse(body)
+              const packsDir = path.join(__dirname, 'public', 'packs')
+              const packDir = path.join(packsDir, playlist.id)
+
+              if (!fs.existsSync(packDir)) {
+                fs.mkdirSync(packDir, { recursive: true })
+              }
+
+              fs.writeFileSync(
+                path.join(packDir, 'playlist.json'),
+                JSON.stringify(playlist, null, 2)
+              )
+
+              // Update the manifest
+              const manifestPath = path.join(packsDir, 'playlists-manifest.json')
+              let manifest = { playlists: [] as Array<{ id: string; name: string; songCount: number; path: string }> }
+
+              if (fs.existsSync(manifestPath)) {
+                manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+              }
+
+              // Update or add playlist entry
+              const existingIndex = manifest.playlists.findIndex((p: { id: string }) => p.id === playlist.id)
+              const entry = {
+                id: playlist.id,
+                name: playlist.name,
+                songCount: playlist.songs?.length || 0,
+                path: `${playlist.id}/playlist.json`
+              }
+
+              if (existingIndex >= 0) {
+                manifest.playlists[existingIndex] = entry
+              } else {
+                manifest.playlists.push(entry)
+              }
+
+              fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
+
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: true, path: `public/packs/${playlist.id}/playlist.json` }))
+            } catch (err) {
+              res.statusCode = 500
+              res.end(JSON.stringify({ error: String(err) }))
+            }
+          })
+        })
+      },
+    },
     // Serve MP3 files from the external folder
     {
       name: 'serve-mp3s',

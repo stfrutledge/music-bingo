@@ -28,6 +28,7 @@ export function PlaylistEditor() {
   const [showJsonImport, setShowJsonImport] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deployStatus, setDeployStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   // Audio preview state
   const [expandedSongIndex, setExpandedSongIndex] = useState<number | null>(null);
@@ -79,6 +80,40 @@ export function PlaylistEditor() {
     await savePlaylist(playlist);
     setSaving(false);
     navigate('/admin');
+  };
+
+  const handleSaveForDeployment = async () => {
+    if (!name.trim() || songs.length < 24) return;
+
+    setDeployStatus('saving');
+
+    const playlist: Playlist = {
+      id: isNew ? `playlist-${Date.now()}` : id!,
+      name: name.trim(),
+      description: description.trim() || undefined,
+      baseAudioUrl: baseAudioUrl.trim(),
+      songs,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    try {
+      const response = await fetch('/api/save-playlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playlist }),
+      });
+
+      if (response.ok) {
+        // Also save to IndexedDB
+        await savePlaylist(playlist);
+        setDeployStatus('success');
+      } else {
+        setDeployStatus('error');
+      }
+    } catch {
+      setDeployStatus('error');
+    }
   };
 
   const addSong = () => {
@@ -695,6 +730,29 @@ export function PlaylistEditor() {
               >
                 {saving ? 'Saving...' : 'Save Playlist'}
               </Button>
+
+              <div className="border-t border-[var(--border-color)] pt-3">
+                <p className="text-xs text-[var(--text-muted)] mb-2">For deployment:</p>
+                <Button
+                  variant="primary"
+                  fullWidth
+                  onClick={handleSaveForDeployment}
+                  disabled={deployStatus === 'saving' || !name.trim() || songs.length < 24}
+                >
+                  {deployStatus === 'saving' ? 'Saving...' : 'Save for Deployment'}
+                </Button>
+                {deployStatus === 'success' && (
+                  <p className="text-xs text-[var(--status-success-text)] mt-1 text-center">
+                    Saved to public/packs/
+                  </p>
+                )}
+                {deployStatus === 'error' && (
+                  <p className="text-xs text-[var(--status-error-text)] mt-1 text-center">
+                    Failed (dev server required)
+                  </p>
+                )}
+              </div>
+
               <Button variant="secondary" fullWidth onClick={() => navigate('/admin')}>
                 Cancel
               </Button>
