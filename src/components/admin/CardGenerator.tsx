@@ -32,7 +32,6 @@ export function CardGenerator() {
   // Card pack state
   const [packName, setPackName] = useState('');
   const [existingPacks, setExistingPacks] = useState<ExistingPack[]>([]);
-  const [loadingPacks, setLoadingPacks] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -59,7 +58,6 @@ export function CardGenerator() {
   };
 
   const loadExistingPacks = async (playlistId: string) => {
-    setLoadingPacks(true);
     try {
       // Try dev API first (for local development)
       const response = await fetch(`/api/list-card-packs?playlistId=${playlistId}`);
@@ -82,7 +80,6 @@ export function CardGenerator() {
         // Ignore errors
       }
     }
-    setLoadingPacks(false);
   };
 
   const loadPackFromFile = async (packId: string) => {
