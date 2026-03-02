@@ -103,12 +103,13 @@ export async function getCacheStatus(playlist: Playlist): Promise<CacheStatus> {
 export async function downloadPlaylistAudio(
   playlist: Playlist,
   onProgress?: (downloaded: number, total: number, error?: string) => void
-): Promise<{ success: number; failed: number }> {
+): Promise<{ success: number; failed: number; failedSongs: string[] }> {
   const cache = await openAudioCache();
   const total = playlist.songs.length;
   let downloaded = 0;
   let success = 0;
   let failed = 0;
+  const failedSongs: string[] = [];
 
   for (const song of playlist.songs) {
     const url = getAudioUrl(playlist.baseAudioUrl, song.audioFile);
@@ -142,19 +143,23 @@ export async function downloadPlaylistAudio(
           } else {
             console.warn(`Cache put succeeded but verify failed for ${song.title}`);
             failed++;
+            failedSongs.push(`${song.title} - ${song.artist}`);
           }
         } catch (cacheError) {
           console.error(`Cache.put failed for ${song.title}:`, cacheError);
           failed++;
+          failedSongs.push(`${song.title} - ${song.artist}`);
         }
       } else {
         console.warn(`HTTP ${response.status} for ${song.title}`);
         failed++;
+        failedSongs.push(`${song.title} - ${song.artist}`);
         onProgress?.(downloaded, total, `HTTP ${response.status}: ${song.audioFile}`);
       }
     } catch (error) {
       console.error(`Failed to download ${song.title}:`, error);
       failed++;
+      failedSongs.push(`${song.title} - ${song.artist}`);
       onProgress?.(downloaded, total, `Error: ${song.audioFile}`);
     }
 
@@ -163,7 +168,10 @@ export async function downloadPlaylistAudio(
   }
 
   console.log(`Download complete: ${success} success, ${failed} failed out of ${total}`);
-  return { success, failed };
+  if (failedSongs.length > 0) {
+    console.log('Failed songs:', failedSongs);
+  }
+  return { success, failed, failedSongs };
 }
 
 export async function getAudioFromCache(url: string): Promise<Response | undefined> {

@@ -20,6 +20,7 @@ export function AudioDownload() {
   const [cachedCount, setCachedCount] = useState(0);
   const [checking, setChecking] = useState(true);
   const [isLocal, setIsLocal] = useState(false);
+  const [failedSongs, setFailedSongs] = useState<string[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -61,12 +62,17 @@ export function AudioDownload() {
     if (!playlist) return;
 
     setDownloading(true);
+    setFailedSongs([]);
 
-    await downloadPlaylistAudio(playlist, (downloaded, total) => {
+    const result = await downloadPlaylistAudio(playlist, (downloaded, total) => {
       setProgress({ downloaded, total });
     });
 
     setDownloading(false);
+
+    if (result.failedSongs.length > 0) {
+      setFailedSongs(result.failedSongs);
+    }
 
     // Check final status
     const status = await getCacheStatus(playlist);
@@ -195,12 +201,24 @@ export function AudioDownload() {
           ) : (
             'Downloaded audio will be cached for offline use.'
           )}
-          {cachedCount > 0 && cachedCount < progress.total && (
-            <span className="block mt-1 text-[var(--status-warning-text)]">
-              Some files may have failed to download.
-            </span>
-          )}
         </p>
+
+        {/* Failed Songs List */}
+        {failedSongs.length > 0 && (
+          <div className="mt-4 p-3 bg-[var(--status-error-bg)] border border-[var(--status-error-text)] rounded-lg text-left">
+            <p className="text-sm font-semibold text-[var(--status-error-text)] mb-2">
+              {failedSongs.length} file{failedSongs.length > 1 ? 's' : ''} failed to download:
+            </p>
+            <ul className="text-xs text-[var(--status-error-text)] max-h-32 overflow-y-auto space-y-1">
+              {failedSongs.map((song, i) => (
+                <li key={i}>• {song}</li>
+              ))}
+            </ul>
+            <p className="text-xs text-[var(--text-muted)] mt-2">
+              Check that CORS is configured on your R2 bucket.
+            </p>
+          </div>
+        )}
       </div>
     </AppShell>
   );
