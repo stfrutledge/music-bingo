@@ -174,3 +174,50 @@ export interface GenerationResult {
   stats: GenerationStats;
   pacingTable: PacingTable;
 }
+
+/**
+ * An event bundles a playlist and card pack together for one-click loading.
+ */
+export interface BingoEvent {
+  id: string;                    // URL-safe slug
+  name: string;                  // Display name
+  description?: string;
+  playlistId: string;
+  cardPackId: string;
+  defaultPatterns?: string[];    // Pre-selected patterns
+  defaultPlayerCount?: number;
+  createdAt: number;
+}
+
+/**
+ * Manifest listing all available events.
+ */
+export interface EventManifest {
+  events: Array<{
+    id: string;
+    name: string;
+    playlistId: string;
+    cardPackId: string;
+  }>;
+}
+
+/**
+ * Full event data with embedded playlist and card pack.
+ */
+export interface EventData {
+  event: BingoEvent;
+  embedded: {
+    playlist: Playlist;
+    cardPackData: CardPackData;
+  };
+}
+
+/**
+ * Event configuration passed through the host flow.
+ */
+export interface EventConfig {
+  eventId: string;
+  eventName: string;
+  defaultPatterns?: string[];
+  defaultPlayerCount?: number;
+}

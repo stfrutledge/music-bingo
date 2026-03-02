@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import type { Playlist, BingoCard, PacingTable, PacingEntry, CacheStatus, CardPackInfo } from '../../types';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import type { Playlist, BingoCard, PacingTable, PacingEntry, CacheStatus, CardPackInfo, EventConfig } from '../../types';
 import { getPlaylist, getCardsForPlaylist, getPacingTable, saveCards, savePacingTable, deleteCardsForPlaylist } from '../../lib/db';
 import { getPacingForGroupSize } from '../../lib/cardGenerator';
 import { BINGO_PATTERNS } from '../../lib/patterns';
@@ -13,12 +13,18 @@ import { AppShell } from '../shared/AppShell';
 export function GameSetup() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { startNewGame } = useGame();
+
+  // Get eventConfig from router state (if loaded via event)
+  const eventConfig = (location.state as { eventConfig?: EventConfig })?.eventConfig;
 
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [allCards, setAllCards] = useState<BingoCard[]>([]);
   const [pacingTable, setPacingTable] = useState<PacingTable | null>(null);
-  const [selectedPatterns, setSelectedPatterns] = useState<string[]>(['single-line-h']);
+  const [selectedPatterns, setSelectedPatterns] = useState<string[]>(
+    eventConfig?.defaultPatterns || ['single-line-h']
+  );
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
 
@@ -31,7 +37,7 @@ export function GameSetup() {
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [loadingPacks, setLoadingPacks] = useState(false);
 
-  const [playerCount, setPlayerCount] = useState(30);
+  const [playerCount, setPlayerCount] = useState(eventConfig?.defaultPlayerCount || 30);
   const cardRangeStart = 1;
   const cardRangeEnd = Math.min(playerCount, allCards.length);
   const cardsInPlay = cardRangeEnd - cardRangeStart + 1;
@@ -172,6 +178,19 @@ export function GameSetup() {
 
   return (
     <AppShell title={playlist.name} subtitle="Game Setup" maxWidth="xl">
+      {/* Event Banner */}
+      {eventConfig && (
+        <div className="mb-6 p-4 bg-[var(--status-success-bg)] border border-[var(--accent-green)] rounded-lg flex items-center gap-3">
+          <svg className="w-5 h-5 text-[var(--status-success-text)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <div className="flex-1">
+            <div className="font-semibold text-[var(--status-success-text)]">Event Loaded: {eventConfig.eventName}</div>
+            <div className="text-sm text-[var(--text-secondary)]">Playlist and cards pre-configured</div>
+          </div>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -242,28 +261,41 @@ export function GameSetup() {
         {/* Sidebar - Card pack, player count, and start */}
         <div className="space-y-6">
           {/* Card Pack Selection */}
-          {availablePacks.length > 0 && (
+          {(availablePacks.length > 0 || eventConfig) && (
             <div className="card">
               <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
                 Card Pack
               </h3>
-              <select
-                value={selectedPackId || ''}
-                onChange={e => e.target.value && loadCardPack(e.target.value)}
-                className="input w-full"
-                disabled={loading}
-              >
-                <option value="">Select a card pack...</option>
-                {availablePacks.map(pack => (
-                  <option key={pack.id} value={pack.id}>
-                    {pack.name} ({pack.cardCount} cards)
-                  </option>
-                ))}
-              </select>
-              {selectedPackId && (
-                <p className="text-sm text-[var(--status-success-text)] mt-2">
-                  Loaded: {availablePacks.find(p => p.id === selectedPackId)?.name}
-                </p>
+              {eventConfig ? (
+                <div className="p-3 bg-[var(--status-success-bg)] border border-[var(--accent-green)] rounded-lg">
+                  <p className="text-sm text-[var(--status-success-text)] font-medium">
+                    Pre-loaded from event
+                  </p>
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">
+                    {allCards.length} cards ready
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <select
+                    value={selectedPackId || ''}
+                    onChange={e => e.target.value && loadCardPack(e.target.value)}
+                    className="input w-full"
+                    disabled={loading}
+                  >
+                    <option value="">Select a card pack...</option>
+                    {availablePacks.map(pack => (
+                      <option key={pack.id} value={pack.id}>
+                        {pack.name} ({pack.cardCount} cards)
+                      </option>
+                    ))}
+                  </select>
+                  {selectedPackId && (
+                    <p className="text-sm text-[var(--status-success-text)] mt-2">
+                      Loaded: {availablePacks.find(p => p.id === selectedPackId)?.name}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -384,11 +416,11 @@ export function GameSetup() {
             size="lg"
             fullWidth
             onClick={handleStartGame}
-            disabled={starting || selectedPatterns.length === 0 || (availablePacks.length > 0 && !selectedPackId) || totalCards === 0}
+            disabled={starting || selectedPatterns.length === 0 || (!eventConfig && availablePacks.length > 0 && !selectedPackId) || totalCards === 0}
           >
             {starting ? 'Starting...' : 'Start Game'}
           </Button>
-          {availablePacks.length > 0 && !selectedPackId && (
+          {!eventConfig && availablePacks.length > 0 && !selectedPackId && (
             <p className="text-sm text-[var(--text-muted)] text-center mt-2">
               Select a card pack to start
             </p>

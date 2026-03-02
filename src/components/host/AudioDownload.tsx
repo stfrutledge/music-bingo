@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import type { Playlist } from '../../types';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import type { Playlist, EventConfig } from '../../types';
 import { getPlaylist } from '../../lib/db';
 import { downloadPlaylistAudio, getCacheStatus, clearPlaylistCache, checkAudioAvailability } from '../../lib/audioCache';
 import { Button } from '../shared/Button';
@@ -9,6 +9,10 @@ import { AppShell } from '../shared/AppShell';
 export function AudioDownload() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get eventConfig from router state (if loaded via event)
+  const eventConfig = (location.state as { eventConfig?: EventConfig })?.eventConfig;
 
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -35,7 +39,7 @@ export function AudioDownload() {
       // Only auto-skip for LOCAL files (localhost dev server)
       // Remote files (Cloudflare) should still show download option for offline use
       if (availability.allAvailable && availability.isLocal) {
-        navigate(`/host/setup/${data.id}`, { replace: true });
+        navigate(`/host/setup/${data.id}`, { replace: true, state: { eventConfig } });
         return;
       }
 
@@ -45,7 +49,7 @@ export function AudioDownload() {
       setProgress({ downloaded: status.cachedSongs, total: status.totalSongs });
 
       if (status.isComplete) {
-        navigate(`/host/setup/${data.id}`, { replace: true });
+        navigate(`/host/setup/${data.id}`, { replace: true, state: { eventConfig } });
         return;
       }
 
@@ -67,7 +71,7 @@ export function AudioDownload() {
     // Check final status
     const status = await getCacheStatus(playlist);
     if (status.isComplete) {
-      navigate(`/host/setup/${playlist.id}`);
+      navigate(`/host/setup/${playlist.id}`, { state: { eventConfig } });
     } else {
       setCachedCount(status.cachedSongs);
     }
@@ -87,7 +91,7 @@ export function AudioDownload() {
 
   const handleSkip = () => {
     if (playlist) {
-      navigate(`/host/setup/${playlist.id}`);
+      navigate(`/host/setup/${playlist.id}`, { state: { eventConfig } });
     }
   };
 
@@ -134,7 +138,7 @@ export function AudioDownload() {
                 variant="success"
                 size="lg"
                 fullWidth
-                onClick={() => navigate(`/host/setup/${playlist.id}`)}
+                onClick={() => navigate(`/host/setup/${playlist.id}`, { state: { eventConfig } })}
               >
                 Continue to Game Setup
               </Button>

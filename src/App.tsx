@@ -19,6 +19,8 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { PlaylistEditor } from './components/admin/PlaylistEditor';
 import { CardGenerator } from './components/admin/CardGenerator';
 import { AudioTester } from './components/admin/AudioTester';
+import { EventList } from './components/admin/EventList';
+import { EventCreator } from './components/admin/EventCreator';
 
 function App() {
   return (
@@ -43,6 +45,9 @@ function App() {
             <Route path="/admin/playlist/:id" element={<PlaylistEditor />} />
             <Route path="/admin/cards/:id" element={<CardGenerator />} />
             <Route path="/admin/audio/:id" element={<AudioTester />} />
+            <Route path="/admin/events" element={<EventList />} />
+            <Route path="/admin/events/new" element={<EventCreator />} />
+            <Route path="/admin/events/:id" element={<EventCreator />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

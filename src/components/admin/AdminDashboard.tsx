@@ -37,14 +37,24 @@ export function AdminDashboard() {
             Manage your music bingo playlists and generate cards
           </p>
         </div>
-        <Link to="/admin/playlist/new">
-          <Button variant="primary" size="lg">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Playlist
-          </Button>
-        </Link>
+        <div className="flex gap-3">
+          <Link to="/admin/events">
+            <Button variant="secondary" size="lg">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Events
+            </Button>
+          </Link>
+          <Link to="/admin/playlist/new">
+            <Button variant="primary" size="lg">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              New Playlist
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {loading ? (

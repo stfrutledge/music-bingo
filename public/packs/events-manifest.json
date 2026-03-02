@@ -1,0 +1,10 @@
+{
+  "events": [
+    {
+      "id": "test-for-dead-rabbit-event",
+      "name": "Test for Dead Rabbit Event",
+      "playlistId": "music-bingo-2026",
+      "cardPackId": "test-event"
+    }
+  ]
+}

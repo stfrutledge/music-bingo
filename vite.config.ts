@@ -236,6 +236,132 @@ export default defineConfig({
             }
           })
         })
+
+        // Save event to public/packs/events/{id}.json
+        server.middlewares.use('/api/save-event', (req, res) => {
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end('Method not allowed')
+            return
+          }
+
+          let body = ''
+          req.on('data', chunk => body += chunk)
+          req.on('end', () => {
+            try {
+              const eventData = JSON.parse(body)
+              const { event } = eventData
+              const eventsDir = path.join(__dirname, 'public', 'packs', 'events')
+
+              // Create events directory if needed
+              if (!fs.existsSync(eventsDir)) {
+                fs.mkdirSync(eventsDir, { recursive: true })
+              }
+
+              // Save event data
+              fs.writeFileSync(
+                path.join(eventsDir, `${event.id}.json`),
+                JSON.stringify(eventData, null, 2)
+              )
+
+              // Update events manifest
+              const manifestPath = path.join(__dirname, 'public', 'packs', 'events-manifest.json')
+              let manifest = { events: [] as Array<{ id: string; name: string; playlistId: string; cardPackId: string }> }
+
+              if (fs.existsSync(manifestPath)) {
+                manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+              }
+
+              // Update or add event entry
+              const existingIdx = manifest.events.findIndex((e: { id: string }) => e.id === event.id)
+              const entry = {
+                id: event.id,
+                name: event.name,
+                playlistId: event.playlistId,
+                cardPackId: event.cardPackId,
+              }
+
+              if (existingIdx >= 0) {
+                manifest.events[existingIdx] = entry
+              } else {
+                manifest.events.push(entry)
+              }
+
+              fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
+
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: true, path: `public/packs/events/${event.id}.json` }))
+            } catch (err) {
+              res.statusCode = 500
+              res.end(JSON.stringify({ error: String(err) }))
+            }
+          })
+        })
+
+        // Delete event
+        server.middlewares.use('/api/delete-event', (req, res) => {
+          if (req.method !== 'DELETE') {
+            res.statusCode = 405
+            res.end('Method not allowed')
+            return
+          }
+
+          try {
+            const url = new URL(req.url || '', `http://${req.headers.host}`)
+            const eventId = url.searchParams.get('id')
+            if (!eventId) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: 'id required' }))
+              return
+            }
+
+            const eventPath = path.join(__dirname, 'public', 'packs', 'events', `${eventId}.json`)
+
+            // Delete event file
+            if (fs.existsSync(eventPath)) {
+              fs.unlinkSync(eventPath)
+            }
+
+            // Update manifest
+            const manifestPath = path.join(__dirname, 'public', 'packs', 'events-manifest.json')
+            if (fs.existsSync(manifestPath)) {
+              const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+              manifest.events = manifest.events.filter((e: { id: string }) => e.id !== eventId)
+              fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
+            }
+
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: true }))
+          } catch (err) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: String(err) }))
+          }
+        })
+
+        // List events
+        server.middlewares.use('/api/list-events', (req, res) => {
+          if (req.method !== 'GET') {
+            res.statusCode = 405
+            res.end('Method not allowed')
+            return
+          }
+
+          try {
+            const manifestPath = path.join(__dirname, 'public', 'packs', 'events-manifest.json')
+            let events: Array<{ id: string; name: string; playlistId: string; cardPackId: string }> = []
+
+            if (fs.existsSync(manifestPath)) {
+              const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+              events = manifest.events || []
+            }
+
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ events }))
+          } catch (err) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: String(err) }))
+          }
+        })
       },
     },
     // Serve MP3 files from the external folder

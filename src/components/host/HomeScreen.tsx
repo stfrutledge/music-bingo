@@ -1,9 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
 import { useOfflineStatus } from '../../hooks/useOfflineStatus';
 import { useGame } from '../../context/GameContext';
+import { getAvailableEvents, loadEvent, importEventToDb } from '../../lib/eventService';
+import { getCacheStatus, isLocalUrl } from '../../lib/audioCache';
+import type { EventManifest, EventConfig } from '../../types';
 
 export function HomeScreen() {
   const isOffline = useOfflineStatus();
@@ -11,8 +14,65 @@ export function HomeScreen() {
   const location = useLocation();
   const { game, isLoading } = useGame();
 
+  // Event loading state
+  const [events, setEvents] = useState<EventManifest['events']>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingEvent, setLoadingEvent] = useState(false);
+
   // Check if user intentionally exited the game
   const fromGame = (location.state as { fromGame?: boolean })?.fromGame;
+
+  // Load available events on mount
+  useEffect(() => {
+    async function loadEvents() {
+      setLoadingEvents(true);
+      const eventsList = await getAvailableEvents();
+      setEvents(eventsList);
+      setLoadingEvents(false);
+    }
+    loadEvents();
+  }, []);
+
+  const handleLoadEvent = async () => {
+    if (!selectedEventId) return;
+
+    setLoadingEvent(true);
+    const eventData = await loadEvent(selectedEventId);
+
+    if (!eventData) {
+      alert('Failed to load event');
+      setLoadingEvent(false);
+      return;
+    }
+
+    const { event, embedded } = eventData;
+
+    // Import playlist and cards to IndexedDB
+    await importEventToDb(embedded.playlist, embedded.cardPackData);
+
+    // Create event config to pass through the flow
+    const eventConfig: EventConfig = {
+      eventId: event.id,
+      eventName: event.name,
+      defaultPatterns: event.defaultPatterns,
+      defaultPlayerCount: event.defaultPlayerCount,
+    };
+
+    // Check if audio needs to be downloaded
+    const isLocal = isLocalUrl(embedded.playlist.baseAudioUrl);
+    const cacheStatus = await getCacheStatus(embedded.playlist);
+
+    setLoadingEvent(false);
+
+    if (!isLocal && !cacheStatus.isComplete) {
+      // Navigate to audio download page with event config
+      navigate(`/host/download/${embedded.playlist.id}`, { state: { eventConfig } });
+    } else {
+      // Navigate directly to game setup with event config
+      navigate(`/host/setup/${embedded.playlist.id}`, { state: { eventConfig } });
+    }
+  };
 
   // Auto-redirect to game screen if there's an active game (unless user explicitly exited)
   useEffect(() => {
@@ -63,6 +123,37 @@ export function HomeScreen() {
               </Button>
             </Link>
           </div>
+
+          {/* Quick Load Event */}
+          {!loadingEvents && events.length > 0 && (
+            <div className="mt-8 p-4 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl">
+              <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Quick Load Event</h3>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <select
+                  value={selectedEventId}
+                  onChange={e => setSelectedEventId(e.target.value)}
+                  className="input flex-1"
+                  disabled={loadingEvent}
+                >
+                  <option value="">Select an event...</option>
+                  {events.map(event => (
+                    <option key={event.id} value={event.id}>{event.name}</option>
+                  ))}
+                </select>
+                <Button
+                  variant="success"
+                  onClick={handleLoadEvent}
+                  disabled={!selectedEventId || loadingEvent}
+                  className="whitespace-nowrap"
+                >
+                  {loadingEvent ? 'Loading...' : 'Load Event'}
+                </Button>
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mt-2">
+                Events bundle playlist + cards for one-click setup
+              </p>
+            </div>
+          )}
 
         </div>
 
