@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import { getAudioFromCache } from '../lib/audioCache';
 
 const FADE_DURATION = 500; // ms for fade in/out
 
@@ -157,7 +158,20 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       startOffset: startTime,
     }));
 
-    audio.src = url;
+    // Try to load from cache first (for offline support)
+    let audioSrc = url;
+    try {
+      const cachedResponse = await getAudioFromCache(url);
+      if (cachedResponse) {
+        const blob = await cachedResponse.blob();
+        audioSrc = URL.createObjectURL(blob);
+        console.log('Playing from cache:', url);
+      }
+    } catch (err) {
+      console.warn('Cache lookup failed, using network:', err);
+    }
+
+    audio.src = audioSrc;
     audio.load();
 
     if (autoPlay) {
@@ -175,7 +189,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [fadeIn]);
 
-  const preloadAudio = useCallback((url: string, startTime: number = 0) => {
+  const preloadAudio = useCallback(async (url: string, startTime: number = 0) => {
     const preload = preloadAudioRef.current;
     if (!preload) return;
 
@@ -183,7 +197,19 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     preloadStartTimeRef.current = startTime;
     setState(prev => ({ ...prev, isPreloading: true }));
 
-    preload.src = url;
+    // Try to load from cache first (for offline support)
+    let audioSrc = url;
+    try {
+      const cachedResponse = await getAudioFromCache(url);
+      if (cachedResponse) {
+        const blob = await cachedResponse.blob();
+        audioSrc = URL.createObjectURL(blob);
+      }
+    } catch (err) {
+      console.warn('Cache lookup failed for preload:', err);
+    }
+
+    preload.src = audioSrc;
     preload.load();
 
     // Seek to start time when metadata loads

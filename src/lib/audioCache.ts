@@ -123,18 +123,28 @@ export async function downloadPlaylistAudio(
     }
 
     try {
+      console.log(`Fetching: ${url}`);
       const response = await fetch(url, { mode: 'cors' });
+      console.log(`Response: ${response.status} ${response.statusText}, ok: ${response.ok}`);
+
       if (response.ok) {
         // Clone the response since we can only read it once
         const clone = response.clone();
-        await cache.put(url, clone);
 
-        // Verify it was cached
-        const verify = await cache.match(url);
-        if (verify) {
-          success++;
-        } else {
-          console.warn(`Cache put succeeded but verify failed for ${song.title}`);
+        try {
+          await cache.put(url, clone);
+          console.log(`Cached: ${song.title}`);
+
+          // Verify it was cached
+          const verify = await cache.match(url);
+          if (verify) {
+            success++;
+          } else {
+            console.warn(`Cache put succeeded but verify failed for ${song.title}`);
+            failed++;
+          }
+        } catch (cacheError) {
+          console.error(`Cache.put failed for ${song.title}:`, cacheError);
           failed++;
         }
       } else {
