@@ -91,9 +91,10 @@ def detect_best_start_time(audio_path: str, target_duration: float = 45.0) -> tu
         # We want a window of ~target_duration that has highest average energy
         window_frames = int(target_duration * sr / hop_length)
 
-        # Skip first 5 seconds (usually intro) and ensure we don't go past song end
+        # Skip first 5 seconds (usually intro) and limit to first 40% of song
         start_frame = int(5 * sr / hop_length)
-        end_frame = len(combined_smooth) - window_frames
+        max_start_time = duration * 0.4  # Only search within first 40% of song
+        end_frame = min(int(max_start_time * sr / hop_length), len(combined_smooth) - window_frames)
 
         if end_frame <= start_frame:
             # Song too short for proper analysis
