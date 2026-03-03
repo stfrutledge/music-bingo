@@ -124,6 +124,12 @@ export interface AppSettings {
   darkMode: boolean;
 }
 
+export type AudioSource = 'local' | 'cloudflare';
+
+export interface AudioSettings {
+  audioSource: AudioSource;
+}
+
 export interface GroupRecommendation {
   cardCount: number;
   maxOverlap: number;

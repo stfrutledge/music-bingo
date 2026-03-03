@@ -28,6 +28,7 @@ export function PlaylistEditor() {
   const [showJsonImport, setShowJsonImport] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [deployStatus, setDeployStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   // Audio preview state
@@ -295,6 +296,53 @@ export function PlaylistEditor() {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newSongs: Song[] = [];
+
+    for (const file of Array.from(files)) {
+      if (!file.name.toLowerCase().endsWith('.mp3')) continue;
+
+      // Remove .mp3 extension
+      const nameWithoutExt = file.name.slice(0, -4);
+
+      // Try to parse "Artist - Title" or "Title - Artist" format
+      const parts = nameWithoutExt.split(/\s*[-–—]\s*/);
+
+      let title: string;
+      let artist: string;
+
+      if (parts.length >= 2) {
+        // Assume format: "Artist - Title"
+        artist = parts[0].trim();
+        title = parts.slice(1).join(' - ').trim();
+      } else {
+        // Just use filename as title
+        title = nameWithoutExt.trim();
+        artist = 'Unknown Artist';
+      }
+
+      newSongs.push({
+        id: `song-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        title,
+        artist,
+        audioFile: file.name,
+      });
+    }
+
+    if (newSongs.length > 0) {
+      setSongs([...songs, ...newSongs]);
+      alert(`Added ${newSongs.length} songs from files`);
+    }
+
+    // Reset the input so the same files can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const parseJsonImport = () => {
     try {
       const data = JSON.parse(jsonInput);
@@ -438,6 +486,21 @@ export function PlaylistEditor() {
                 )}
               </h2>
               <div className="flex gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  accept=".mp3"
+                  multiple
+                  className="hidden"
+                />
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Select MP3s
+                </Button>
                 <Button
                   variant="secondary"
                   size="sm"
@@ -452,9 +515,22 @@ export function PlaylistEditor() {
                 >
                   {showBulkInput ? 'Hide Bulk' : 'Bulk Add'}
                 </Button>
-                <Button variant="primary" size="sm" onClick={addSong}>
-                  Add Song
+                <Button variant="secondary" size="sm" onClick={addSong}>
+                  + Add
                 </Button>
+                {songs.length > 0 && (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm(`Clear all ${songs.length} songs?`)) {
+                        setSongs([]);
+                      }
+                    }}
+                  >
+                    Clear All
+                  </Button>
+                )}
               </div>
             </div>
 

@@ -1,4 +1,5 @@
 import type { Playlist, CacheStatus } from '../types';
+import { getEffectiveBaseUrl } from './audioSettings';
 
 const AUDIO_CACHE_NAME = 'music-bingo-audio-v1';
 
@@ -198,8 +199,10 @@ export async function clearAllAudioCache(): Promise<boolean> {
 }
 
 export function getAudioUrl(baseUrl: string, filename: string): string {
-  // Ensure baseUrl ends with /
-  const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  // Use the effective base URL from settings
+  const effectiveBase = getEffectiveBaseUrl();
+  // Ensure base ends with /
+  const base = effectiveBase.endsWith('/') ? effectiveBase : `${effectiveBase}/`;
   return `${base}${filename}`;
 }
 

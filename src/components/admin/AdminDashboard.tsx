@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import type { Playlist } from '../../types';
+import type { Playlist, AudioSource } from '../../types';
 import { getAllPlaylists, deletePlaylist } from '../../lib/db';
+import { getAudioSource, setAudioSource, AUDIO_URLS } from '../../lib/audioSettings';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
 
 export function AdminDashboard() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [audioSource, setAudioSourceState] = useState<AudioSource>(getAudioSource);
 
   useEffect(() => {
     loadPlaylists();
   }, []);
+
+  const handleAudioSourceChange = (source: AudioSource) => {
+    setAudioSource(source);
+    setAudioSourceState(source);
+  };
 
   const loadPlaylists = async () => {
     setLoading(true);
@@ -54,6 +61,40 @@ export function AdminDashboard() {
               New Playlist
             </Button>
           </Link>
+        </div>
+      </div>
+
+      {/* Settings Card */}
+      <div className="card mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Audio Source</h2>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
+              {audioSource === 'local' ? AUDIO_URLS.local : AUDIO_URLS.cloudflare}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-1">
+            <button
+              onClick={() => handleAudioSourceChange('local')}
+              className={`px-5 py-2.5 rounded-md text-sm font-semibold transition-all ${
+                audioSource === 'local'
+                  ? 'bg-[var(--accent-green)] text-white shadow-md'
+                  : 'bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              Local
+            </button>
+            <button
+              onClick={() => handleAudioSourceChange('cloudflare')}
+              className={`px-5 py-2.5 rounded-md text-sm font-semibold transition-all ${
+                audioSource === 'cloudflare'
+                  ? 'bg-[var(--accent-green)] text-white shadow-md'
+                  : 'bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              Cloudflare
+            </button>
+          </div>
         </div>
       </div>
 
