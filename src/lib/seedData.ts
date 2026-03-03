@@ -18,14 +18,8 @@ export async function seedDatabaseIfEmpty(): Promise<void> {
         await seedPlaylistFromPack(packId);
       }
 
-      // Remove playlists that are no longer in the manifest
-      const existingPlaylists = await getAllPlaylists();
-      for (const playlist of existingPlaylists) {
-        if (!manifestIds.has(playlist.id)) {
-          console.log(`Removing outdated playlist: ${playlist.name}`);
-          await deletePlaylist(playlist.id);
-        }
-      }
+      // Note: We no longer delete playlists not in manifest
+      // This preserves user-created playlists
       return;
     }
 

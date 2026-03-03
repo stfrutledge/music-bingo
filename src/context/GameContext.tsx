@@ -210,13 +210,14 @@ function gameReducer(state: GameContextState, action: GameAction): GameContextSt
   }
 }
 
-interface CardRangeOptions {
+interface GameStartOptions {
   cardRangeStart: number;
   cardRangeEnd: number;
+  shuffledSongOrder?: string[]; // Optional pre-shuffled order from preview
 }
 
 interface GameContextValue extends GameContextState {
-  startNewGame: (playlist: Playlist, patternIds: string[], cardRange?: CardRangeOptions) => Promise<void>;
+  startNewGame: (playlist: Playlist, patternIds: string[], options?: GameStartOptions) => Promise<void>;
   loadGame: (gameId: string, playlist: Playlist) => Promise<void>;
   cardsInPlay: number;
   nextSong: () => void;
@@ -269,14 +270,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.game]);
 
-  const startNewGame = useCallback(async (playlist: Playlist, patternIds: string[], cardRange?: CardRangeOptions) => {
+  const startNewGame = useCallback(async (playlist: Playlist, patternIds: string[], options?: GameStartOptions) => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
     const cards = await getCardsForPlaylist(playlist.id);
 
     // Filter to only cards in play
-    const activeCards = cardRange
-      ? cards.filter(c => c.cardNumber >= cardRange.cardRangeStart && c.cardNumber <= cardRange.cardRangeEnd)
+    const activeCards = options
+      ? cards.filter(c => c.cardNumber >= options.cardRangeStart && c.cardNumber <= options.cardRangeEnd)
       : cards;
 
     // Smart playlist filtering:
@@ -290,7 +291,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     console.log(`Playlist filtering: ${playlist.songs.length} total songs, ${relevantSongs.length} callable (${removedCount} removed, ${activeCards.length} cards in play)`);
 
-    const shuffledOrder = shuffleSongOrder(relevantSongs);
+    // Use pre-shuffled order if provided (from preview), otherwise shuffle now
+    const shuffledOrder = options?.shuffledSongOrder
+      ? options.shuffledSongOrder.filter(id => callableSongIds.has(id))
+      : shuffleSongOrder(relevantSongs);
     const firstSongId = shuffledOrder[0];
 
     const game: GameState = {
@@ -310,8 +314,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       currentSongIndex: 0,
       isPlaying: false,
       startedAt: Date.now(),
-      cardRangeStart: cardRange?.cardRangeStart,
-      cardRangeEnd: cardRange?.cardRangeEnd,
+      cardRangeStart: options?.cardRangeStart,
+      cardRangeEnd: options?.cardRangeEnd,
     };
 
     await saveGame(game);
