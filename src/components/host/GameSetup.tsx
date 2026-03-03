@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import type { Playlist, BingoCard, BingoPattern, PacingTable, PacingEntry, CacheStatus, CardPackInfo, EventConfig } from '../../types';
+import type { Playlist, BingoCard, PacingTable, CacheStatus, CardPackInfo, EventConfig } from '../../types';
 import { getPlaylist, getCardsForPlaylist, getPacingTable, saveCards, savePacingTable, deleteCardsForPlaylist } from '../../lib/db';
-import { getPacingForGroupSize } from '../../lib/cardGenerator';
 import { BINGO_PATTERNS, getPatternById } from '../../lib/patterns';
 import { getCacheStatus, isLocalUrl } from '../../lib/audioCache';
 import { checkWin } from '../../lib/winChecker';
@@ -247,11 +246,6 @@ export function GameSetup() {
     const cardsToCheck = allCards.filter(c => c.cardNumber >= cardRangeStart && c.cardNumber <= cardRangeEnd);
     return predictAllRounds(cardsToCheck, shuffledSongOrder, selectedPatterns, playlist);
   }, [playlist, allCards, shuffledSongOrder, selectedPatterns, cardRangeStart, cardRangeEnd]);
-
-  const pacingEntry = useMemo((): PacingEntry | null => {
-    if (!pacingTable) return null;
-    return getPacingForGroupSize(pacingTable, cardsInPlay);
-  }, [pacingTable, cardsInPlay]);
 
   useEffect(() => {
     if (id) {

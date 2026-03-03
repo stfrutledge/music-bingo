@@ -198,8 +198,8 @@ export async function clearAllAudioCache(): Promise<boolean> {
   return caches.delete(AUDIO_CACHE_NAME);
 }
 
-export function getAudioUrl(baseUrl: string, filename: string): string {
-  // Use the effective base URL from settings
+export function getAudioUrl(_baseUrl: string, filename: string): string {
+  // Use the effective base URL from settings (ignores playlist's baseUrl)
   const effectiveBase = getEffectiveBaseUrl();
   // Ensure base ends with /
   const base = effectiveBase.endsWith('/') ? effectiveBase : `${effectiveBase}/`;

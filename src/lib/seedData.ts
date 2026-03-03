@@ -1,5 +1,5 @@
 import type { Playlist, BingoCard, PacingTable } from '../types';
-import { db, savePlaylist, getAllPlaylists, saveCards, savePacingTable, getCardsForPlaylist, deletePlaylist } from './db';
+import { db, savePlaylist, saveCards, savePacingTable, getCardsForPlaylist } from './db';
 
 export async function seedDatabaseIfEmpty(): Promise<void> {
   console.log('Syncing database with static playlists...');
