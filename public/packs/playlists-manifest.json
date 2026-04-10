@@ -13,6 +13,13 @@
           "path": "music-bingo-2026/card-packs/test-event.json"
         }
       ]
+    },
+    {
+      "id": "san-patricio",
+      "name": "San Patricio playlist",
+      "songCount": 71,
+      "path": "san-patricio/playlist.json",
+      "cardPacks": []
     }
   ]
 }

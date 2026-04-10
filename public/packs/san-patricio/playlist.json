@@ -1,0 +1,505 @@
+{
+  "id": "san-patricio",
+  "name": "San Patricio playlist",
+  "description": "Music Bingo - April 2026",
+  "baseAudioUrl": "https://pub-808e302e1ac64e4daac4342d53d6ce19.r2.dev/san-patricio/",
+  "songs": [
+    {
+      "id": "ana-tijoux-1977",
+      "title": "1977",
+      "artist": "Ana Tijoux",
+      "audioFile": "1977 - Ana Tijoux.mp3",
+      "startTime": 54
+    },
+    {
+      "id": "the-gaslight-anthem-45",
+      "title": "45",
+      "artist": "The Gaslight Anthem",
+      "audioFile": "45 - The Gaslight Anthem.mp3",
+      "startTime": 20
+    },
+    {
+      "id": "2017-remaster-david-bowie-heroes",
+      "title": "_Heroes_",
+      "artist": "David Bowie",
+      "audioFile": "_Heroes_ - 2017 Remaster - David Bowie.mp3",
+      "startTime": 148
+    },
+    {
+      "id": "villagers-a-trick-of-the-light",
+      "title": "A Trick of the Light",
+      "artist": "Villagers",
+      "audioFile": "A Trick of the Light - Villagers.mp3",
+      "startTime": 99
+    },
+    {
+      "id": "soak-b-a-nobody",
+      "title": "B a noBody",
+      "artist": "SOAK",
+      "audioFile": "B a noBody - SOAK.mp3",
+      "startTime": 61
+    },
+    {
+      "id": "david-gray-babylon",
+      "title": "Babylon",
+      "artist": "David Gray",
+      "audioFile": "Babylon - David Gray.mp3",
+      "startTime": 82
+    },
+    {
+      "id": "bruce-springsteen-badlands",
+      "title": "Badlands",
+      "artist": "Bruce Springsteen",
+      "audioFile": "Badlands - Bruce Springsteen.mp3",
+      "startTime": 32
+    },
+    {
+      "id": "the-thrills-big-sur",
+      "title": "Big Sur",
+      "artist": "The Thrills",
+      "audioFile": "Big Sur - The Thrills.mp3",
+      "startTime": 40
+    },
+    {
+      "id": "bruce-springsteen-born-to-run",
+      "title": "Born to Run",
+      "artist": "Bruce Springsteen",
+      "audioFile": "Born to Run - Bruce Springsteen.mp3",
+      "startTime": 85
+    },
+    {
+      "id": "feeder-buck-rogers",
+      "title": "Buck Rogers",
+      "artist": "Feeder",
+      "audioFile": "Buck Rogers - Feeder.mp3",
+      "startTime": 77
+    },
+    {
+      "id": "ed-sheeran-castle-on-the-hill",
+      "title": "Castle on the Hill",
+      "artist": "Ed Sheeran",
+      "audioFile": "Castle on the Hill - Ed Sheeran.mp3",
+      "startTime": 37
+    },
+    {
+      "id": "lcd-soundsystem-daft-punk-is-playing-at-my-house",
+      "title": "Daft Punk Is Playing at My House",
+      "artist": "LCD Soundsystem",
+      "audioFile": "Daft Punk Is Playing at My House - LCD Soundsystem.mp3",
+      "startTime": 35
+    },
+    {
+      "id": "stereophonics-dakota",
+      "title": "Dakota",
+      "artist": "Stereophonics",
+      "audioFile": "Dakota - Stereophonics.mp3",
+      "startTime": 105
+    },
+    {
+      "id": "thin-lizzy-dancing-in-the-moonlight-it-s-caught-me",
+      "title": "Dancing In The Moonlight (It's Caught Me In It's Spotlight)",
+      "artist": "Thin Lizzy",
+      "audioFile": "Dancing In The Moonlight (It's Caught Me In It's Spotlight) - Thin Lizzy.mp3",
+      "startTime": 46
+    },
+    {
+      "id": "khakikid-date-nite",
+      "title": "Date Nite",
+      "artist": "KhakiKid",
+      "audioFile": "Date Nite - KhakiKid.mp3",
+      "startTime": 17
+    },
+    {
+      "id": "remastered-oasis-don-t-look-back-in-anger",
+      "title": "Don't Look Back In Anger",
+      "artist": "Oasis",
+      "audioFile": "Don't Look Back In Anger - Remastered - Oasis.mp3",
+      "startTime": 47
+    },
+    {
+      "id": "the-cranberries-dreams",
+      "title": "Dreams",
+      "artist": "The Cranberries",
+      "audioFile": "Dreams - The Cranberries.mp3",
+      "startTime": 63
+    },
+    {
+      "id": "myles-smith-drive-safe",
+      "title": "Drive Safe",
+      "artist": "Myles Smith",
+      "audioFile": "Drive Safe - Myles Smith.mp3",
+      "startTime": 26
+    },
+    {
+      "id": "train-drops-of-jupiter-tell-me",
+      "title": "Drops of Jupiter (Tell Me)",
+      "artist": "Train",
+      "audioFile": "Drops of Jupiter (Tell Me) - Train.mp3",
+      "startTime": 96
+    },
+    {
+      "id": "bad-bunny-dtmf",
+      "title": "DtMF",
+      "artist": "Bad Bunny",
+      "audioFile": "DtMF - Bad Bunny.mp3",
+      "startTime": 51
+    },
+    {
+      "id": "natalia-lafourcade-el-lugar-correcto",
+      "title": "El lugar correcto",
+      "artist": "Natalia Lafourcade",
+      "audioFile": "El lugar correcto - Natalia Lafourcade.mp3",
+      "startTime": 54
+    },
+    {
+      "id": "maye-favorite-place",
+      "title": "Favorite Place",
+      "artist": "maye",
+      "audioFile": "Favorite Place - maye.mp3",
+      "startTime": 40
+    },
+    {
+      "id": "fontaines-d-c-favourite",
+      "title": "Favourite",
+      "artist": "Fontaines D.C.",
+      "audioFile": "Favourite - Fontaines D.C..mp3",
+      "startTime": 67
+    },
+    {
+      "id": "joy-crookes-first-last-dance",
+      "title": "First Last Dance",
+      "artist": "Joy Crookes",
+      "audioFile": "First Last Dance - Joy Crookes.mp3",
+      "startTime": 79
+    },
+    {
+      "id": "arctic-monkeys-fluorescent-adolescent",
+      "title": "Fluorescent Adolescent",
+      "artist": "Arctic Monkeys",
+      "audioFile": "Fluorescent Adolescent - Arctic Monkeys.mp3",
+      "startTime": 63
+    },
+    {
+      "id": "dermot-kennedy-funeral",
+      "title": "Funeral",
+      "artist": "Dermot Kennedy",
+      "audioFile": "Funeral - Dermot Kennedy.mp3",
+      "startTime": 97
+    },
+    {
+      "id": "mark-ronson-god-put-a-smile-on-your-face-feat-the-",
+      "title": "God Put a Smile on Your Face (feat. The Daptone Horns)",
+      "artist": "Mark Ronson",
+      "audioFile": "God Put a Smile on Your Face (feat. The Daptone Horns) - Mark Ronson.mp3",
+      "startTime": 64
+    },
+    {
+      "id": "pixies-here-comes-your-man",
+      "title": "Here Comes Your Man",
+      "artist": "Pixies",
+      "audioFile": "Here Comes Your Man - Pixies.mp3",
+      "startTime": 80
+    },
+    {
+      "id": "bob-dylan-hurricane",
+      "title": "Hurricane",
+      "artist": "Bob Dylan",
+      "audioFile": "Hurricane - Bob Dylan.mp3",
+      "startTime": 172
+    },
+    {
+      "id": "remastered-2007-u2-i-still-haven-t-found-what-i-m-",
+      "title": "I Still Haven't Found What I'm Looking For",
+      "artist": "U2",
+      "audioFile": "I Still Haven't Found What I'm Looking For - Remastered 2007 - U2.mp3",
+      "startTime": 99
+    },
+    {
+      "id": "inhaler-it-won-t-always-be-like-this",
+      "title": "It Won't Always Be Like This",
+      "artist": "Inhaler",
+      "audioFile": "It Won't Always Be Like This - Inhaler.mp3",
+      "startTime": 54
+    },
+    {
+      "id": "hozier-jackie-and-wilson",
+      "title": "Jackie And Wilson",
+      "artist": "Hozier",
+      "audioFile": "Jackie And Wilson - Hozier.mp3",
+      "startTime": 47
+    },
+    {
+      "id": "caesars-jerk-it-out",
+      "title": "Jerk It Out",
+      "artist": "Caesars",
+      "audioFile": "Jerk It Out - Caesars.mp3",
+      "startTime": 78
+    },
+    {
+      "id": "radiohead-jigsaw-falling-into-place",
+      "title": "Jigsaw Falling Into Place",
+      "artist": "Radiohead",
+      "audioFile": "Jigsaw Falling Into Place - Radiohead.mp3",
+      "startTime": 100
+    },
+    {
+      "id": "kingfishr-killeagh",
+      "title": "Killeagh",
+      "artist": "Kingfishr",
+      "audioFile": "Killeagh - Kingfishr.mp3",
+      "startTime": 48
+    },
+    {
+      "id": "sixpence-none-the-richer-kiss-me",
+      "title": "Kiss Me",
+      "artist": "Sixpence None The Richer",
+      "audioFile": "Kiss Me - Sixpence None The Richer.mp3",
+      "startTime": 63
+    },
+    {
+      "id": "los-amigos-invisibles-la-que-me-gusta",
+      "title": "La Que Me Gusta",
+      "artist": "Los Amigos Invisibles",
+      "audioFile": "La Que Me Gusta - Los Amigos Invisibles.mp3",
+      "startTime": 95
+    },
+    {
+      "id": "julieta-venegas-lento",
+      "title": "Lento",
+      "artist": "Julieta Venegas",
+      "audioFile": "Lento - Julieta Venegas.mp3",
+      "startTime": 50
+    },
+    {
+      "id": "the-cranberries-linger",
+      "title": "Linger",
+      "artist": "The Cranberries",
+      "audioFile": "Linger - The Cranberries.mp3",
+      "startTime": 68
+    },
+    {
+      "id": "the-black-keys-lo-hi",
+      "title": "Lo_Hi",
+      "artist": "The Black Keys",
+      "audioFile": "Lo_Hi - The Black Keys.mp3",
+      "startTime": 32
+    },
+    {
+      "id": "r-e-m-losing-my-religion",
+      "title": "Losing My Religion",
+      "artist": "R.E.M.",
+      "audioFile": "Losing My Religion - R.E.M..mp3",
+      "startTime": 51
+    },
+    {
+      "id": "olivia-dean-man-i-need",
+      "title": "Man I Need",
+      "artist": "Olivia Dean",
+      "audioFile": "Man I Need - Olivia Dean.mp3",
+      "startTime": 46
+    },
+    {
+      "id": "moio-moments",
+      "title": "Moments",
+      "artist": "MOIO",
+      "audioFile": "Moments - MOIO.mp3",
+      "startTime": 27
+    },
+    {
+      "id": "2013-remaster-van-morrison-moondance",
+      "title": "Moondance",
+      "artist": "Van Morrison",
+      "audioFile": "Moondance - 2013 Remaster - Van Morrison.mp3",
+      "startTime": 84
+    },
+    {
+      "id": "manic-street-preachers-motorcycle-emptiness",
+      "title": "Motorcycle Emptiness",
+      "artist": "Manic Street Preachers",
+      "audioFile": "Motorcycle Emptiness - Manic Street Preachers.mp3",
+      "startTime": 109
+    },
+    {
+      "id": "the-cardigans-my-favourite-game",
+      "title": "My Favourite Game",
+      "artist": "The Cardigans",
+      "audioFile": "My Favourite Game - The Cardigans.mp3",
+      "startTime": 22
+    },
+    {
+      "id": "the-kooks-naive",
+      "title": "Naive",
+      "artist": "The Kooks",
+      "audioFile": "Naive - The Kooks.mp3",
+      "startTime": 63
+    },
+    {
+      "id": "niall-horan-nice-to-meet-ya",
+      "title": "Nice To Meet Ya",
+      "artist": "Niall Horan",
+      "audioFile": "Nice To Meet Ya - Niall Horan.mp3",
+      "startTime": 27
+    },
+    {
+      "id": "santana-oye-como-va",
+      "title": "Oye Como Va",
+      "artist": "Santana",
+      "audioFile": "Oye Como Va - Santana.mp3",
+      "startTime": 60
+    },
+    {
+      "id": "sam-fender-people-watching",
+      "title": "People Watching",
+      "artist": "Sam Fender",
+      "audioFile": "People Watching - Sam Fender.mp3",
+      "startTime": 75
+    },
+    {
+      "id": "father-john-misty-real-love-baby",
+      "title": "Real Love Baby",
+      "artist": "Father John Misty",
+      "audioFile": "Real Love Baby - Father John Misty.mp3",
+      "startTime": 43
+    },
+    {
+      "id": "sam-fender-rein-me-in-with-olivia-dean",
+      "title": "Rein Me In (with Olivia Dean)",
+      "artist": "Sam Fender",
+      "audioFile": "Rein Me In (with Olivia Dean) - Sam Fender.mp3",
+      "startTime": 34
+    },
+    {
+      "id": "the-frames-revelate",
+      "title": "Revelate",
+      "artist": "The Frames",
+      "audioFile": "Revelate - The Frames.mp3",
+      "startTime": 65
+    },
+    {
+      "id": "bleachers-rollercoaster",
+      "title": "Rollercoaster",
+      "artist": "Bleachers",
+      "audioFile": "Rollercoaster - Bleachers.mp3",
+      "startTime": 33
+    },
+    {
+      "id": "james-sit-down",
+      "title": "Sit Down",
+      "artist": "James",
+      "audioFile": "Sit Down - James.mp3",
+      "startTime": 92
+    },
+    {
+      "id": "amble-socrates-smiled",
+      "title": "Socrates Smiled",
+      "artist": "Amble",
+      "audioFile": "Socrates Smiled - Amble.mp3",
+      "startTime": 62
+    },
+    {
+      "id": "bomba-est-reo-soy-yo",
+      "title": "Soy Yo",
+      "artist": "Bomba Estéreo",
+      "audioFile": "Soy Yo - Bomba Estéreo.mp3",
+      "startTime": 62
+    },
+    {
+      "id": "snow-patrol-spitting-games",
+      "title": "Spitting Games",
+      "artist": "Snow Patrol",
+      "audioFile": "Spitting Games - Snow Patrol.mp3",
+      "startTime": 74
+    },
+    {
+      "id": "fontaines-d-c-starburster",
+      "title": "Starburster",
+      "artist": "Fontaines D.C.",
+      "audioFile": "Starburster - Fontaines D.C..mp3",
+      "startTime": 89
+    },
+    {
+      "id": "kt-tunstall-suddenly-i-see",
+      "title": "Suddenly I See",
+      "artist": "KT Tunstall",
+      "audioFile": "Suddenly I See - KT Tunstall.mp3",
+      "startTime": 70
+    },
+    {
+      "id": "cmat-take-a-sexy-picture-of-me",
+      "title": "Take A Sexy Picture Of Me",
+      "artist": "CMAT",
+      "audioFile": "Take A Sexy Picture Of Me - CMAT.mp3",
+      "startTime": 89
+    },
+    {
+      "id": "kali-uchis-telepat-a",
+      "title": "telepatía",
+      "artist": "Kali Uchis",
+      "audioFile": "telepatía - Kali Uchis.mp3",
+      "startTime": 25
+    },
+    {
+      "id": "thin-lizzy-the-boys-are-back-in-town",
+      "title": "The Boys Are Back In Town",
+      "artist": "Thin Lizzy",
+      "audioFile": "The Boys Are Back In Town - Thin Lizzy.mp3",
+      "startTime": 53
+    },
+    {
+      "id": "tame-impala-the-less-i-know-the-better",
+      "title": "The Less I Know The Better",
+      "artist": "Tame Impala",
+      "audioFile": "The Less I Know The Better - Tame Impala.mp3",
+      "startTime": 55
+    },
+    {
+      "id": "paul-brady-the-world-is-what-you-make-it",
+      "title": "The World Is What You Make It",
+      "artist": "Paul Brady",
+      "audioFile": "The World Is What You Make It - Paul Brady.mp3",
+      "startTime": 90
+    },
+    {
+      "id": "2005-remaster-talking-heads-this-must-be-the-place",
+      "title": "This Must Be the Place (Naive Melody)",
+      "artist": "Talking Heads",
+      "audioFile": "This Must Be the Place (Naive Melody) - 2005 Remaster - Talking Heads.mp3",
+      "startTime": 85
+    },
+    {
+      "id": "the-jam-town-called-malice",
+      "title": "Town Called Malice",
+      "artist": "The Jam",
+      "audioFile": "Town Called Malice - The Jam.mp3",
+      "startTime": 57
+    },
+    {
+      "id": "bratty-tu-nombre",
+      "title": "tu nombre",
+      "artist": "Bratty",
+      "audioFile": "tu nombre - Bratty.mp3",
+      "startTime": 24
+    },
+    {
+      "id": "two-door-cinema-club-what-you-know",
+      "title": "What You Know",
+      "artist": "Two Door Cinema Club",
+      "audioFile": "What You Know - Two Door Cinema Club.mp3",
+      "startTime": 42
+    },
+    {
+      "id": "raye-where-is-my-husband",
+      "title": "WHERE IS MY HUSBAND!",
+      "artist": "RAYE",
+      "audioFile": "WHERE IS MY HUSBAND! - RAYE.mp3",
+      "startTime": 79
+    },
+    {
+      "id": "new-radicals-you-get-what-you-give",
+      "title": "You Get What You Give",
+      "artist": "New Radicals",
+      "audioFile": "You Get What You Give - New Radicals.mp3",
+      "startTime": 120
+    }
+  ]
+}
