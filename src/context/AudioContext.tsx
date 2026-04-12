@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
-import { getAudioFromCache } from '../lib/audioCache';
+import { getAudioFromCache, isLocalUrl } from '../lib/audioCache';
+import { getAudioSource } from '../lib/audioSettings';
 
 const FADE_DURATION = 500; // ms for fade in/out
 
@@ -158,17 +159,23 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       startOffset: startTime,
     }));
 
-    // Try to load from cache first (for offline support)
+    // For local audio source, use files directly without cache lookup
+    // Cache is only needed for remote/streaming sources (offline support)
     let audioSrc = url;
-    try {
-      const cachedResponse = await getAudioFromCache(url);
-      if (cachedResponse) {
-        const blob = await cachedResponse.blob();
-        audioSrc = URL.createObjectURL(blob);
-        console.log('Playing from cache:', url);
+    const isLocal = getAudioSource() === 'local' || isLocalUrl(url);
+
+    if (!isLocal) {
+      // Only check cache for remote sources
+      try {
+        const cachedResponse = await getAudioFromCache(url);
+        if (cachedResponse) {
+          const blob = await cachedResponse.blob();
+          audioSrc = URL.createObjectURL(blob);
+          console.log('Playing from cache:', url);
+        }
+      } catch (err) {
+        console.warn('Cache lookup failed, using network:', err);
       }
-    } catch (err) {
-      console.warn('Cache lookup failed, using network:', err);
     }
 
     audio.src = audioSrc;
@@ -197,16 +204,21 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     preloadStartTimeRef.current = startTime;
     setState(prev => ({ ...prev, isPreloading: true }));
 
-    // Try to load from cache first (for offline support)
+    // For local audio source, use files directly without cache lookup
     let audioSrc = url;
-    try {
-      const cachedResponse = await getAudioFromCache(url);
-      if (cachedResponse) {
-        const blob = await cachedResponse.blob();
-        audioSrc = URL.createObjectURL(blob);
+    const isLocal = getAudioSource() === 'local' || isLocalUrl(url);
+
+    if (!isLocal) {
+      // Only check cache for remote sources
+      try {
+        const cachedResponse = await getAudioFromCache(url);
+        if (cachedResponse) {
+          const blob = await cachedResponse.blob();
+          audioSrc = URL.createObjectURL(blob);
+        }
+      } catch (err) {
+        console.warn('Cache lookup failed for preload:', err);
       }
-    } catch (err) {
-      console.warn('Cache lookup failed for preload:', err);
     }
 
     preload.src = audioSrc;

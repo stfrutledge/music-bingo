@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
+import { AudioSourceToggle } from '../shared/AudioSourceToggle';
 import { useOfflineStatus } from '../../hooks/useOfflineStatus';
 import { useGame } from '../../context/GameContext';
 import { getAvailableEvents, loadEvent, importEventToDb } from '../../lib/eventService';
@@ -104,7 +105,7 @@ export function HomeScreen() {
         {/* Left - Content */}
         <div className="text-center lg:text-left py-12 lg:py-0">
           <h1 className="text-4xl lg:text-5xl font-bold text-[var(--text-primary)] mb-4">
-            Host Your Music Bingo Game
+            One More Tune Bingo
           </h1>
           <p className="text-lg text-[var(--text-secondary)] mb-8 max-w-md mx-auto lg:mx-0">
             Play songs, track winners, and manage rounds with ease.
@@ -154,6 +155,19 @@ export function HomeScreen() {
               </p>
             </div>
           )}
+
+          {/* Audio Source Setting */}
+          <div className="mt-6 p-4 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--text-secondary)]">Audio Settings</h3>
+                <p className="text-xs text-[var(--text-muted)] mt-1">
+                  Local: play from device &bull; Streaming: play from cloud
+                </p>
+              </div>
+              <AudioSourceToggle />
+            </div>
+          </div>
 
         </div>
 
