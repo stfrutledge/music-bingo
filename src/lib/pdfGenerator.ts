@@ -1,6 +1,17 @@
 import jsPDF from 'jspdf';
 import type { BingoCard, Playlist, Song } from '../types';
 import logoUrl from '/logo.png?url';
+import { InterRegular, InterBold } from '../fonts/inter';
+
+function loadInterFonts(pdf: jsPDF): void {
+  // Add Inter Regular - must be done for each jsPDF instance
+  pdf.addFileToVFS('Inter-Regular.ttf', InterRegular);
+  pdf.addFont('Inter-Regular.ttf', 'Inter', 'normal');
+
+  // Add Inter Bold
+  pdf.addFileToVFS('Inter-Bold.ttf', InterBold);
+  pdf.addFont('Inter-Bold.ttf', 'Inter', 'bold');
+}
 
 interface PDFOptions {
   cardsPerPage: number;
@@ -71,6 +82,9 @@ export async function generateCardsPDF(
     format: 'a4',
   });
 
+  // Load Inter font
+  loadInterFonts(pdf);
+
   const songMap = new Map(playlist.songs.map(s => [s.id, s]));
   const cardHeight = 148.5; // Half of A4 height (297 / 2)
 
@@ -109,7 +123,7 @@ function drawCard(
   // Card number in top right - larger for visibility
   pdf.setTextColor(10, 10, 10);
   pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'bold');
+  pdf.setFont('Inter', 'bold');
   pdf.text(`Card #${card.cardNumber}`, pageWidth - opts.margin, offsetY + opts.margin + 4, { align: 'right' });
 
   // Grid dimensions - make it square
@@ -161,7 +175,7 @@ function drawCard(
 
           pdf.setTextColor(255, 255, 255);
           pdf.setFontSize(12);
-          pdf.setFont('helvetica', 'bold');
+          pdf.setFont('Inter', 'bold');
           const freeText = 'FREE';
           const freeWidth = pdf.getTextWidth(freeText);
           pdf.text(freeText, x + (cellSize - freeWidth) / 2, y + cellSize / 2 + 3);
@@ -184,13 +198,13 @@ function drawCard(
           // Song title - bold, dark text, wrap fully (no truncation)
           pdf.setTextColor(10, 10, 10);
           pdf.setFontSize(titleFontSize);
-          pdf.setFont('helvetica', 'bold');
+          pdf.setFont('Inter', 'bold');
 
           const titleLines: string[] = pdf.splitTextToSize(song.title, textWidth);
 
           // Artist name - wrap fully (no truncation)
           pdf.setFontSize(artistFontSize);
-          pdf.setFont('helvetica', 'normal');
+          pdf.setFont('Inter', 'normal');
           const artistLines: string[] = pdf.splitTextToSize(song.artist, textWidth);
 
           // Calculate total height needed
@@ -204,7 +218,7 @@ function drawCard(
 
           // Draw title lines
           pdf.setFontSize(titleFontSize);
-          pdf.setFont('helvetica', 'bold');
+          pdf.setFont('Inter', 'bold');
           pdf.setTextColor(10, 10, 10);
           titleLines.forEach((line: string) => {
             const lineWidth = pdf.getTextWidth(line);
@@ -217,7 +231,7 @@ function drawCard(
 
           // Draw artist lines
           pdf.setFontSize(artistFontSize);
-          pdf.setFont('helvetica', 'normal');
+          pdf.setFont('Inter', 'normal');
           pdf.setTextColor(80, 80, 80);
           artistLines.forEach((line: string) => {
             const lineWidth = pdf.getTextWidth(line);
