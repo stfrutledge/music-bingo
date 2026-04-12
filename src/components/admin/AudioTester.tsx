@@ -2,9 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Playlist, Song } from '../../types';
 import { getPlaylist } from '../../lib/db';
-import { getAudioUrl } from '../../lib/audioCache';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
+
+// Build URL directly from playlist's baseAudioUrl (not the global setting)
+function buildAudioUrl(baseUrl: string, filename: string): string {
+  const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  return `${base}${filename}`;
+}
 
 interface SongStatus {
   song: Song;
@@ -46,7 +51,7 @@ export function AudioTester() {
   const testSingleSong = async (song: Song): Promise<boolean> => {
     if (!playlist) return false;
 
-    const url = getAudioUrl(playlist.baseAudioUrl, song.audioFile);
+    const url = buildAudioUrl(playlist.baseAudioUrl, song.audioFile);
 
     try {
       const response = await fetch(url, { method: 'HEAD' });
@@ -93,7 +98,7 @@ export function AudioTester() {
       return;
     }
 
-    const url = getAudioUrl(playlist.baseAudioUrl, song.audioFile);
+    const url = buildAudioUrl(playlist.baseAudioUrl, song.audioFile);
 
     if (!audioRef.current) {
       audioRef.current = new Audio();

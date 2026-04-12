@@ -131,10 +131,11 @@ export function PlaylistEditor() {
     const updated = [...songs];
     updated[index] = { ...updated[index], [field]: value };
 
-    // Auto-generate audio filename when title or artist changes
+    // Only auto-generate audio filename if it's empty (new songs)
+    // This allows editing title/artist for display without breaking the audio link
     if (field === 'title' || field === 'artist') {
       const song = updated[index];
-      if (song.title && song.artist) {
+      if (song.title && song.artist && !song.audioFile) {
         updated[index].audioFile = generateAudioFilename(song.title, song.artist);
       }
     }
@@ -631,7 +632,7 @@ export function PlaylistEditor() {
                         {/* Edit fields */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs text-[var(--text-muted)] mb-1">Title</label>
+                            <label className="block text-xs text-[var(--text-muted)] mb-1">Title (for cards)</label>
                             <input
                               type="text"
                               value={song.title}
@@ -641,7 +642,7 @@ export function PlaylistEditor() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs text-[var(--text-muted)] mb-1">Artist</label>
+                            <label className="block text-xs text-[var(--text-muted)] mb-1">Artist (for cards)</label>
                             <input
                               type="text"
                               value={song.artist}
@@ -650,6 +651,21 @@ export function PlaylistEditor() {
                               placeholder="Artist"
                             />
                           </div>
+                        </div>
+
+                        {/* Audio file field */}
+                        <div>
+                          <label className="block text-xs text-[var(--text-muted)] mb-1">Audio Filename</label>
+                          <input
+                            type="text"
+                            value={song.audioFile}
+                            onChange={e => updateSong(index, 'audioFile', e.target.value)}
+                            className="input w-full font-mono text-sm"
+                            placeholder="filename.mp3"
+                          />
+                          <p className="text-xs text-[var(--text-muted)] mt-1">
+                            Must match the actual MP3 filename exactly
+                          </p>
                         </div>
 
                         {/* Start time controls */}
