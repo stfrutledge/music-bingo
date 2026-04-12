@@ -53,12 +53,35 @@ export function AudioTester() {
 
     const url = buildAudioUrl(playlist.baseAudioUrl, song.audioFile);
 
-    try {
-      const response = await fetch(url, { method: 'HEAD' });
-      return response.ok;
-    } catch {
-      return false;
-    }
+    // Use Audio element to test - more reliable than fetch for CORS
+    return new Promise((resolve) => {
+      const audio = new Audio();
+      audio.preload = 'metadata';
+
+      const cleanup = () => {
+        audio.src = '';
+        audio.load();
+      };
+
+      audio.onloadedmetadata = () => {
+        cleanup();
+        resolve(true);
+      };
+
+      audio.onerror = () => {
+        cleanup();
+        resolve(false);
+      };
+
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        cleanup();
+        resolve(false);
+      }, 5000);
+
+      audio.src = url;
+      audio.load();
+    });
   };
 
   const testAllSongs = async () => {
