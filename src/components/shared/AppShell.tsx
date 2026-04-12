@@ -45,7 +45,7 @@ export function AppShell({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                   </svg>
                 </div>
-                <span className="text-lg font-semibold text-[var(--text-primary)]">Music Bingo</span>
+                <span className="text-lg font-semibold text-[var(--text-primary)]">One More Tune Bingo</span>
               </Link>
 
               {/* Nav Links */}
@@ -96,7 +96,7 @@ export function AppShell({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                 </svg>
               </div>
-              <span className="font-semibold text-[var(--text-primary)]">Music Bingo</span>
+              <span className="font-semibold text-[var(--text-primary)]">One More Tune Bingo</span>
             </Link>
             <div className="flex items-center gap-2">
               <Link
@@ -121,7 +121,7 @@ export function AppShell({
       {/* Footer - Desktop only */}
       <footer className="hidden lg:block border-t border-[var(--border-color)] bg-[var(--bg-card)]">
         <div className={`${maxWidthClass} mx-auto px-6 py-4 flex items-center justify-between text-sm text-[var(--text-muted)]`}>
-          <span>Music Bingo Host</span>
+          <span>One More Tune Bingo</span>
           <span>Built for live events</span>
         </div>
       </footer>

@@ -9,15 +9,18 @@ interface ArtworkResult {
 const artworkCache = new Map<string, ArtworkResult | null>();
 
 async function fetchAudioBlob(audioUrl: string, cacheOnly = false): Promise<Blob | null> {
-  // Try service worker cache first (avoids CORS issues for cached files)
-  try {
-    const cache = await caches.open('audio-cache');
-    const cachedResponse = await cache.match(audioUrl);
-    if (cachedResponse) {
-      return await cachedResponse.blob();
+  // Try service worker caches (check both names for compatibility)
+  const cacheNames = ['music-bingo-audio-v1', 'audio-cache'];
+  for (const cacheName of cacheNames) {
+    try {
+      const cache = await caches.open(cacheName);
+      const cachedResponse = await cache.match(audioUrl);
+      if (cachedResponse) {
+        return await cachedResponse.blob();
+      }
+    } catch {
+      // Cache API not available or error
     }
-  } catch {
-    // Cache API not available or error
   }
 
   // If cacheOnly mode, don't try to download

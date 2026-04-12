@@ -1,8 +1,8 @@
 import type { Playlist, BingoCard, PacingTable } from '../types';
-import { db, savePlaylist, saveCards, savePacingTable, getCardsForPlaylist } from './db';
+import { db, savePlaylist, saveCards, savePacingTable, getCardsForPlaylist, getPlaylist } from './db';
 
 export async function seedDatabaseIfEmpty(): Promise<void> {
-  console.log('Syncing database with static playlists...');
+  console.log('Checking for new playlists to seed...');
 
   try {
     // Try loading from packs manifest first
@@ -32,8 +32,15 @@ export async function seedDatabaseIfEmpty(): Promise<void> {
 
     const data = await response.json();
     const playlist = parsePlaylistData(data);
-    await savePlaylist(playlist);
-    console.log(`Seeded playlist: ${playlist.name} with ${playlist.songs.length} songs`);
+
+    // Only seed if playlist doesn't already exist (preserve user edits)
+    const existingPlaylist = await getPlaylist(playlist.id);
+    if (existingPlaylist) {
+      console.log(`Playlist already exists: ${playlist.name} (skipping)`);
+    } else {
+      await savePlaylist(playlist);
+      console.log(`Seeded playlist: ${playlist.name} with ${playlist.songs.length} songs`);
+    }
 
     // Seed cards if available
     await seedCardsIfMissing(playlist.id);
@@ -50,9 +57,14 @@ async function seedPlaylistFromPack(packId: string): Promise<void> {
     const data = await response.json();
     const playlist = parsePlaylistData(data);
 
-    // Always update/save the playlist from static data (source of truth)
-    await savePlaylist(playlist);
-    console.log(`Synced playlist: ${playlist.name} (${playlist.songs.length} songs)`);
+    // Only seed if playlist doesn't already exist (preserve user edits)
+    const existingPlaylist = await getPlaylist(playlist.id);
+    if (existingPlaylist) {
+      console.log(`Playlist already exists: ${playlist.name} (skipping to preserve user edits)`);
+    } else {
+      await savePlaylist(playlist);
+      console.log(`Seeded new playlist: ${playlist.name} (${playlist.songs.length} songs)`);
+    }
 
     // Seed cards for this playlist
     await seedCardsIfMissing(playlist.id);

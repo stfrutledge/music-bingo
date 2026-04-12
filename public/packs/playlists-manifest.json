@@ -19,7 +19,14 @@
       "name": "San Patricio playlist",
       "songCount": 71,
       "path": "san-patricio/playlist.json",
-      "cardPacks": []
+      "cardPacks": [
+        {
+          "id": "san-patricio",
+          "name": "San Patricio",
+          "cardCount": 100,
+          "path": "san-patricio/card-packs/san-patricio.json"
+        }
+      ]
     }
   ]
 }
