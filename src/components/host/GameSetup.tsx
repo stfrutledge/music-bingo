@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import type { Playlist, BingoCard, PacingTable, CacheStatus, CardPackInfo, EventConfig } from '../../types';
-import { getPlaylist, getCardsForPlaylist, getPacingTable, saveCards, savePacingTable, deleteCardsForPlaylist } from '../../lib/db';
+import type { Playlist, BingoCard, CacheStatus, CardPackInfo, EventConfig } from '../../types';
+import { getPlaylist, getCardsForPlaylist, saveCards, savePacingTable, deleteCardsForPlaylist } from '../../lib/db';
 import { BINGO_PATTERNS, getPatternById } from '../../lib/patterns';
 import { getCacheStatus, isLocalUrl } from '../../lib/audioCache';
 import { checkWin } from '../../lib/winChecker';
@@ -137,7 +137,6 @@ export function GameSetup() {
 
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [allCards, setAllCards] = useState<BingoCard[]>([]);
-  const [pacingTable, setPacingTable] = useState<PacingTable | null>(null);
   const [selectedPatterns, setSelectedPatterns] = useState<string[]>(
     eventConfig?.defaultPatterns || ['single-line-h']
   );
@@ -304,7 +303,6 @@ export function GameSetup() {
 
         // Update state
         setAllCards(cards);
-        setPacingTable(pacing);
         setSelectedPackId(packId);
 
         if (cards.length > 0) {
@@ -319,16 +317,14 @@ export function GameSetup() {
 
   const loadPlaylist = async (playlistId: string) => {
     setLoading(true);
-    const [playlistData, cards, pacing] = await Promise.all([
+    const [playlistData, cards] = await Promise.all([
       getPlaylist(playlistId),
       getCardsForPlaylist(playlistId),
-      getPacingTable(playlistId),
     ]);
 
     if (playlistData) {
       setPlaylist(playlistData);
       setAllCards(cards);
-      setPacingTable(pacing || null);
       if (cards.length > 0) {
         setPlayerCount(Math.min(30, cards.length));
       }
