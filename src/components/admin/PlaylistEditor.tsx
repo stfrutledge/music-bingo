@@ -774,7 +774,12 @@ export function PlaylistEditor() {
                               </button>
                               <div className="flex-1" />
                               <button
-                                onClick={() => { toggleExpanded(index); removeSong(index); }}
+                                onClick={() => {
+                                  if (confirm(`Delete "${song.title}" by ${song.artist}?`)) {
+                                    toggleExpanded(index);
+                                    removeSong(index);
+                                  }
+                                }}
                                 className="px-3 py-1.5 text-sm text-[var(--status-error-text)] hover:opacity-80 bg-[var(--bg-tertiary)] rounded"
                               >
                                 Delete song
