@@ -5,7 +5,7 @@ const AUDIO_SETTINGS_KEY = 'music-bingo-audio-settings';
 // Audio source URLs
 export const AUDIO_URLS = {
   local: '/audio/',
-  cloudflare: 'https://pub-fac7b942338643f38692b2544ffeb60d.r2.dev/',
+  cloudflare: 'https://pub-1b29fd47df394cdc9f178d12ed054836.r2.dev/',
 } as const;
 
 const DEFAULT_SETTINGS: AudioSettings = {
