@@ -64,21 +64,27 @@ export async function generateCardsPDF(
     console.warn('Could not load logo for PDF, using fallback:', e);
   }
 
-  // A5 landscape: 210 x 148 mm
+  // A4 portrait: 210 x 297 mm (two cards per page, stacked vertically)
   const pdf = new jsPDF({
-    orientation: 'landscape',
+    orientation: 'portrait',
     unit: 'mm',
-    format: 'a5',
+    format: 'a4',
   });
 
   const songMap = new Map(playlist.songs.map(s => [s.id, s]));
+  const cardHeight = 148.5; // Half of A4 height (297 / 2)
 
   cards.forEach((card, index) => {
-    if (index > 0) {
+    const pageIndex = Math.floor(index / 2);
+    const positionOnPage = index % 2; // 0 = top, 1 = bottom
+
+    // Add new page if needed (but not for first card)
+    if (index > 0 && positionOnPage === 0) {
       pdf.addPage();
     }
 
-    drawCard(pdf, card, songMap, opts, logo);
+    const offsetY = positionOnPage * cardHeight;
+    drawCard(pdf, card, songMap, opts, logo, offsetY, cardHeight);
   });
 
   return pdf;
@@ -89,20 +95,22 @@ function drawCard(
   card: BingoCard,
   songMap: Map<string, Song>,
   opts: PDFOptions,
-  logo: string | null
+  logo: string | null,
+  offsetY: number = 0,
+  cardHeight: number = 148
 ): void {
   const pageWidth = 210;
-  const pageHeight = 148;
+  const pageHeight = cardHeight;
 
   // Light background matching site's bg-secondary (#f8f9fa)
   pdf.setFillColor(248, 249, 250);
-  pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+  pdf.rect(0, offsetY, pageWidth, pageHeight, 'F');
 
   // Card number in top right - larger for visibility
   pdf.setTextColor(10, 10, 10);
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
-  pdf.text(`Card #${card.cardNumber}`, pageWidth - opts.margin, opts.margin + 4, { align: 'right' });
+  pdf.text(`Card #${card.cardNumber}`, pageWidth - opts.margin, offsetY + opts.margin + 4, { align: 'right' });
 
   // Grid dimensions - make it square
   const gap = 1.2;
@@ -116,7 +124,7 @@ function drawCard(
 
   // Center the square grid horizontally
   const gridStartX = opts.margin + (availableWidth - (cellSize * 5 + totalGaps)) / 2;
-  const gridStartY = opts.margin + 6;
+  const gridStartY = offsetY + opts.margin + 6;
   const cornerRadius = 2;
 
   // Font sizes for readability in dim lighting
@@ -205,7 +213,7 @@ function drawCard(
           });
 
           // Add space between title and artist
-          currentY += spaceBetween - titleLineHeight + artistLineHeight * 0.7;
+          currentY += spaceBetween;
 
           // Draw artist lines
           pdf.setFontSize(artistFontSize);

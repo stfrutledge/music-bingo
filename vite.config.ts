@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icons/*.png'],
       manifest: {
-        name: 'Music Bingo Host',
-        short_name: 'Music Bingo',
+        name: 'One More Tune Bingo',
+        short_name: 'OMT Bingo',
         description: 'Host music bingo games with offline support',
         theme_color: '#0a1128',
         background_color: '#0a1128',
@@ -49,7 +49,7 @@ export default defineConfig({
             urlPattern: /\.mp3$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'audio-cache',
+              cacheName: 'music-bingo-audio-v1',
               expiration: {
                 maxEntries: 500,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
@@ -172,6 +172,50 @@ export default defineConfig({
 
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify({ packs }))
+          } catch (err) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: String(err) }))
+          }
+        })
+
+        // Delete card pack
+        server.middlewares.use('/api/delete-card-pack', (req, res) => {
+          if (req.method !== 'DELETE') {
+            res.statusCode = 405
+            res.end('Method not allowed')
+            return
+          }
+
+          try {
+            const url = new URL(req.url || '', `http://${req.headers.host}`)
+            const playlistId = url.searchParams.get('playlistId')
+            const packId = url.searchParams.get('packId')
+            if (!playlistId || !packId) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: 'playlistId and packId required' }))
+              return
+            }
+
+            const packPath = path.join(__dirname, 'public', 'packs', playlistId, 'card-packs', `${packId}.json`)
+
+            // Delete pack file
+            if (fs.existsSync(packPath)) {
+              fs.unlinkSync(packPath)
+            }
+
+            // Update manifest
+            const manifestPath = path.join(__dirname, 'public', 'packs', 'playlists-manifest.json')
+            if (fs.existsSync(manifestPath)) {
+              const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+              const playlistEntry = manifest.playlists.find((p: { id: string }) => p.id === playlistId)
+              if (playlistEntry?.cardPacks) {
+                playlistEntry.cardPacks = playlistEntry.cardPacks.filter((p: { id: string }) => p.id !== packId)
+              }
+              fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
+            }
+
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: true }))
           } catch (err) {
             res.statusCode = 500
             res.end(JSON.stringify({ error: String(err) }))

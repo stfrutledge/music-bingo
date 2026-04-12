@@ -247,14 +247,42 @@ export function CardGenerator() {
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Saved Card Packs</h3>
               <div className="space-y-2">
                 {existingPacks.map(pack => (
-                  <button
+                  <div
                     key={pack.id}
-                    onClick={() => loadPackFromFile(pack.id)}
-                    className="w-full text-left p-3 bg-[var(--bg-hover)] rounded-lg hover:bg-[var(--bg-card)] transition-colors"
+                    className="flex items-center gap-2 p-3 bg-[var(--bg-hover)] rounded-lg"
                   >
-                    <div className="font-medium text-[var(--text-primary)]">{pack.name}</div>
-                    <div className="text-xs text-[var(--text-secondary)]">{pack.cardCount} cards</div>
-                  </button>
+                    <button
+                      onClick={() => loadPackFromFile(pack.id)}
+                      className="flex-1 text-left hover:opacity-80 transition-opacity"
+                    >
+                      <div className="font-medium text-[var(--text-primary)]">{pack.name}</div>
+                      <div className="text-xs text-[var(--text-secondary)]">{pack.cardCount} cards</div>
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Delete card pack "${pack.name}"?`)) {
+                          try {
+                            const response = await fetch(`/api/delete-card-pack?playlistId=${playlist?.id}&packId=${pack.id}`, {
+                              method: 'DELETE',
+                            });
+                            if (response.ok) {
+                              loadExistingPacks(playlist!.id);
+                            } else {
+                              alert('Failed to delete pack');
+                            }
+                          } catch {
+                            alert('Failed to delete pack (dev server required)');
+                          }
+                        }
+                      }}
+                      className="p-2 text-[var(--status-error-text)] hover:bg-[var(--bg-card)] rounded transition-colors"
+                      title="Delete pack"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
