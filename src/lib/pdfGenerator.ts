@@ -125,15 +125,15 @@ function drawCard(
   const pageWidth = 210;
   const pageHeight = cardHeight;
 
-  // Light background matching site's bg-secondary (#f8f9fa)
-  pdf.setFillColor(248, 249, 250);
+  // White background
+  pdf.setFillColor(255, 255, 255);
   pdf.rect(0, offsetY, pageWidth, pageHeight, 'F');
 
   // Card number in top right - larger for visibility
   pdf.setTextColor(10, 10, 10);
   pdf.setFontSize(12);
   pdf.setFont('Inter', 'bold');
-  pdf.text(`Card #${card.cardNumber}`, pageWidth - opts.margin, offsetY + opts.margin + 4, { align: 'right' });
+  pdf.text(`#${card.cardNumber}`, pageWidth - opts.margin, offsetY + opts.margin + 4, { align: 'right' });
 
   // Grid dimensions - make it square
   const gap = 1.2;
@@ -167,11 +167,7 @@ function drawCard(
       if (gridIndex === 12) {
         // Free space - use logo if available
         if (logo) {
-          // White background for logo cell
-          pdf.setFillColor(255, 255, 255);
-          pdf.roundedRect(x, y, cellSize, cellSize, cornerRadius, cornerRadius, 'F');
-
-          // Add logo image centered in the cell
+          // Add logo image centered in the cell (no background)
           const padding = 1;
           const imgSize = Math.min(cellSize, cellSize) - padding * 2;
           const imgX = x + (cellSize - imgSize) / 2;
@@ -190,8 +186,8 @@ function drawCard(
           pdf.text(freeText, x + (cellSize - freeWidth) / 2, y + cellSize / 2 + 3);
         }
       } else {
-        // White cell background with subtle border
-        pdf.setFillColor(255, 255, 255);
+        // Light gray cell background with subtle border
+        pdf.setFillColor(248, 249, 250);
         pdf.setDrawColor(200, 200, 200);
         pdf.roundedRect(x, y, cellSize, cellSize, cornerRadius, cornerRadius, 'FD');
 
