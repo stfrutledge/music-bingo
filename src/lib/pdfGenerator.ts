@@ -3,14 +3,23 @@ import type { BingoCard, Playlist, Song } from '../types';
 import logoUrl from '/logo.png?url';
 import { InterRegular, InterBold } from '../fonts/inter';
 
-function loadInterFonts(pdf: jsPDF): void {
-  // Add Inter Regular - must be done for each jsPDF instance
-  pdf.addFileToVFS('Inter-Regular.ttf', InterRegular);
-  pdf.addFont('Inter-Regular.ttf', 'Inter', 'normal');
+// Register Inter fonts globally via jsPDF events API
+// This must happen before any PDF instance is created
+const registerInterFonts = function(this: jsPDF) {
+  this.addFileToVFS('Inter-Regular.ttf', InterRegular);
+  this.addFont('Inter-Regular.ttf', 'Inter', 'normal');
+  this.addFileToVFS('Inter-Bold.ttf', InterBold);
+  this.addFont('Inter-Bold.ttf', 'Inter', 'bold');
+};
 
-  // Add Inter Bold
-  pdf.addFileToVFS('Inter-Bold.ttf', InterBold);
-  pdf.addFont('Inter-Bold.ttf', 'Inter', 'bold');
+// Register the font callback
+(jsPDF as unknown as { API: { events: Array<[string, typeof registerInterFonts]> } }).API.events.push(['addFonts', registerInterFonts]);
+
+function verifyInterFont(pdf: jsPDF): void {
+  const hasInter = 'Inter' in pdf.getFontList();
+  if (!hasInter) {
+    console.error('Inter font not available - falling back to Helvetica');
+  }
 }
 
 interface PDFOptions {
@@ -83,7 +92,7 @@ export async function generateCardsPDF(
   });
 
   // Load Inter font
-  loadInterFonts(pdf);
+  verifyInterFont(pdf);
 
   const songMap = new Map(playlist.songs.map(s => [s.id, s]));
   const cardHeight = 148.5; // Half of A4 height (297 / 2)
