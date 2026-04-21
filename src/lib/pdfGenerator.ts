@@ -129,12 +129,6 @@ function drawCard(
   pdf.setFillColor(255, 255, 255);
   pdf.rect(0, offsetY, pageWidth, pageHeight, 'F');
 
-  // Card number in top right - larger for visibility
-  pdf.setTextColor(10, 10, 10);
-  pdf.setFontSize(12);
-  pdf.setFont('Inter', 'bold');
-  pdf.text(`#${card.cardNumber}`, pageWidth - opts.margin, offsetY + opts.margin + 4, { align: 'right' });
-
   // Grid dimensions - make it square
   const gap = 1.2;
   const totalGaps = gap * 4;
@@ -149,6 +143,13 @@ function drawCard(
   const gridStartX = opts.margin + (availableWidth - (cellSize * 5 + totalGaps)) / 2;
   const gridStartY = offsetY + opts.margin + 6;
   const cornerRadius = 2;
+
+  // Card number - positioned at top-right corner of grid for visibility after trimming
+  const gridEndX = gridStartX + 5 * cellSize + 4 * gap;
+  pdf.setTextColor(10, 10, 10);
+  pdf.setFontSize(10);
+  pdf.setFont('Inter', 'bold');
+  pdf.text(`#${card.cardNumber}`, gridEndX, gridStartY - 2, { align: 'right' });
 
   // Font sizes for readability in dim lighting
   const titleFontSize = 9;
