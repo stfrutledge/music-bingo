@@ -57,12 +57,12 @@ async function seedPlaylistFromPack(packId: string): Promise<void> {
     const data = await response.json();
     const playlist = parsePlaylistData(data);
 
-    // Only seed if playlist doesn't already exist (preserve user edits)
+    // Always update playlist from JSON (to pick up start times and other changes)
+    await savePlaylist(playlist);
     const existingPlaylist = await getPlaylist(playlist.id);
     if (existingPlaylist) {
-      console.log(`Playlist already exists: ${playlist.name} (skipping to preserve user edits)`);
+      console.log(`Updated playlist: ${playlist.name} (${playlist.songs.length} songs)`);
     } else {
-      await savePlaylist(playlist);
       console.log(`Seeded new playlist: ${playlist.name} (${playlist.songs.length} songs)`);
     }
 

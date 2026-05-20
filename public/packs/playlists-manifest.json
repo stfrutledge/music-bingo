@@ -1,30 +1,16 @@
 {
   "playlists": [
     {
-      "id": "music-bingo-2026",
-      "name": "Music Bingo 2026",
-      "songCount": 61,
-      "path": "music-bingo-2026/playlist.json",
-      "cardPacks": [
-        {
-          "id": "test-event",
-          "name": "Test event",
-          "cardCount": 80,
-          "path": "music-bingo-2026/card-packs/test-event.json"
-        }
-      ]
-    },
-    {
-      "id": "san-patricio",
-      "name": "San Patricio playlist",
+      "id": "hen-party",
+      "name": "Hen Party",
       "songCount": 71,
-      "path": "san-patricio/playlist.json",
+      "path": "/packs/hen-party/playlist.json",
       "cardPacks": [
         {
-          "id": "san-patricio",
-          "name": "San Patricio",
-          "cardCount": 100,
-          "path": "san-patricio/card-packs/san-patricio.json"
+          "id": "hen-party",
+          "name": "Hen Party",
+          "cardCount": 80,
+          "path": "hen-party/card-packs/hen-party.json"
         }
       ]
     }

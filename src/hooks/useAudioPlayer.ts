@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
-const FADE_DURATION = 500; // ms for fade in/out
+const FADE_DURATION = 200; // ms for fade in/out (quick transitions for bingo)
 
 interface AudioPlayerState {
   isPlaying: boolean;

@@ -185,7 +185,7 @@ export function PlaylistEditor() {
       // Load the new audio
       const song = songs[index];
       if (song.audioFile && baseAudioUrl) {
-        const audio = new Audio(`${baseAudioUrl}${song.audioFile}`);
+        const audio = new Audio(`${baseAudioUrl}${encodeURIComponent(song.audioFile)}`);
         audioRef.current = audio;
 
         audio.addEventListener('loadedmetadata', () => {

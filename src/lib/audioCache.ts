@@ -203,7 +203,8 @@ export function getAudioUrl(_baseUrl: string, filename: string): string {
   const effectiveBase = getEffectiveBaseUrl();
   // Ensure base ends with /
   const base = effectiveBase.endsWith('/') ? effectiveBase : `${effectiveBase}/`;
-  return `${base}${filename}`;
+  // URL-encode the filename to handle special characters (parentheses, spaces, etc.)
+  return `${base}${encodeURIComponent(filename)}`;
 }
 
 export function generateAudioFilename(title: string, artist: string): string {

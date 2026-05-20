@@ -8,7 +8,8 @@ import { AppShell } from '../shared/AppShell';
 // Build URL directly from playlist's baseAudioUrl (not the global setting)
 function buildAudioUrl(baseUrl: string, filename: string): string {
   const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-  return `${base}${filename}`;
+  // URL-encode the filename to handle special characters (parentheses, spaces, etc.)
+  return `${base}${encodeURIComponent(filename)}`;
 }
 
 interface SongStatus {

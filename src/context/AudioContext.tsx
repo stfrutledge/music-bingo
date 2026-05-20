@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useRef, useCallback, useEff
 import { getAudioFromCache, isLocalUrl } from '../lib/audioCache';
 import { getAudioSource } from '../lib/audioSettings';
 
-const FADE_DURATION = 500; // ms for fade in/out
+const FADE_DURATION = 200; // ms for fade in/out (quick transitions for bingo)
 
 interface AudioContextState {
   isPlaying: boolean;
