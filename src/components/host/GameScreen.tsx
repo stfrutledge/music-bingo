@@ -141,9 +141,10 @@ export function GameScreen() {
                   navigate('/', { state: { fromGame: true } });
                 }
               }}
-              className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              aria-label="Exit game"
+              className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] rounded-lg p-1"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span className="hidden sm:inline">Exit</span>
@@ -187,7 +188,7 @@ export function GameScreen() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <svg className="w-16 h-16 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-16 h-16 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                     </svg>
                   )}
@@ -238,7 +239,14 @@ export function GameScreen() {
               <Button variant="secondary" size="sm" onClick={() => navigate('/host/round-end')}>
                 End Round
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setShowCalledList(!showCalledList)} className="lg:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowCalledList(!showCalledList)}
+                aria-expanded={showCalledList}
+                aria-controls="mobile-called-songs"
+                className="lg:hidden"
+              >
                 {showCalledList ? 'Hide' : 'Show'} Called ({calledSongs.length})
               </Button>
               <div className="flex-1" />
@@ -249,7 +257,7 @@ export function GameScreen() {
 
             {/* Mobile Called Songs */}
             {showCalledList && (
-              <div className="card lg:hidden max-h-48 overflow-y-auto">
+              <div id="mobile-called-songs" className="card lg:hidden max-h-48 overflow-y-auto">
                 <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Called Songs</h3>
                 <div className="space-y-1">
                   {calledSongs.slice().reverse().map((song, idx) => (
@@ -267,22 +275,27 @@ export function GameScreen() {
             {/* Winner Tracker */}
             {potentialWinners.length > 0 && (
               <div className="card">
-                <button onClick={() => setShowWinnerTracker(!showWinnerTracker)} className="w-full flex items-center justify-between mb-3">
+                <button
+                  onClick={() => setShowWinnerTracker(!showWinnerTracker)}
+                  aria-expanded={showWinnerTracker}
+                  aria-controls="winner-tracker-content"
+                  className="w-full flex items-center justify-between mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] rounded-lg p-1 -m-1"
+                >
                   <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide flex items-center gap-2">
                     {potentialWinners.some(w => w.missingCount === 0) ? (
-                      <span className="w-2 h-2 bg-[var(--accent-green)] rounded-full animate-pulse" />
+                      <span className="w-2 h-2 bg-[var(--accent-green)] rounded-full animate-pulse" aria-hidden="true" />
                     ) : potentialWinners.some(w => w.missingCount === 1) ? (
-                      <span className="w-2 h-2 bg-[var(--accent-amber)] rounded-full" />
+                      <span className="w-2 h-2 bg-[var(--accent-amber)] rounded-full" aria-hidden="true" />
                     ) : (
-                      <span className="w-2 h-2 bg-[var(--accent-teal)] rounded-full" />
+                      <span className="w-2 h-2 bg-[var(--accent-teal)] rounded-full" aria-hidden="true" />
                     )}
                     Winner Tracker
                   </h3>
-                  <span className="text-[var(--text-secondary)] text-xs">{showWinnerTracker ? '▼' : '▶'}</span>
+                  <span className="text-[var(--text-secondary)] text-xs" aria-hidden="true">{showWinnerTracker ? '▼' : '▶'}</span>
                 </button>
 
                 {showWinnerTracker && (
-                  <div className="space-y-3">
+                  <div id="winner-tracker-content" className="space-y-3">
                     {potentialWinners.filter(w => w.missingCount === 0).length > 0 && (
                       <div>
                         <div className="text-xs text-[var(--status-success-text)] font-medium mb-1">BINGO!</div>

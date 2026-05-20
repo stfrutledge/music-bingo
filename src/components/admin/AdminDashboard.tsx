@@ -47,7 +47,7 @@ export function AdminDashboard() {
         <div className="flex gap-3">
           <Link to="/admin/events">
             <Button variant="secondary" size="lg">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               Events
@@ -55,7 +55,7 @@ export function AdminDashboard() {
           </Link>
           <Link to="/admin/playlist/new">
             <Button variant="primary" size="lg">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               New Playlist
@@ -73,10 +73,12 @@ export function AdminDashboard() {
               {audioSource === 'local' ? AUDIO_URLS.local : AUDIO_URLS.cloudflare}
             </p>
           </div>
-          <div className="flex items-center gap-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-1" role="radiogroup" aria-label="Audio source">
             <button
               onClick={() => handleAudioSourceChange('local')}
-              className={`px-5 py-2.5 rounded-md text-sm font-semibold transition-all ${
+              role="radio"
+              aria-checked={audioSource === 'local'}
+              className={`px-5 py-3 sm:py-2.5 min-h-[44px] sm:min-h-0 rounded-md text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 ${
                 audioSource === 'local'
                   ? 'bg-[var(--accent-green)] text-white shadow-md'
                   : 'bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)]'
@@ -86,7 +88,9 @@ export function AdminDashboard() {
             </button>
             <button
               onClick={() => handleAudioSourceChange('cloudflare')}
-              className={`px-5 py-2.5 rounded-md text-sm font-semibold transition-all ${
+              role="radio"
+              aria-checked={audioSource === 'cloudflare'}
+              className={`px-5 py-3 sm:py-2.5 min-h-[44px] sm:min-h-0 rounded-md text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 ${
                 audioSource === 'cloudflare'
                   ? 'bg-[var(--accent-green)] text-white shadow-md'
                   : 'bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)]'
@@ -102,7 +106,7 @@ export function AdminDashboard() {
         <div className="text-[var(--text-secondary)] text-center py-12">Loading playlists...</div>
       ) : playlists.length === 0 ? (
         <div className="card text-center py-16 max-w-lg mx-auto">
-          <div className="w-16 h-16 rounded-full bg-[var(--bg-hover)] flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-[var(--bg-hover)] flex items-center justify-center mx-auto mb-4" aria-hidden="true">
             <svg className="w-8 h-8 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>

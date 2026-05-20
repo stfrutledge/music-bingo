@@ -35,15 +35,55 @@ export function AudioPlayer({
     onSeek(percent * duration);
   };
 
+  const handleProgressKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = duration * 0.05; // 5% of duration
+    const largeStep = duration * 0.1; // 10% of duration
+
+    switch (e.key) {
+      case 'ArrowRight':
+        e.preventDefault();
+        onSeek(Math.min(currentTime + step, duration));
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        onSeek(Math.max(currentTime - step, 0));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        onSeek(Math.min(currentTime + largeStep, duration));
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        onSeek(Math.max(currentTime - largeStep, 0));
+        break;
+      case 'Home':
+        e.preventDefault();
+        onSeek(0);
+        break;
+      case 'End':
+        e.preventDefault();
+        onSeek(duration);
+        break;
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2 w-full">
-      {/* Progress bar */}
+      {/* Progress bar - taller on mobile for easier touch */}
       <div
-        className="h-2 bg-[var(--bg-hover)] rounded-full cursor-pointer"
+        role="slider"
+        tabIndex={0}
+        aria-label="Seek audio"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(duration)}
+        aria-valuenow={Math.round(currentTime)}
+        aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+        className="h-3 sm:h-2 bg-[var(--bg-hover)] rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)]"
         onClick={handleProgressClick}
+        onKeyDown={handleProgressKeyDown}
       >
         <div
-          className="h-full bg-[var(--accent-green)] rounded-full transition-all"
+          className="h-full bg-[var(--accent-green)] rounded-full transition-all pointer-events-none"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -57,7 +97,8 @@ export function AudioPlayer({
           <button
             onClick={onPlayPause}
             disabled={isLoading}
-            className="w-12 h-12 flex items-center justify-center bg-[var(--accent-green)] rounded-full hover:bg-[var(--accent-green-light)] disabled:opacity-50 transition-colors"
+            aria-label={isLoading ? 'Loading audio' : isPlaying ? 'Pause' : 'Play'}
+            className="w-12 h-12 flex items-center justify-center bg-[var(--accent-green)] rounded-full hover:bg-[var(--accent-green-light)] disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)]"
           >
             {isLoading ? (
               <LoadingSpinner />
@@ -73,7 +114,9 @@ export function AudioPlayer({
         <button
           onClick={onLoopToggle}
           disabled={isLoading}
-          className={`w-8 h-8 flex items-center justify-center rounded-full border transition-colors mr-2 ${
+          aria-label={loopEnabled ? 'Disable loop' : 'Enable loop'}
+          aria-pressed={loopEnabled}
+          className={`w-11 h-11 sm:w-8 sm:h-8 flex items-center justify-center rounded-full border transition-colors mr-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] ${
             loopEnabled
               ? 'bg-[var(--accent-green)] border-[var(--accent-green)] text-white'
               : 'bg-[var(--bg-hover)] border-[var(--border-color)] hover:bg-[var(--bg-card)]'

@@ -33,14 +33,22 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-[var(--bg-secondary)] flex flex-col">
+      {/* Skip Link for keyboard navigation */}
+      <a
+        href="#main-content"
+        className="skip-link"
+      >
+        Skip to main content
+      </a>
+
       {/* Desktop Header */}
       {showNav && (
         <header className="hidden lg:block bg-[var(--bg-card)] border-b border-[var(--border-color)] sticky top-0 z-50">
           <div className={`${maxWidthClass} mx-auto px-6 h-16 flex items-center justify-between`}>
             <div className="flex items-center gap-8">
               {/* Logo */}
-              <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                <div className="w-9 h-9 rounded-lg bg-[var(--accent-green)] flex items-center justify-center">
+              <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] rounded-lg">
+                <div className="w-9 h-9 rounded-lg bg-[var(--accent-green)] flex items-center justify-center" aria-hidden="true">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                   </svg>
@@ -49,10 +57,11 @@ export function AppShell({
               </Link>
 
               {/* Nav Links */}
-              <nav className="flex items-center gap-1">
+              <nav className="flex items-center gap-1" aria-label="Main navigation">
                 <Link
                   to="/"
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  aria-current={isHome ? 'page' : undefined}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] ${
                     isHome
                       ? 'bg-[var(--bg-hover)] text-[var(--text-primary)]'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
@@ -62,7 +71,8 @@ export function AppShell({
                 </Link>
                 <Link
                   to="/admin"
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  aria-current={isAdmin ? 'page' : undefined}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] ${
                     isAdmin
                       ? 'bg-[var(--bg-hover)] text-[var(--text-primary)]'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
@@ -90,29 +100,29 @@ export function AppShell({
       {showNav && (
         <header className="lg:hidden bg-[var(--bg-card)] border-b border-[var(--border-color)] sticky top-0 z-50">
           <div className="px-4 h-14 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[var(--accent-green)] flex items-center justify-center">
+            <Link to="/" className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] rounded-lg">
+              <div className="w-8 h-8 rounded-lg bg-[var(--accent-green)] flex items-center justify-center" aria-hidden="true">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                 </svg>
               </div>
               <span className="font-semibold text-[var(--text-primary)]">One More Tune Bingo</span>
             </Link>
-            <div className="flex items-center gap-2">
+            <nav className="flex items-center gap-2" aria-label="Mobile navigation">
               <Link
                 to={isAdmin ? '/' : '/admin'}
-                className="px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                className="px-4 py-2.5 min-h-[44px] flex items-center text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] rounded-lg"
               >
                 {isAdmin ? 'Host' : 'Admin'}
               </Link>
               <ThemeToggle />
-            </div>
+            </nav>
           </div>
         </header>
       )}
 
       {/* Main Content */}
-      <main className={`flex-1 ${centered ? 'flex items-center justify-center' : ''}`}>
+      <main id="main-content" className={`flex-1 ${centered ? 'flex items-center justify-center' : ''}`}>
         <div className={`${maxWidthClass} mx-auto px-4 lg:px-6 py-6 lg:py-8 w-full`}>
           {children}
         </div>

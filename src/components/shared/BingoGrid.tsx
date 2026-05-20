@@ -12,7 +12,8 @@ interface BingoGridProps {
 }
 
 const sizeClasses = {
-  sm: 'text-[8px] p-0.5',
+  // Minimum 10px for readability on mobile
+  sm: 'text-[10px] p-0.5',
   md: 'text-xs p-1',
   lg: 'text-sm p-2',
 };

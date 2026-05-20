@@ -615,14 +615,16 @@ export function PlaylistEditor() {
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleExpanded(index); }}
-                        className={`p-1.5 rounded transition-colors ${
+                        aria-expanded={isExpanded}
+                        aria-label={isExpanded ? 'Collapse song details' : 'Expand song details'}
+                        className={`p-2.5 sm:p-1.5 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 rounded transition-colors ${
                           isExpanded
                             ? 'text-[var(--accent-primary)] bg-[var(--accent-primary)]/10'
                             : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                         }`}
                         title={isExpanded ? 'Close' : 'Edit & preview'}
                       >
-                        {isExpanded ? '▲' : '▼'}
+                        <span aria-hidden="true">{isExpanded ? '▲' : '▼'}</span>
                       </button>
                     </div>
 
@@ -684,7 +686,9 @@ export function PlaylistEditor() {
                           </div>
                           <button
                             onClick={() => toggleStartTimeLock(index)}
-                            className={`px-2 py-1 rounded text-sm flex items-center gap-1 transition-colors ${
+                            aria-pressed={song.startTimeManual}
+                            aria-label={song.startTimeManual ? 'Unlock start time' : 'Lock start time'}
+                            className={`px-3 py-2.5 sm:px-2 sm:py-1 min-h-[44px] sm:min-h-0 rounded text-sm flex items-center gap-1 transition-colors ${
                               song.startTimeManual
                                 ? 'text-[var(--status-success-text)] bg-[var(--status-success-bg)]'
                                 : 'text-[var(--text-muted)] bg-[var(--bg-tertiary)] hover:text-[var(--text-secondary)]'
@@ -773,18 +777,18 @@ export function PlaylistEditor() {
                             </div>
 
                             {/* Song actions row */}
-                            <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-color)]">
+                            <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-color)] flex-wrap">
                               <button
                                 onClick={() => moveSong(index, 'up')}
                                 disabled={index === 0}
-                                className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 bg-[var(--bg-tertiary)] rounded"
+                                className="px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 bg-[var(--bg-tertiary)] rounded"
                               >
                                 ↑ Move up
                               </button>
                               <button
                                 onClick={() => moveSong(index, 'down')}
                                 disabled={index === songs.length - 1}
-                                className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 bg-[var(--bg-tertiary)] rounded"
+                                className="px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 bg-[var(--bg-tertiary)] rounded"
                               >
                                 ↓ Move down
                               </button>
@@ -796,7 +800,7 @@ export function PlaylistEditor() {
                                     removeSong(index);
                                   }
                                 }}
-                                className="px-3 py-1.5 text-sm text-[var(--status-error-text)] hover:opacity-80 bg-[var(--bg-tertiary)] rounded"
+                                className="px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--status-error-text)] hover:opacity-80 bg-[var(--bg-tertiary)] rounded"
                               >
                                 Delete song
                               </button>

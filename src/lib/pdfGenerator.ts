@@ -98,7 +98,6 @@ export async function generateCardsPDF(
   const cardHeight = 148.5; // Half of A4 height (297 / 2)
 
   cards.forEach((card, index) => {
-    const pageIndex = Math.floor(index / 2);
     const positionOnPage = index % 2; // 0 = top, 1 = bottom
 
     // Add new page if needed (but not for first card)

@@ -156,6 +156,13 @@ body {
   box-shadow: 0 0 0 3px var(--status-success-bg);
 }
 
+/* Ensure select elements also get focus styles */
+select.input:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px var(--status-success-bg);
+}
+
 /* Button base styles */
 .btn {
   display: inline-flex;
@@ -209,8 +216,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 8px;
   background-color: var(--bg-hover);
   border: 1px solid var(--border-color);
@@ -219,10 +226,23 @@ body {
   transition: all 0.15s ease;
 }
 
+/* Slightly smaller on desktop where mouse precision is better */
+@media (min-width: 640px) {
+  .theme-toggle {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
 .theme-toggle:hover {
   background-color: var(--bg-accent);
   color: var(--accent-green);
   border-color: var(--accent-green);
+}
+
+.theme-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring-offset), 0 0 0 4px var(--accent-green);
 }
 
 /* Status badges */
@@ -458,5 +478,50 @@ body {
 @media (min-width: 1024px) {
   .mobile-only {
     display: none;
+  }
+}
+
+/* Screen reader only - visually hidden but accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--accent-green);
+  color: white;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  z-index: 100;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0.5rem;
+  outline: 2px solid var(--accent-green-light);
+  outline-offset: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
