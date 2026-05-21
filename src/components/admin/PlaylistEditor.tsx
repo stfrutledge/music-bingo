@@ -5,6 +5,7 @@ import { getPlaylist, savePlaylist } from '../../lib/db';
 import { generateAudioFilename } from '../../lib/audioCache';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
+import { useConfirmDialog } from '../shared/ConfirmDialog';
 
 const DEFAULT_BASE_URL = 'https://yourusername.github.io/music-bingo/packs/';
 
@@ -18,6 +19,7 @@ export function PlaylistEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isNew = id === 'new';
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -417,6 +419,7 @@ export function PlaylistEditor() {
 
   return (
     <AppShell title={isNew ? 'Create Playlist' : 'Edit Playlist'} maxWidth="xl">
+      <ConfirmDialog />
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -523,8 +526,15 @@ export function PlaylistEditor() {
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => {
-                      if (confirm(`Clear all ${songs.length} songs?`)) {
+                    onClick={async () => {
+                      const confirmed = await confirm({
+                        title: 'Clear All Songs',
+                        message: `Clear all ${songs.length} songs from this playlist?`,
+                        confirmLabel: 'Clear All',
+                        cancelLabel: 'Cancel',
+                        variant: 'danger',
+                      });
+                      if (confirmed) {
                         setSongs([]);
                       }
                     }}
@@ -794,8 +804,15 @@ export function PlaylistEditor() {
                               </button>
                               <div className="flex-1" />
                               <button
-                                onClick={() => {
-                                  if (confirm(`Delete "${song.title}" by ${song.artist}?`)) {
+                                onClick={async () => {
+                                  const confirmed = await confirm({
+                                    title: 'Delete Song',
+                                    message: `Delete "${song.title}" by ${song.artist}?`,
+                                    confirmLabel: 'Delete',
+                                    cancelLabel: 'Cancel',
+                                    variant: 'danger',
+                                  });
+                                  if (confirmed) {
                                     toggleExpanded(index);
                                     removeSong(index);
                                   }

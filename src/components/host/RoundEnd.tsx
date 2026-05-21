@@ -6,6 +6,7 @@ import { checkWin } from '../../lib/winChecker';
 import { Button } from '../shared/Button';
 import { PatternDisplay } from '../shared/PatternDisplay';
 import { AppShell } from '../shared/AppShell';
+import { useConfirmDialog } from '../shared/ConfirmDialog';
 import type { BingoPattern } from '../../types';
 
 interface PatternStatus {
@@ -17,6 +18,7 @@ interface PatternStatus {
 export function RoundEnd() {
   const navigate = useNavigate();
   const { game, playlist, advanceRound, endGame, resetCalledSongs, cards, excludedSongIds } = useGame();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const [selectedNextPattern, setSelectedNextPattern] = useState<string | null>(null);
 
@@ -124,6 +126,7 @@ export function RoundEnd() {
 
   return (
     <AppShell title={`Round ${currentRound.roundNumber} Complete`} maxWidth="xl">
+      <ConfirmDialog />
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -165,8 +168,15 @@ export function RoundEnd() {
             <Button
               variant="secondary"
               fullWidth
-              onClick={() => {
-                if (confirm('Reset all cards? This will clear all called songs and players will need to wipe their cards.')) {
+              onClick={async () => {
+                const confirmed = await confirm({
+                  title: 'Reset All Cards',
+                  message: 'Reset all cards? This will clear all called songs and players will need to wipe their cards.',
+                  confirmLabel: 'Reset Cards',
+                  cancelLabel: 'Cancel',
+                  variant: 'danger',
+                });
+                if (confirmed) {
                   resetCalledSongs();
                   alert('Cards reset! Tell players to clear their marks.');
                 }

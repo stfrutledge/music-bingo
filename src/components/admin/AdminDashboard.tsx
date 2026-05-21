@@ -5,11 +5,13 @@ import { getAllPlaylists, deletePlaylist } from '../../lib/db';
 import { getAudioSource, setAudioSource, AUDIO_URLS } from '../../lib/audioSettings';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
+import { useConfirmDialog } from '../shared/ConfirmDialog';
 
 export function AdminDashboard() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [audioSource, setAudioSourceState] = useState<AudioSource>(getAudioSource);
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     loadPlaylists();
@@ -28,7 +30,14 @@ export function AdminDashboard() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Delete playlist "${name}"? This will also delete all generated cards.`)) {
+    const confirmed = await confirm({
+      title: 'Delete Playlist',
+      message: `Delete playlist "${name}"? This will also delete all generated cards.`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+    if (confirmed) {
       await deletePlaylist(id);
       loadPlaylists();
     }
@@ -36,6 +45,7 @@ export function AdminDashboard() {
 
   return (
     <AppShell title="Admin Dashboard" maxWidth="xl">
+      <ConfirmDialog />
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>

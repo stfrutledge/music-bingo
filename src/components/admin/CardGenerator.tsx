@@ -7,6 +7,7 @@ import { generateCardsPDF, downloadPDF } from '../../lib/pdfGenerator';
 import { Button } from '../shared/Button';
 import { BingoGrid } from '../shared/BingoGrid';
 import { AppShell } from '../shared/AppShell';
+import { useConfirmDialog } from '../shared/ConfirmDialog';
 
 interface ExistingPack {
   id: string;
@@ -17,6 +18,7 @@ interface ExistingPack {
 export function CardGenerator() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [cards, setCards] = useState<BingoCard[]>([]);
@@ -176,6 +178,7 @@ export function CardGenerator() {
 
   return (
     <AppShell title={playlist.name} subtitle="Card Generator" maxWidth="xl">
+      <ConfirmDialog />
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -260,7 +263,14 @@ export function CardGenerator() {
                     </button>
                     <button
                       onClick={async () => {
-                        if (confirm(`Delete card pack "${pack.name}"?`)) {
+                        const confirmed = await confirm({
+                          title: 'Delete Card Pack',
+                          message: `Delete card pack "${pack.name}"?`,
+                          confirmLabel: 'Delete',
+                          cancelLabel: 'Cancel',
+                          variant: 'danger',
+                        });
+                        if (confirmed) {
                           try {
                             const response = await fetch(`/api/delete-card-pack?playlistId=${playlist?.id}&packId=${pack.id}`, {
                               method: 'DELETE',

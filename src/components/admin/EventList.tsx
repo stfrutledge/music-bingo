@@ -4,6 +4,7 @@ import type { EventManifest } from '../../types';
 import { getAvailableEvents, deleteEvent } from '../../lib/eventService';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
+import { useConfirmDialog } from '../shared/ConfirmDialog';
 
 type EventInfo = EventManifest['events'][0];
 
@@ -12,6 +13,7 @@ export function EventList() {
   const [events, setEvents] = useState<EventInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     loadEvents();
@@ -25,7 +27,14 @@ export function EventList() {
   };
 
   const handleDelete = async (eventId: string, eventName: string) => {
-    if (!confirm(`Delete event "${eventName}"? This cannot be undone.`)) {
+    const confirmed = await confirm({
+      title: 'Delete Event',
+      message: `Delete event "${eventName}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -41,6 +50,7 @@ export function EventList() {
 
   return (
     <AppShell title="Events" maxWidth="xl">
+      <ConfirmDialog />
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>

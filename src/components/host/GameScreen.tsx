@@ -11,12 +11,14 @@ import { AudioPlayer } from '../shared/AudioPlayer';
 import { PatternDisplay } from '../shared/PatternDisplay';
 import { ThemeToggle } from '../shared/ThemeToggle';
 import { CardPreviewModal } from './CardPreviewModal';
+import { useConfirmDialog } from '../shared/ConfirmDialog';
 
 export function GameScreen() {
   const navigate = useNavigate();
   const { game, playlist, cards, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners, cardsInPlay, endGame } = useGame();
   const audio = useAudio();
   const wakeLock = useWakeLock();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const [showCalledList, setShowCalledList] = useState(false);
   const [showWinnerTracker, setShowWinnerTracker] = useState(true);
@@ -121,8 +123,15 @@ export function GameScreen() {
     prevSong();
   };
 
-  const handleEndGame = () => {
-    if (confirm('Are you sure you want to end the game?')) {
+  const handleEndGame = async () => {
+    const confirmed = await confirm({
+      title: 'End Game',
+      message: 'Are you sure you want to end the game?',
+      confirmLabel: 'End Game',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+    if (confirmed) {
       endGame();
       navigate('/host/game-over');
     }
@@ -130,13 +139,20 @@ export function GameScreen() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-secondary)] flex flex-col">
+      <ConfirmDialog />
       {/* Header */}
       <header className="bg-[var(--bg-card)] border-b border-[var(--border-color)] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 lg:px-6 h-14 lg:h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => {
-                if (confirm('Exit the game? You can resume it later from the home screen.')) {
+              onClick={async () => {
+                const confirmed = await confirm({
+                  title: 'Exit Game',
+                  message: 'Exit the game? You can resume it later from the home screen.',
+                  confirmLabel: 'Exit',
+                  cancelLabel: 'Cancel',
+                });
+                if (confirmed) {
                   audio.pause();
                   navigate('/', { state: { fromGame: true } });
                 }
