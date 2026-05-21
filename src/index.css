@@ -47,7 +47,7 @@
 
   --text-primary: #0a0a0a;
   --text-secondary: #4a4a4a;
-  --text-muted: #6b7280;
+  --text-muted: #5c6370;
   --text-inverse: #ffffff;
 
   --border-color: #e5e7eb;
@@ -59,6 +59,8 @@
   --accent-teal-light: #14b8a6;
   --accent-amber: #d97706;
   --accent-amber-light: #f59e0b;
+  --accent-red: #dc2626;
+  --accent-red-light: #ef4444;
 
   --ring-offset: #ffffff;
 
@@ -96,6 +98,8 @@
   --accent-teal-light: #2dd4bf;
   --accent-amber: #f59e0b;
   --accent-amber-light: #fbbf24;
+  --accent-red: #ef4444;
+  --accent-red-light: #f87171;
 
   --ring-offset: #111111;
 

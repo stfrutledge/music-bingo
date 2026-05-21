@@ -11,7 +11,7 @@ const variantClasses = {
   primary: 'bg-[var(--accent-green)] text-white hover:bg-[var(--accent-green-light)] focus:ring-[var(--accent-green)]',
   secondary: 'bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border-color)] hover:bg-[var(--bg-card)] hover:border-[var(--border-strong)] focus:ring-[var(--accent-teal)]',
   success: 'bg-[var(--accent-green)] text-white hover:bg-[var(--accent-green-light)] focus:ring-[var(--accent-green)]',
-  danger: 'bg-red-600 text-white hover:bg-red-500 focus:ring-red-500',
+  danger: 'bg-[var(--accent-red)] text-white hover:bg-[var(--accent-red-light)] focus:ring-[var(--accent-red)]',
   ghost: 'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] focus:ring-[var(--accent-teal)]',
 };
 
