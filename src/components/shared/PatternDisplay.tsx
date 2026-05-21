@@ -32,8 +32,8 @@ export function PatternDisplay({
       onClick={onClick}
       className={`
         flex flex-col items-center gap-1
-        ${onClick ? 'cursor-pointer hover:opacity-80' : ''}
-        ${selected ? 'ring-2 ring-[var(--accent-green)] ring-offset-2 ring-offset-[var(--ring-offset)] rounded-lg p-1' : ''}
+        ${onClick ? 'cursor-pointer pattern-select' : ''}
+        ${selected ? 'ring-2 ring-[var(--accent-green)] ring-offset-2 ring-offset-[var(--ring-offset)] rounded-lg p-1 selected' : ''}
       `}
     >
       <div

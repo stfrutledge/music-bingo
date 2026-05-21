@@ -129,7 +129,7 @@ export function WinnerVerification() {
               <div
                 className={`card text-center ${
                   result.isWin
-                    ? 'bg-[var(--status-success-bg)] border-[var(--accent-green)]'
+                    ? 'bg-[var(--status-success-bg)] border-[var(--accent-green)] celebrate'
                     : 'bg-[var(--status-error-bg)] border-red-500'
                 } border-2`}
               >

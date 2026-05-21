@@ -36,6 +36,19 @@
   --color-neutral-950: #0a0a0a;
 }
 
+/* Animation timing tokens */
+:root {
+  /* Easing curves - natural deceleration, no bounce */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Durations by purpose */
+  --duration-instant: 100ms;   /* Button press, toggle */
+  --duration-fast: 150ms;      /* Hover states */
+  --duration-normal: 200ms;    /* State changes */
+  --duration-slow: 300ms;      /* Layout changes, modals */
+}
+
 /* Light mode (default) */
 :root {
   --bg-primary: #ffffff;
@@ -516,6 +529,203 @@ select.input:focus {
   top: 0.5rem;
   outline: 2px solid var(--accent-green-light);
   outline-offset: 2px;
+}
+
+/* ============================================
+   Animation system
+   ============================================ */
+
+/* Button press effect */
+.btn-press {
+  transition: transform var(--duration-instant) var(--ease-out-quart),
+              box-shadow var(--duration-fast) var(--ease-out-quart);
+}
+
+.btn-press:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-press:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Card hover lift */
+.card-lift {
+  transition: transform var(--duration-normal) var(--ease-out-quart),
+              box-shadow var(--duration-normal) var(--ease-out-quart);
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade in and scale up (for modals) */
+@keyframes fade-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Backdrop fade */
+@keyframes backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Bingo tile mark animation */
+@keyframes tile-mark {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.tile-marked {
+  animation: tile-mark var(--duration-normal) var(--ease-out-quart);
+}
+
+/* Pulse for attention */
+@keyframes pulse-attention {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.pulse-attention {
+  animation: pulse-attention 2s var(--ease-out-quart) infinite;
+}
+
+/* Celebration shake (for BINGO) */
+@keyframes celebrate-shake {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  20% {
+    transform: translateX(-3px) rotate(-1deg);
+  }
+  40% {
+    transform: translateX(3px) rotate(1deg);
+  }
+  60% {
+    transform: translateX(-2px) rotate(-0.5deg);
+  }
+  80% {
+    transform: translateX(2px) rotate(0.5deg);
+  }
+}
+
+.celebrate {
+  animation: celebrate-shake 0.5s var(--ease-out-quart);
+}
+
+/* Stagger children entrance */
+.stagger-children > * {
+  opacity: 0;
+  animation: fade-in var(--duration-slow) var(--ease-out-quart) forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+
+/* Dialog animations */
+.dialog-backdrop {
+  animation: backdrop-fade-in var(--duration-normal) var(--ease-out-quart);
+}
+
+.dialog-content {
+  animation: fade-scale-in var(--duration-slow) var(--ease-out-expo);
+}
+
+/* Song tile transition */
+.song-tile {
+  transition: background-color var(--duration-normal) var(--ease-out-quart),
+              transform var(--duration-instant) var(--ease-out-quart);
+}
+
+.song-tile:active {
+  transform: scale(0.97);
+}
+
+/* Pattern selection feedback */
+.pattern-select {
+  transition: transform var(--duration-fast) var(--ease-out-quart),
+              box-shadow var(--duration-fast) var(--ease-out-quart),
+              border-color var(--duration-fast) var(--ease-out-quart);
+}
+
+.pattern-select:hover {
+  transform: scale(1.03);
+}
+
+.pattern-select.selected {
+  transform: scale(1.05);
+}
+
+/* Progress bar fill */
+.progress-fill {
+  transition: width var(--duration-slow) var(--ease-out-quart);
+}
+
+/* Number counter animation */
+@keyframes number-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.number-pop {
+  animation: number-pop var(--duration-normal) var(--ease-out-quart);
+}
+
+/* Spin animation for loading */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 /* Reduced motion preference */

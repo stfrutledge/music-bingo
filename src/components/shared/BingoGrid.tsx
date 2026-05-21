@@ -80,7 +80,7 @@ export function BingoGrid({
               ${isPatternCell && !isMarked ? 'ring-2 ring-[var(--accent-amber)] ring-inset' : ''}
               rounded aspect-square overflow-hidden
               ${sizeClasses[size]}
-              ${onCellClick ? 'cursor-pointer hover:opacity-80' : ''}
+              ${onCellClick ? 'cursor-pointer hover:opacity-80 song-tile' : ''}
             `}
           >
             {song && (

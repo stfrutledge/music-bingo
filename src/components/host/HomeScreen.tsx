@@ -222,7 +222,7 @@ export function HomeScreen() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="card p-5">
+    <div className="card card-lift p-5">
       <div className="w-10 h-10 rounded-lg bg-[var(--bg-accent)] flex items-center justify-center text-[var(--accent-green)] mb-3" aria-hidden="true">
         {icon}
       </div>

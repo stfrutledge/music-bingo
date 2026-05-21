@@ -83,7 +83,7 @@ export function AudioPlayer({
         onKeyDown={handleProgressKeyDown}
       >
         <div
-          className="h-full bg-[var(--accent-green)] rounded-full transition-all pointer-events-none"
+          className="h-full bg-[var(--accent-green)] rounded-full progress-fill pointer-events-none"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -98,7 +98,7 @@ export function AudioPlayer({
             onClick={onPlayPause}
             disabled={isLoading}
             aria-label={isLoading ? 'Loading audio' : isPlaying ? 'Pause' : 'Play'}
-            className="w-12 h-12 flex items-center justify-center bg-[var(--accent-green)] rounded-full hover:bg-[var(--accent-green-light)] disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)]"
+            className="w-12 h-12 flex items-center justify-center bg-[var(--accent-green)] rounded-full hover:bg-[var(--accent-green-light)] disabled:opacity-50 btn-press focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)]"
           >
             {isLoading ? (
               <LoadingSpinner />
@@ -150,7 +150,7 @@ function PauseIcon() {
 
 function LoadingSpinner() {
   return (
-    <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+    <svg className="w-6 h-6 text-white spin" fill="none" viewBox="0 0 24 24">
       <circle
         className="opacity-25"
         cx="12"

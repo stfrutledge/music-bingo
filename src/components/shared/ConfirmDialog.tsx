@@ -49,13 +49,13 @@ export function ConfirmDialog({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/50 dialog-backdrop"
         onClick={onCancel}
         aria-hidden="true"
       />
 
       {/* Dialog */}
-      <div className="relative bg-[var(--bg-card)] rounded-lg shadow-xl max-w-md w-full">
+      <div className="relative bg-[var(--bg-card)] rounded-lg shadow-xl max-w-md w-full dialog-content">
         {/* Header */}
         <div className="p-6 pb-4">
           <h2
