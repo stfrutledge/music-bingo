@@ -3,6 +3,132 @@ import type { BingoCard, Playlist, Song } from '../types';
 import logoUrl from '/logo.png?url';
 import { InterRegular, InterBold } from '../fonts/inter';
 
+// ============================================================================
+// TEXT CLEANUP & FORMATTING (Display only - does not modify underlying data)
+// ============================================================================
+
+/**
+ * Cleans song title by removing metadata like feat., remix, remaster, etc.
+ */
+function cleanSongTitle(title: string): string {
+  let cleaned = title;
+
+  // Remove patterns in parentheses or brackets
+  const bracketPatterns = [
+    /\s*[\(\[][^\)\]]*feat\.?[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*featuring[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*remix[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*radio\s*(edit|version)?[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*remaster(ed)?[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*version[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*explicit[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*clean[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*deluxe[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*anniversary[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*acoustic[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*live[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*spanish[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*extended[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*club\s*mix[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[][^\)\]]*edit[^\)\]]*[\)\]]/gi,
+    /\s*[\(\[]\d{4}[^\)\]]*[\)\]]/gi, // Year tags
+  ];
+
+  for (const pattern of bracketPatterns) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+
+  // Remove patterns after dash (e.g., "Title - Remix", "Title - Spanish Version")
+  const dashPatterns = [
+    /\s+-\s+remix$/gi,
+    /\s+-\s+radio\s*(edit|version)?$/gi,
+    /\s+-\s+remaster(ed)?$/gi,
+    /\s+-\s+edit$/gi,
+    /\s+-\s+spanish\s*version$/gi,
+    /\s+-\s+acoustic(\s*version)?$/gi,
+    /\s+-\s+live(\s*version)?$/gi,
+    /\s+-\s+extended\s*mix$/gi,
+    /\s+-\s+club\s*mix$/gi,
+    /\s+-\s+.*version$/gi,
+  ];
+
+  for (const pattern of dashPatterns) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+
+  return cleaned.trim();
+}
+
+/**
+ * Extracts primary artist from multi-artist strings (display only).
+ * Splits on / and returns only the first artist.
+ */
+function cleanArtistName(artist: string): string {
+  // Split on / and take first artist
+  const primary = artist.split('/')[0].trim();
+  return primary;
+}
+
+/**
+ * Converts string to Title Case.
+ * Keeps minor words lowercase unless they're the first word.
+ */
+function toTitleCase(str: string): string {
+  const minorWords = new Set([
+    'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor',
+    'on', 'at', 'to', 'by', 'of', 'in', 'as'
+  ]);
+
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map((word, index) => {
+      // Always capitalize first word
+      if (index === 0) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      // Keep minor words lowercase
+      if (minorWords.has(word)) {
+        return word;
+      }
+      // Capitalize other words
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+/**
+ * Word-safe text wrapping - never splits words.
+ * Only wraps at word boundaries.
+ */
+function wrapTextSafely(pdf: jsPDF, text: string, maxWidth: number): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const testWidth = pdf.getTextWidth(testLine);
+
+    if (testWidth > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
+
+// ============================================================================
+// FONT REGISTRATION
+// ============================================================================
+
 // Register Inter fonts globally via jsPDF events API
 // This must happen before any PDF instance is created
 const registerInterFonts = function(this: jsPDF) {
@@ -200,17 +326,22 @@ function drawCard(
           const cellPadding = 1.5;
           const textWidth = cellSize - cellPadding * 2;
 
-          // Song title - bold, dark text, wrap fully (no truncation)
+          // Clean and format song title (Title Case, metadata removed)
+          const cleanedTitle = toTitleCase(cleanSongTitle(song.title));
+          // Clean artist name (primary artist only)
+          const cleanedArtist = cleanArtistName(song.artist);
+
+          // Song title - bold, dark text, word-safe wrapping
           pdf.setTextColor(10, 10, 10);
           pdf.setFontSize(titleFontSize);
           pdf.setFont('Inter', 'bold');
 
-          const titleLines: string[] = pdf.splitTextToSize(song.title, textWidth);
+          const titleLines = wrapTextSafely(pdf, cleanedTitle, textWidth).slice(0, 3);
 
-          // Artist name - wrap fully (no truncation)
+          // Artist name - word-safe wrapping
           pdf.setFontSize(artistFontSize);
           pdf.setFont('Inter', 'normal');
-          const artistLines: string[] = pdf.splitTextToSize(song.artist, textWidth);
+          const artistLines = wrapTextSafely(pdf, cleanedArtist, textWidth).slice(0, 2);
 
           // Calculate total height needed
           const totalTitleHeight = titleLines.length * titleLineHeight;
@@ -234,10 +365,10 @@ function drawCard(
           // Add space between title and artist
           currentY += spaceBetween;
 
-          // Draw artist lines
+          // Draw artist lines - burgundy color (#9B123A)
           pdf.setFontSize(artistFontSize);
           pdf.setFont('Inter', 'normal');
-          pdf.setTextColor(80, 80, 80);
+          pdf.setTextColor(155, 18, 58);
           artistLines.forEach((line: string) => {
             const lineWidth = pdf.getTextWidth(line);
             pdf.text(line, x + (cellSize - lineWidth) / 2, currentY);
