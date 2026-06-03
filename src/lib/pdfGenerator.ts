@@ -3,6 +3,7 @@ import type { BingoCard, Playlist, Song } from '../types';
 import logoUrl from '/logo.png?url';
 import headerSvgUrl from '/music-bingo-header.svg?url&v=2';
 import { InterRegular, InterBold } from '../fonts/inter';
+import { RobotoCondensedBold } from '../fonts/roboto-condensed';
 
 // ============================================================================
 // TEXT CLEANUP & FORMATTING (Display only - does not modify underlying data)
@@ -130,17 +131,19 @@ function wrapTextSafely(pdf: jsPDF, text: string, maxWidth: number): string[] {
 // FONT REGISTRATION
 // ============================================================================
 
-// Register Inter fonts globally via jsPDF events API
+// Register fonts globally via jsPDF events API
 // This must happen before any PDF instance is created
-const registerInterFonts = function(this: jsPDF) {
+const registerFonts = function(this: jsPDF) {
   this.addFileToVFS('Inter-Regular.ttf', InterRegular);
   this.addFont('Inter-Regular.ttf', 'Inter', 'normal');
   this.addFileToVFS('Inter-Bold.ttf', InterBold);
   this.addFont('Inter-Bold.ttf', 'Inter', 'bold');
+  this.addFileToVFS('RobotoCondensed-Bold.ttf', RobotoCondensedBold);
+  this.addFont('RobotoCondensed-Bold.ttf', 'RobotoCondensed', 'bold');
 };
 
 // Register the font callback
-(jsPDF as unknown as { API: { events: Array<[string, typeof registerInterFonts]> } }).API.events.push(['addFonts', registerInterFonts]);
+(jsPDF as unknown as { API: { events: Array<[string, typeof registerFonts]> } }).API.events.push(['addFonts', registerFonts]);
 
 function verifyInterFont(pdf: jsPDF): void {
   const hasInter = 'Inter' in pdf.getFontList();
@@ -385,10 +388,10 @@ function drawCard(
           // Clean artist name (primary artist only)
           const cleanedArtist = cleanArtistName(song.artist);
 
-          // Song title - bold, dark text, word-safe wrapping
+          // Song title - Roboto Condensed Bold, dark text, word-safe wrapping
           pdf.setTextColor(10, 10, 10);
           pdf.setFontSize(titleFontSize);
-          pdf.setFont('Inter', 'bold');
+          pdf.setFont('RobotoCondensed', 'bold');
 
           const titleLines = wrapTextSafely(pdf, cleanedTitle, textWidth).slice(0, 3);
 
@@ -408,7 +411,7 @@ function drawCard(
 
           // Draw title lines
           pdf.setFontSize(titleFontSize);
-          pdf.setFont('Inter', 'bold');
+          pdf.setFont('RobotoCondensed', 'bold');
           pdf.setTextColor(10, 10, 10);
           titleLines.forEach((line: string) => {
             const lineWidth = pdf.getTextWidth(line);
