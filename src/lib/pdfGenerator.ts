@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import type { BingoCard, Playlist, Song } from '../types';
 import logoUrl from '/logo.png?url';
-import headerSvgUrl from '/music-bingo-header.svg?url';
+import headerSvgUrl from '/music-bingo-header.svg?url&v=2';
 import { InterRegular, InterBold } from '../fonts/inter';
 
 // ============================================================================
@@ -198,17 +198,22 @@ async function loadLogoImage(): Promise<string> {
 }
 
 async function loadHeaderImage(): Promise<string> {
-  if (headerDataUrl) return headerDataUrl;
-
+  // Always reload header to pick up changes (no caching)
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
+      // SVG viewBox is 2400x420 - render at 3x scale for crisp PDF output
+      const scale = 3;
+      const baseWidth = 2400;
+      const baseHeight = 420;
+      const width = baseWidth * scale;
+      const height = baseHeight * scale;
       const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, width, height);
         headerDataUrl = canvas.toDataURL('image/png');
         resolve(headerDataUrl);
       } else {
@@ -292,7 +297,7 @@ function drawCard(
   // Grid dimensions - make it square
   const gap = 1.2;
   const totalGaps = gap * 4;
-  const headerSpace = 24; // Space for header SVG
+  const headerSpace = 14; // Space for header SVG
   const availableHeight = pageHeight - opts.margin - headerSpace - opts.margin; // header space + margins
   const availableWidth = opts.cardWidth;
 
