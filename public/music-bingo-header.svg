@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="420" viewBox="0 0 2400 420" role="img" aria-labelledby="title desc">
+  <title id="title">Music Bingo Champagne Menu Header</title>
+  <desc id="desc">A clean premium Music Bingo header with burgundy sparkle accents for print use.</desc>
+  <defs>
+    <style>
+      .title {
+        font-family: "Libre Bodoni", "Bodoni 72", "Bodoni MT", "Didot", "Playfair Display", Georgia, serif;
+        font-size: 230px;
+        font-weight: 700;
+        letter-spacing: 34px;
+        fill: #111111;
+      }
+      .sparkle {
+        fill: #9B123A;
+      }
+      .dotline {
+        stroke: #9B123A;
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-dasharray: 1 38;
+        opacity: 0.95;
+      }
+    </style>
+  </defs>
+
+  <!-- Transparent background by design. Do not add a background fill. -->
+
+  <!-- Left sparkle cluster -->
+  <g class="sparkle" transform="translate(220 190)">
+    <path d="M0 -70 C10 -25 25 -10 70 0 C25 10 10 25 0 70 C-10 25 -25 10 -70 0 C-25 -10 -10 -25 0 -70 Z"/>
+    <path d="M-105 -95 C-99 -72 -88 -61 -65 -55 C-88 -49 -99 -38 -105 -15 C-111 -38 -122 -49 -145 -55 C-122 -61 -111 -72 -105 -95 Z"/>
+    <path d="M110 45 C116 68 127 79 150 85 C127 91 116 102 110 125 C104 102 93 91 70 85 C93 79 104 68 110 45 Z"/>
+  </g>
+
+  <!-- Title -->
+  <text class="title" x="1200" y="245" text-anchor="middle">MUSIC BINGO</text>
+
+  <!-- Right sparkle cluster -->
+  <g class="sparkle" transform="translate(2180 190)">
+    <path d="M0 -70 C10 -25 25 -10 70 0 C25 10 10 25 0 70 C-10 25 -25 10 -70 0 C-25 -10 -10 -25 0 -70 Z"/>
+    <path d="M105 -95 C111 -72 122 -61 145 -55 C122 -49 111 -38 105 -15 C99 -38 88 -49 65 -55 C88 -61 99 -72 105 -95 Z"/>
+    <path d="M-110 45 C-104 68 -93 79 -70 85 C-93 91 -104 102 -110 125 C-116 102 -127 91 -150 85 C-127 79 -116 68 -110 45 Z"/>
+  </g>
+
+  <!-- Optional subtle dotted underline -->
+  <line class="dotline" x1="790" y1="330" x2="1610" y2="330"/>
+</svg>

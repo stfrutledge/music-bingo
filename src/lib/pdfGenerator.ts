@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import type { BingoCard, Playlist, Song } from '../types';
 import logoUrl from '/logo.png?url';
+import headerSvgUrl from '/music-bingo-header.svg?url';
 import { InterRegular, InterBold } from '../fonts/inter';
 
 // ============================================================================
@@ -166,8 +167,9 @@ const DEFAULT_OPTIONS: PDFOptions = {
   titleFontSize: 14,
 };
 
-// Cache for the logo image data
+// Cache for image data
 let logoDataUrl: string | null = null;
+let headerDataUrl: string | null = null;
 
 async function loadLogoImage(): Promise<string> {
   if (logoDataUrl) return logoDataUrl;
@@ -195,6 +197,32 @@ async function loadLogoImage(): Promise<string> {
   });
 }
 
+async function loadHeaderImage(): Promise<string> {
+  if (headerDataUrl) return headerDataUrl;
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        headerDataUrl = canvas.toDataURL('image/png');
+        resolve(headerDataUrl);
+      } else {
+        reject(new Error('Could not get canvas context'));
+      }
+    };
+    img.onerror = (e) => {
+      console.error('Failed to load header image:', e);
+      reject(new Error('Failed to load header'));
+    };
+    img.src = headerSvgUrl;
+  });
+}
+
 export async function generateCardsPDF(
   cards: BingoCard[],
   playlist: Playlist,
@@ -202,26 +230,32 @@ export async function generateCardsPDF(
 ): Promise<jsPDF> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
-  // Load logo image
+  // Load images
   let logo: string | null = null;
+  let header: string | null = null;
   try {
     logo = await loadLogoImage();
   } catch (e) {
     console.warn('Could not load logo for PDF, using fallback:', e);
   }
+  try {
+    header = await loadHeaderImage();
+  } catch (e) {
+    console.warn('Could not load header for PDF, using fallback:', e);
+  }
 
-  // A4 portrait: 210 x 297 mm (two cards per page, stacked vertically)
+  // US Letter portrait: 215.9 x 279.4 mm (two cards per page, stacked vertically)
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
-    format: 'a4',
+    format: 'letter',
   });
 
   // Load Inter font
   verifyInterFont(pdf);
 
   const songMap = new Map(playlist.songs.map(s => [s.id, s]));
-  const cardHeight = 148.5; // Half of A4 height (297 / 2)
+  const cardHeight = 139.7; // Half of Letter height (279.4 / 2)
 
   cards.forEach((card, index) => {
     const positionOnPage = index % 2; // 0 = top, 1 = bottom
@@ -232,7 +266,7 @@ export async function generateCardsPDF(
     }
 
     const offsetY = positionOnPage * cardHeight;
-    drawCard(pdf, card, songMap, opts, logo, offsetY, cardHeight);
+    drawCard(pdf, card, songMap, opts, logo, header, offsetY, cardHeight);
   });
 
   return pdf;
@@ -244,6 +278,7 @@ function drawCard(
   songMap: Map<string, Song>,
   opts: PDFOptions,
   logo: string | null,
+  header: string | null,
   offsetY: number = 0,
   cardHeight: number = 148
 ): void {
@@ -257,7 +292,8 @@ function drawCard(
   // Grid dimensions - make it square
   const gap = 1.2;
   const totalGaps = gap * 4;
-  const availableHeight = pageHeight - opts.margin - 6 - opts.margin; // header space + margins
+  const headerSpace = 24; // Space for header SVG
+  const availableHeight = pageHeight - opts.margin - headerSpace - opts.margin; // header space + margins
   const availableWidth = opts.cardWidth;
 
   // Use the smaller dimension to make a square grid
@@ -266,15 +302,28 @@ function drawCard(
 
   // Center the square grid horizontally
   const gridStartX = opts.margin + (availableWidth - (cellSize * 5 + totalGaps)) / 2;
-  const gridStartY = offsetY + opts.margin + 6;
+  const gridStartY = offsetY + opts.margin + headerSpace;
   const cornerRadius = 2;
 
-  // Card number - positioned at top-right corner of grid for visibility after trimming
+  // Header: MUSIC BINGO SVG and card number
   const gridEndX = gridStartX + 5 * cellSize + 4 * gap;
-  pdf.setTextColor(10, 10, 10);
-  pdf.setFontSize(10);
-  pdf.setFont('Inter', 'bold');
-  pdf.text(`#${card.cardNumber}`, gridEndX, gridStartY - 2, { align: 'right' });
+  const gridWidth = gridEndX - gridStartX;
+
+  // Header SVG (aspect ratio 2400:420 = 5.71:1)
+  if (header) {
+    const headerAspectRatio = 2400 / 420;
+    const headerWidth = gridWidth * 0.85; // 85% of grid width
+    const headerHeight = headerWidth / headerAspectRatio;
+    const headerX = gridStartX + (gridWidth - headerWidth) / 2; // Center above grid
+    const headerY = offsetY + opts.margin - 2;
+    pdf.addImage(header, 'PNG', headerX, headerY, headerWidth, headerHeight);
+  } else {
+    // Fallback text if SVG fails to load
+    pdf.setTextColor(10, 10, 10);
+    pdf.setFontSize(16);
+    pdf.setFont('times', 'bold');
+    pdf.text('MUSIC BINGO', gridStartX, gridStartY - 2);
+  }
 
   // Font sizes for readability in dim lighting
   const titleFontSize = 9;
@@ -378,6 +427,13 @@ function drawCard(
       }
     }
   }
+
+  // Card number - to the right of bottom-right box, aligned with bottom of box
+  const gridEndY = gridStartY + 5 * cellSize + 4 * gap;
+  pdf.setTextColor(10, 10, 10);
+  pdf.setFontSize(10);
+  pdf.setFont('Inter', 'normal');
+  pdf.text(`#${card.cardNumber}`, gridEndX + 2, gridEndY - 1);
 }
 
 export function downloadPDF(pdf: jsPDF, filename: string): void {
