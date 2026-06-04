@@ -3,7 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { Playlist, Song } from '../../types';
 import { getPlaylist, savePlaylist } from '../../lib/db';
 import { generateAudioFilename } from '../../lib/audioCache';
-import { downloadPlaylistJson, checkPlaylistSyncStatus } from '../../lib/playlistSync';
+import { checkPlaylistSyncStatus } from '../../lib/playlistSync';
+import {
+  loadAndMergeFromSheets,
+  saveToSheets,
+  songToSheetData,
+} from '../../lib/sheetsSync';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
 import { useConfirmDialog } from '../shared/ConfirmDialog';
@@ -35,6 +40,9 @@ export function PlaylistEditor() {
   const [deployStatus, setDeployStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [syncStatus, setSyncStatus] = useState<'synced' | 'local-newer' | 'file-newer' | 'local-only' | 'checking'>('checking');
 
+  // Google Sheets sync state
+  const [sheetsSyncStatus, setSheetsSyncStatus] = useState<'idle' | 'syncing' | 'saved' | 'error'>('idle');
+
   // Audio preview state
   const [expandedSongIndex, setExpandedSongIndex] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -54,14 +62,22 @@ export function PlaylistEditor() {
   }, [id, isNew]);
 
   const loadPlaylist = async (playlistId: string) => {
-    const playlist = await getPlaylist(playlistId);
+    let playlist = await getPlaylist(playlistId);
     if (playlist) {
+      // Try to merge with Google Sheets data
+      try {
+        playlist = await loadAndMergeFromSheets(playlist);
+      } catch (e) {
+        console.warn('Could not load from Google Sheets:', e);
+      }
+
       setName(playlist.name);
       setDescription(playlist.description || '');
       setBaseAudioUrl(playlist.baseAudioUrl);
       setSongs(playlist.songs);
     }
   };
+
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -797,45 +813,45 @@ export function PlaylistEditor() {
                                 </Button>
                               )}
                             </div>
-
-                            {/* Song actions row */}
-                            <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-color)] flex-wrap">
-                              <button
-                                onClick={() => moveSong(index, 'up')}
-                                disabled={index === 0}
-                                className="px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 bg-[var(--bg-tertiary)] rounded"
-                              >
-                                ↑ Move up
-                              </button>
-                              <button
-                                onClick={() => moveSong(index, 'down')}
-                                disabled={index === songs.length - 1}
-                                className="px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 bg-[var(--bg-tertiary)] rounded"
-                              >
-                                ↓ Move down
-                              </button>
-                              <div className="flex-1" />
-                              <button
-                                onClick={async () => {
-                                  const confirmed = await confirm({
-                                    title: 'Delete Song',
-                                    message: `Delete "${song.title}" by ${song.artist}?`,
-                                    confirmLabel: 'Delete',
-                                    cancelLabel: 'Cancel',
-                                    variant: 'danger',
-                                  });
-                                  if (confirmed) {
-                                    toggleExpanded(index);
-                                    removeSong(index);
-                                  }
-                                }}
-                                className="px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--status-error-text)] hover:opacity-80 bg-[var(--bg-tertiary)] rounded"
-                              >
-                                Delete song
-                              </button>
-                            </div>
                           </div>
                         )}
+
+                        {/* Song actions row - always visible */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-color)] flex-wrap">
+                          <button
+                            onClick={() => moveSong(index, 'up')}
+                            disabled={index === 0}
+                            className="px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 bg-[var(--bg-tertiary)] rounded"
+                          >
+                            ↑ Move up
+                          </button>
+                          <button
+                            onClick={() => moveSong(index, 'down')}
+                            disabled={index === songs.length - 1}
+                            className="px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 bg-[var(--bg-tertiary)] rounded"
+                          >
+                            ↓ Move down
+                          </button>
+                          <div className="flex-1" />
+                          <button
+                            onClick={async () => {
+                              const confirmed = await confirm({
+                                title: 'Delete Song',
+                                message: `Delete "${song.title}" by ${song.artist}?`,
+                                confirmLabel: 'Delete',
+                                cancelLabel: 'Cancel',
+                                variant: 'danger',
+                              });
+                              if (confirmed) {
+                                toggleExpanded(index);
+                                removeSong(index);
+                              }
+                            }}
+                            className="px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--status-error-text)] hover:opacity-80 bg-[var(--bg-tertiary)] rounded"
+                          >
+                            Delete song
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -862,29 +878,25 @@ export function PlaylistEditor() {
               </Button>
 
               <div className="border-t border-[var(--border-color)] pt-3">
-                <p className="text-xs text-[var(--text-muted)] mb-2">Export for backup/sync:</p>
+                <p className="text-xs text-[var(--text-muted)] mb-2">Save to repo (dev only):</p>
                 <Button
                   variant="primary"
                   fullWidth
-                  onClick={() => {
-                    const playlist: Playlist = {
-                      id: isNew ? `playlist-${Date.now()}` : id!,
-                      name: name.trim(),
-                      description: description.trim() || undefined,
-                      baseAudioUrl: baseAudioUrl.trim(),
-                      songs,
-                      createdAt: Date.now(),
-                      updatedAt: Date.now(),
-                    };
-                    downloadPlaylistJson(playlist);
-                  }}
-                  disabled={!name.trim() || songs.length < 24}
+                  onClick={handleSaveForDeployment}
+                  disabled={deployStatus === 'saving' || !name.trim() || songs.length < 24}
                 >
-                  Export JSON
+                  {deployStatus === 'saving' ? 'Saving...' : 'Save to Repo'}
                 </Button>
-                <p className="text-xs text-[var(--text-muted)] mt-1 text-center">
-                  Save to public/packs/{id || 'name'}/playlist.json
-                </p>
+                {deployStatus === 'success' && (
+                  <p className="text-xs text-[var(--status-success-text)] mt-1 text-center">
+                    Saved to public/packs/
+                  </p>
+                )}
+                {deployStatus === 'error' && (
+                  <p className="text-xs text-[var(--status-error-text)] mt-1 text-center">
+                    Failed (dev server required)
+                  </p>
+                )}
               </div>
 
               <Button variant="secondary" fullWidth onClick={() => navigate('/admin')}>
@@ -931,6 +943,62 @@ export function PlaylistEditor() {
               </div>
             </div>
           )}
+
+          {/* Google Sheets Sync Card */}
+          <div className="card">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide mb-3">Google Sheets</h3>
+
+            {/* Sync Status */}
+            <div className="flex items-center gap-2 mb-3">
+              {sheetsSyncStatus === 'syncing' ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-[var(--accent-primary)] animate-pulse" />
+                  <span className="text-sm text-[var(--accent-primary)]">Syncing...</span>
+                </>
+              ) : sheetsSyncStatus === 'saved' ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-[var(--status-success-text)]" />
+                  <span className="text-sm text-[var(--status-success-text)]">Saved to Sheets</span>
+                </>
+              ) : sheetsSyncStatus === 'error' ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-[var(--status-error-text)]" />
+                  <span className="text-sm text-[var(--status-error-text)]">Sync failed</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-[var(--text-muted)]" />
+                  <span className="text-sm text-[var(--text-muted)]">Ready</span>
+                </>
+              )}
+            </div>
+
+            {/* Manual Sync Button */}
+            {!isNew && id && (
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={async () => {
+                  console.log('[Sync Now] Button clicked!', { id, name, songCount: songs.length });
+                  setSheetsSyncStatus('syncing');
+                  try {
+                    const result = await saveToSheets({
+                      playlistId: id,
+                      playlistName: name,
+                      songs: songs.map(songToSheetData),
+                    });
+                    setSheetsSyncStatus(result.success ? 'saved' : 'error');
+                  } catch (e) {
+                    console.error('[Sync Now] Error:', e);
+                    setSheetsSyncStatus('error');
+                  }
+                }}
+                disabled={sheetsSyncStatus === 'syncing'}
+              >
+                {sheetsSyncStatus === 'syncing' ? 'Syncing...' : 'Sync Now'}
+              </Button>
+            )}
+          </div>
 
           {/* Info Card */}
           <div className="card">

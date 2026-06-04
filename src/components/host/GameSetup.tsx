@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import type { Playlist, BingoCard, CacheStatus, CardPackInfo, EventConfig } from '../../types';
 import { getPlaylist, getCardsForPlaylist, saveCards, savePacingTable, deleteCardsForPlaylist } from '../../lib/db';
+import { isSheetsConfigured, loadAndMergeFromSheets } from '../../lib/sheetsSync';
 import { BINGO_PATTERNS, getPatternById } from '../../lib/patterns';
 import { getCacheStatus, isLocalUrl } from '../../lib/audioCache';
 import { checkWin } from '../../lib/winChecker';
@@ -317,12 +318,20 @@ export function GameSetup() {
 
   const loadPlaylist = async (playlistId: string) => {
     setLoading(true);
-    const [playlistData, cards] = await Promise.all([
+    let [playlistData, cards] = await Promise.all([
       getPlaylist(playlistId),
       getCardsForPlaylist(playlistId),
     ]);
 
     if (playlistData) {
+      // Merge with Google Sheets data if configured (for latest titles/start times)
+      if (isSheetsConfigured()) {
+        try {
+          playlistData = await loadAndMergeFromSheets(playlistData);
+        } catch (e) {
+          console.warn('Could not load from Google Sheets:', e);
+        }
+      }
       setPlaylist(playlistData);
       setAllCards(cards);
       if (cards.length > 0) {
