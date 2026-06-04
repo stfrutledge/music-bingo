@@ -12,8 +12,8 @@ import { RobotoCondensedBold } from '../fonts/roboto-condensed';
 /**
  * Cleans song title by removing metadata like feat., remix, remaster, etc.
  */
-function cleanSongTitle(title: string): string {
-  let cleaned = title;
+function cleanSongTitle(title: string | number): string {
+  let cleaned = String(title);
 
   // Remove patterns in parentheses or brackets
   const bracketPatterns = [

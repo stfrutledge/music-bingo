@@ -4,6 +4,7 @@ import type { Playlist, BingoCard, GenerationStats, PacingTable } from '../../ty
 import { getPlaylist, getCardsForPlaylist, saveCards, deleteCardsForPlaylist, savePacingTable, getPacingTable } from '../../lib/db';
 import { generateCards } from '../../lib/cardGenerator';
 import { generateCardsPDF, downloadPDF } from '../../lib/pdfGenerator';
+import { loadAndMergeFromSheets } from '../../lib/sheetsSync';
 import { Button } from '../shared/Button';
 import { BingoGrid } from '../shared/BingoGrid';
 import { AppShell } from '../shared/AppShell';
@@ -51,7 +52,9 @@ export function CardGenerator() {
     ]);
 
     if (playlistData) {
-      setPlaylist(playlistData);
+      // Load latest song data from Google Sheets (source of truth)
+      const mergedPlaylist = await loadAndMergeFromSheets(playlistData);
+      setPlaylist(mergedPlaylist);
       setCards(cardsData);
       if (pacingData) setPacingTable(pacingData);
       if (cardsData.length > 0) setPreviewCard(cardsData[0]);
