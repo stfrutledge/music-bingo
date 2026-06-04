@@ -1,0 +1,576 @@
+{
+  "id": "generated-playlist",
+  "name": "Generated Playlist",
+  "description": "Auto-generated from Music Bingo Hen Party",
+  "baseAudioUrl": "./audio/",
+  "songs": [
+    {
+      "id": "edit-peggy-gou-spotubedl-com-it-goes-like-nanana",
+      "title": "(It Goes Like) Nanana",
+      "artist": "Edit - Peggy Gou - SpotubeDL.com",
+      "audioFile": "(It Goes Like) Nanana - Edit - Peggy Gou - SpotubeDL.com.mp3",
+      "startTime": 66.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "radio-version-sean-paul-spotubedl-com-when-you-gon",
+      "title": "(When You Gonna) Give It Up to Me",
+      "artist": "Radio Version - Sean Paul - SpotubeDL.com",
+      "audioFile": "(When You Gonna) Give It Up to Me - Radio Version - Sean Paul - SpotubeDL.com.mp3",
+      "startTime": 9.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "anne-marie-spotubedl-com-2002",
+      "title": "2002",
+      "artist": "Anne-Marie - SpotubeDL.com",
+      "audioFile": "2002 - Anne-Marie - SpotubeDL.com.mp3",
+      "startTime": 42.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "dolly-parton-spotubedl-com-9-to-5",
+      "title": "9 to 5",
+      "artist": "Dolly Parton - SpotubeDL.com",
+      "audioFile": "9 to 5 - Dolly Parton - SpotubeDL.com.mp3",
+      "startTime": 29.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "calvin-harris-spotubedl-com-acceptable-in-the-80-s",
+      "title": "Acceptable in the 80's",
+      "artist": "Calvin Harris - SpotubeDL.com",
+      "audioFile": "Acceptable in the 80's - Calvin Harris - SpotubeDL.com.mp3",
+      "startTime": 61.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sheryl-crow-spotubedl-com-all-i-wanna-do",
+      "title": "All I Wanna Do",
+      "artist": "Sheryl Crow - SpotubeDL.com",
+      "audioFile": "All I Wanna Do - Sheryl Crow - SpotubeDL.com.mp3",
+      "startTime": 109.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "charli-xcx-spotubedl-com-apple",
+      "title": "Apple",
+      "artist": "Charli xcx - SpotubeDL.com",
+      "audioFile": "Apple - Charli xcx - SpotubeDL.com.mp3",
+      "startTime": 10.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "dasha-spotubedl-com-austin-boots-stop-workin",
+      "title": "Austin (Boots Stop Workin')",
+      "artist": "Dasha - SpotubeDL.com",
+      "audioFile": "Austin (Boots Stop Workin') - Dasha - SpotubeDL.com.mp3",
+      "startTime": 41.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "spanish-version-enrique-iglesias-spotubedl-com-bai",
+      "title": "Bailando",
+      "artist": "Spanish Version - Enrique Iglesias - SpotubeDL.com",
+      "audioFile": "Bailando - Spanish Version - Enrique Iglesias - SpotubeDL.com.mp3",
+      "startTime": 65.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "dua-lipa-spotubedl-com-be-the-one",
+      "title": "Be the One",
+      "artist": "Dua Lipa - SpotubeDL.com",
+      "audioFile": "Be the One - Dua Lipa - SpotubeDL.com.mp3",
+      "startTime": 32.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "m-neskin-spotubedl-com-beggin",
+      "title": "Beggin'",
+      "artist": "Måneskin - SpotubeDL.com",
+      "audioFile": "Beggin' - Måneskin - SpotubeDL.com.mp3",
+      "startTime": 85.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "saweetie-spotubedl-com-best-friend-feat-doja-cat",
+      "title": "Best Friend (feat. Doja Cat)",
+      "artist": "Saweetie - SpotubeDL.com",
+      "audioFile": "Best Friend (feat. Doja Cat) - Saweetie - SpotubeDL.com.mp3",
+      "startTime": 10.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "destiny-s-child-spotubedl-com-bootylicious",
+      "title": "Bootylicious",
+      "artist": "Destiny's Child - SpotubeDL.com",
+      "audioFile": "Bootylicious - Destiny's Child - SpotubeDL.com.mp3",
+      "startTime": 21.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "carly-rae-jepsen-spotubedl-com-call-me-maybe",
+      "title": "Call Me Maybe",
+      "artist": "Carly Rae Jepsen - SpotubeDL.com",
+      "audioFile": "Call Me Maybe - Carly Rae Jepsen - SpotubeDL.com.mp3",
+      "startTime": 77.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "kylie-minogue-spotubedl-com-can-t-get-you-out-of-m",
+      "title": "Can't Get You out of My Head",
+      "artist": "Kylie Minogue - SpotubeDL.com",
+      "audioFile": "Can't Get You out of My Head - Kylie Minogue - SpotubeDL.com.mp3",
+      "startTime": 27.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "pnau-remix-elton-john-spotubedl-com-cold-heart",
+      "title": "Cold Heart",
+      "artist": "PNAU Remix - Elton John - SpotubeDL.com",
+      "audioFile": "Cold Heart - PNAU Remix - Elton John - SpotubeDL.com.mp3",
+      "startTime": 50.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "beyonc-spotubedl-com-cuff-it",
+      "title": "CUFF IT",
+      "artist": "Beyoncé - SpotubeDL.com",
+      "audioFile": "CUFF IT - Beyoncé - SpotubeDL.com.mp3",
+      "startTime": 39.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "from-barbie-the-album-dua-lipa-spotubedl-com-dance",
+      "title": "Dance The Night",
+      "artist": "From Barbie The Album - Dua Lipa - SpotubeDL.com",
+      "audioFile": "Dance The Night - From Barbie The Album - Dua Lipa - SpotubeDL.com.mp3",
+      "startTime": 47.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "jub-l-spotubedl-com-dancing-in-the-moonlight-feat-",
+      "title": "Dancing in the Moonlight (feat. NEIMY)",
+      "artist": "Jubël - SpotubeDL.com",
+      "audioFile": "Dancing in the Moonlight (feat. NEIMY) - Jubël - SpotubeDL.com.mp3",
+      "startTime": 27.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sabrina-carpenter-spotubedl-com-espresso",
+      "title": "Espresso",
+      "artist": "Sabrina Carpenter - SpotubeDL.com",
+      "audioFile": "Espresso - Sabrina Carpenter - SpotubeDL.com.mp3",
+      "startTime": 64.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "radio-edit-backstreet-boys-spotubedl-com-everybody",
+      "title": "Everybody (Backstreet's Back)",
+      "artist": "Radio Edit - Backstreet Boys - SpotubeDL.com",
+      "audioFile": "Everybody (Backstreet's Back) - Radio Edit - Backstreet Boys - SpotubeDL.com.mp3",
+      "startTime": 41.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "daddy-yankee-spotubedl-com-gasolina",
+      "title": "Gasolina",
+      "artist": "Daddy Yankee - SpotubeDL.com",
+      "audioFile": "Gasolina - Daddy Yankee - SpotubeDL.com.mp3",
+      "startTime": 23.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "britney-spears-spotubedl-com-gimme-more",
+      "title": "Gimme More",
+      "artist": "Britney Spears - SpotubeDL.com",
+      "audioFile": "Gimme More - Britney Spears - SpotubeDL.com.mp3",
+      "startTime": 73.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "cat-burns-spotubedl-com-go",
+      "title": "go",
+      "artist": "Cat Burns - SpotubeDL.com",
+      "audioFile": "go - Cat Burns - SpotubeDL.com.mp3",
+      "startTime": 44.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "remix-lizzo-spotubedl-com-good-as-hell-feat-ariana",
+      "title": "Good as Hell (feat. Ariana Grande)",
+      "artist": "Remix - Lizzo - SpotubeDL.com",
+      "audioFile": "Good as Hell (feat. Ariana Grande) - Remix - Lizzo - SpotubeDL.com.mp3",
+      "startTime": 62.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ciara-spotubedl-com-goodies-feat-petey-pablo",
+      "title": "Goodies (feat. Petey Pablo)",
+      "artist": "Ciara - SpotubeDL.com",
+      "audioFile": "Goodies (feat. Petey Pablo) - Ciara - SpotubeDL.com.mp3",
+      "startTime": 43.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "tate-mcrae-spotubedl-com-greedy",
+      "title": "greedy",
+      "artist": "Tate McRae - SpotubeDL.com",
+      "audioFile": "greedy - Tate McRae - SpotubeDL.com.mp3",
+      "startTime": 53.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "paramore-spotubedl-com-hard-times",
+      "title": "Hard Times",
+      "artist": "Paramore - SpotubeDL.com",
+      "audioFile": "Hard Times - Paramore - SpotubeDL.com.mp3",
+      "startTime": 49.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "yeah-yeah-yeahs-spotubedl-com-heads-will-roll",
+      "title": "Heads Will Roll",
+      "artist": "Yeah Yeah Yeahs - SpotubeDL.com",
+      "audioFile": "Heads Will Roll - Yeah Yeah Yeahs - SpotubeDL.com.mp3",
+      "startTime": 87.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "kiesza-spotubedl-com-hideaway",
+      "title": "Hideaway",
+      "artist": "Kiesza - SpotubeDL.com",
+      "audioFile": "Hideaway - Kiesza - SpotubeDL.com.mp3",
+      "startTime": 100.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "gwen-stefani-spotubedl-com-hollaback-girl",
+      "title": "Hollaback Girl",
+      "artist": "Gwen Stefani - SpotubeDL.com",
+      "audioFile": "Hollaback Girl - Gwen Stefani - SpotubeDL.com.mp3",
+      "startTime": 64.0,
+      "_confidence": 0.99
+    },
+    {
+      "id": "nelly-spotubedl-com-hot-in-herre",
+      "title": "Hot In Herre",
+      "artist": "Nelly - SpotubeDL.com",
+      "audioFile": "Hot In Herre - Nelly - SpotubeDL.com.mp3",
+      "startTime": 46.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "nickelback-spotubedl-com-how-you-remind-me",
+      "title": "How You Remind Me",
+      "artist": "Nickelback - SpotubeDL.com",
+      "audioFile": "How You Remind Me - Nickelback - SpotubeDL.com.mp3",
+      "startTime": 83.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "radio-edit-bodyrockers-spotubedl-com-i-like-the-wa",
+      "title": "I Like The Way",
+      "artist": "Radio Edit - Bodyrockers - SpotubeDL.com",
+      "audioFile": "I Like The Way - Radio Edit - Bodyrockers - SpotubeDL.com.mp3",
+      "startTime": 81.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "whitney-houston-spotubedl-com-i-wanna-dance-with-s",
+      "title": "I Wanna Dance with Somebody (Who Loves Me)",
+      "artist": "Whitney Houston - SpotubeDL.com",
+      "audioFile": "I Wanna Dance with Somebody (Who Loves Me) - Whitney Houston - SpotubeDL.com.mp3",
+      "startTime": 61.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "nelly-furtado-spotubedl-com-i-m-like-a-bird",
+      "title": "I'm Like A Bird",
+      "artist": "Nelly Furtado - SpotubeDL.com",
+      "audioFile": "I'm Like A Bird - Nelly Furtado - SpotubeDL.com.mp3",
+      "startTime": 97.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "elton-john-spotubedl-com-i-m-still-standing",
+      "title": "I'm Still Standing",
+      "artist": "Elton John - SpotubeDL.com",
+      "audioFile": "I'm Still Standing - Elton John - SpotubeDL.com.mp3",
+      "startTime": 38.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "jennifer-lopez-spotubedl-com-jenny-from-the-block",
+      "title": "Jenny from the Block",
+      "artist": "Jennifer Lopez - SpotubeDL.com",
+      "audioFile": "Jenny from the Block - Jennifer Lopez - SpotubeDL.com.mp3",
+      "startTime": 19.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "liberty-x-spotubedl-com-just-a-little",
+      "title": "Just A Little",
+      "artist": "Liberty X - SpotubeDL.com",
+      "audioFile": "Just A Little - Liberty X - SpotubeDL.com.mp3",
+      "startTime": 76.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "from-moulin-rouge-soundtrack-christina-aguilera-sp",
+      "title": "Lady Marmalade",
+      "artist": "From _Moulin Rouge_ Soundtrack - Christina Aguilera - SpotubeDL.com",
+      "audioFile": "Lady Marmalade - From _Moulin Rouge_ Soundtrack - Christina Aguilera - SpotubeDL.com.mp3",
+      "startTime": 73.0,
+      "_confidence": 0.99
+    },
+    {
+      "id": "disclosure-spotubedl-com-latch",
+      "title": "Latch",
+      "artist": "Disclosure - SpotubeDL.com",
+      "audioFile": "Latch - Disclosure - SpotubeDL.com.mp3",
+      "startTime": 80.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "anastacia-spotubedl-com-left-outside-alone",
+      "title": "Left Outside Alone",
+      "artist": "Anastacia - SpotubeDL.com",
+      "audioFile": "Left Outside Alone - Anastacia - SpotubeDL.com.mp3",
+      "startTime": 60.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "madonna-spotubedl-com-like-a-prayer",
+      "title": "Like a Prayer",
+      "artist": "Madonna - SpotubeDL.com",
+      "audioFile": "Like a Prayer - Madonna - SpotubeDL.com.mp3",
+      "startTime": 136.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "paul-russell-spotubedl-com-lil-boo-thang",
+      "title": "Lil Boo Thang",
+      "artist": "Paul Russell - SpotubeDL.com",
+      "audioFile": "Lil Boo Thang - Paul Russell - SpotubeDL.com.mp3",
+      "startTime": 5.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ricky-martin-spotubedl-com-livin-la-vida-loca",
+      "title": "Livin' la Vida Loca",
+      "artist": "Ricky Martin - SpotubeDL.com",
+      "audioFile": "Livin' la Vida Loca - Ricky Martin - SpotubeDL.com.mp3",
+      "startTime": 34.0,
+      "_confidence": 0.98
+    },
+    {
+      "id": "maroon-5-spotubedl-com-makes-me-wonder",
+      "title": "Makes Me Wonder",
+      "artist": "Maroon 5 - SpotubeDL.com",
+      "audioFile": "Makes Me Wonder - Maroon 5 - SpotubeDL.com.mp3",
+      "startTime": 84.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "kelis-spotubedl-com-milkshake",
+      "title": "Milkshake",
+      "artist": "Kelis - SpotubeDL.com",
+      "audioFile": "Milkshake - Kelis - SpotubeDL.com.mp3",
+      "startTime": 26.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "single-version-hanson-spotubedl-com-mmmbop",
+      "title": "MMMBop",
+      "artist": "Single Version - Hanson - SpotubeDL.com",
+      "audioFile": "MMMBop - Single Version - Hanson - SpotubeDL.com.mp3",
+      "startTime": 86.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sophie-ellis-bextor-spotubedl-com-murder-on-the-da",
+      "title": "Murder On The Dancefloor",
+      "artist": "Sophie Ellis-Bextor - SpotubeDL.com",
+      "audioFile": "Murder On The Dancefloor - Sophie Ellis-Bextor - SpotubeDL.com.mp3",
+      "startTime": 92.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "lily-allen-spotubedl-com-not-fair",
+      "title": "Not Fair",
+      "artist": "Lily Allen - SpotubeDL.com",
+      "audioFile": "Not Fair - Lily Allen - SpotubeDL.com.mp3",
+      "startTime": 24.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "chappell-roan-spotubedl-com-pink-pony-club",
+      "title": "Pink Pony Club",
+      "artist": "Chappell Roan - SpotubeDL.com",
+      "audioFile": "Pink Pony Club - Chappell Roan - SpotubeDL.com.mp3",
+      "startTime": 103.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ginuwine-spotubedl-com-pony",
+      "title": "Pony",
+      "artist": "Ginuwine - SpotubeDL.com",
+      "audioFile": "Pony - Ginuwine - SpotubeDL.com.mp3",
+      "startTime": 46.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "kygo-remix-marvin-gaye-spotubedl-com-sexual-healin",
+      "title": "Sexual Healing",
+      "artist": "Kygo Remix - Marvin Gaye - SpotubeDL.com",
+      "audioFile": "Sexual Healing - Kygo Remix - Marvin Gaye - SpotubeDL.com.mp3",
+      "startTime": 146.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "justin-timberlake-spotubedl-com-sexyback",
+      "title": "SexyBack",
+      "artist": "Justin Timberlake - SpotubeDL.com",
+      "audioFile": "SexyBack - Justin Timberlake - SpotubeDL.com.mp3",
+      "startTime": 35.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ellie-goulding-spotubedl-com-starry-eyed",
+      "title": "Starry Eyed",
+      "artist": "Ellie Goulding - SpotubeDL.com",
+      "audioFile": "Starry Eyed - Ellie Goulding - SpotubeDL.com.mp3",
+      "startTime": 68.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "spice-girls-spotubedl-com-stop",
+      "title": "Stop",
+      "artist": "Spice Girls - SpotubeDL.com",
+      "audioFile": "Stop - Spice Girls - SpotubeDL.com.mp3",
+      "startTime": 31.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "celeste-spotubedl-com-stop-this-flame",
+      "title": "Stop This Flame",
+      "artist": "Celeste - SpotubeDL.com",
+      "audioFile": "Stop This Flame - Celeste - SpotubeDL.com.mp3",
+      "startTime": 36.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "kt-tunstall-spotubedl-com-suddenly-i-see",
+      "title": "Suddenly I See",
+      "artist": "KT Tunstall - SpotubeDL.com",
+      "audioFile": "Suddenly I See - KT Tunstall - SpotubeDL.com.mp3",
+      "startTime": 70.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "fat-joe-spotubedl-com-sunshine-the-light",
+      "title": "Sunshine (The Light)",
+      "artist": "Fat Joe - SpotubeDL.com",
+      "audioFile": "Sunshine (The Light) - Fat Joe - SpotubeDL.com.mp3",
+      "startTime": 39.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "jason-derulo-spotubedl-com-swalla-feat-nicki-minaj",
+      "title": "Swalla (feat. Nicki Minaj & Ty Dolla $ign)",
+      "artist": "Jason Derulo - SpotubeDL.com",
+      "audioFile": "Swalla (feat. Nicki Minaj & Ty Dolla $ign) - Jason Derulo - SpotubeDL.com.mp3",
+      "startTime": 42.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "scissor-sisters-spotubedl-com-take-your-mama",
+      "title": "Take Your Mama",
+      "artist": "Scissor Sisters - SpotubeDL.com",
+      "audioFile": "Take Your Mama - Scissor Sisters - SpotubeDL.com.mp3",
+      "startTime": 65.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "shania-twain-spotubedl-com-that-don-t-impress-me-m",
+      "title": "That Don't Impress Me Much",
+      "artist": "Shania Twain - SpotubeDL.com",
+      "audioFile": "That Don't Impress Me Much - Shania Twain - SpotubeDL.com.mp3",
+      "startTime": 47.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "taylor-swift-spotubedl-com-the-fate-of-ophelia",
+      "title": "The Fate of Ophelia",
+      "artist": "Taylor Swift - SpotubeDL.com",
+      "audioFile": "The Fate of Ophelia - Taylor Swift - SpotubeDL.com.mp3",
+      "startTime": 40.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "99-souls-spotubedl-com-the-girl-is-mine",
+      "title": "The Girl Is Mine",
+      "artist": "99 Souls - SpotubeDL.com",
+      "audioFile": "The Girl Is Mine - 99 Souls - SpotubeDL.com.mp3",
+      "startTime": 35.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "timbaland-spotubedl-com-the-way-i-are",
+      "title": "The Way I Are",
+      "artist": "Timbaland - SpotubeDL.com",
+      "audioFile": "The Way I Are - Timbaland - SpotubeDL.com.mp3",
+      "startTime": 39.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "amy-macdonald-spotubedl-com-this-is-the-life",
+      "title": "This Is The Life",
+      "artist": "Amy Macdonald - SpotubeDL.com",
+      "audioFile": "This Is The Life - Amy Macdonald - SpotubeDL.com.mp3",
+      "startTime": 59.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bad-bunny-spotubedl-com-tit-me-pregunt",
+      "title": "Tití Me Preguntó",
+      "artist": "Bad Bunny - SpotubeDL.com",
+      "audioFile": "Tití Me Preguntó - Bad Bunny - SpotubeDL.com.mp3",
+      "startTime": 68.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "mc-hammer-spotubedl-com-u-can-t-touch-this",
+      "title": "U Can't Touch This",
+      "artist": "MC Hammer - SpotubeDL.com",
+      "audioFile": "U Can't Touch This - MC Hammer - SpotubeDL.com.mp3",
+      "startTime": 103.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "natasha-bedingfield-spotubedl-com-unwritten",
+      "title": "Unwritten",
+      "artist": "Natasha Bedingfield - SpotubeDL.com",
+      "audioFile": "Unwritten - Natasha Bedingfield - SpotubeDL.com.mp3",
+      "startTime": 104.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "1995-remaster-sister-sledge-spotubedl-com-we-are-f",
+      "title": "We Are Family",
+      "artist": "1995 Remaster - Sister Sledge - SpotubeDL.com",
+      "audioFile": "We Are Family - 1995 Remaster - Sister Sledge - SpotubeDL.com.mp3",
+      "startTime": 80.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "raye-spotubedl-com-where-is-my-husband",
+      "title": "WHERE IS MY HUSBAND!",
+      "artist": "RAYE - SpotubeDL.com",
+      "audioFile": "WHERE IS MY HUSBAND! - RAYE - SpotubeDL.com.mp3",
+      "startTime": 79.0,
+      "_confidence": 1.0
+    }
+  ]
+}

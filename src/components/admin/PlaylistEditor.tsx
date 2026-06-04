@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { Playlist, Song } from '../../types';
 import { getPlaylist, savePlaylist } from '../../lib/db';
 import { generateAudioFilename } from '../../lib/audioCache';
+import { downloadPlaylistJson, checkPlaylistSyncStatus } from '../../lib/playlistSync';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
 import { useConfirmDialog } from '../shared/ConfirmDialog';
@@ -32,6 +33,7 @@ export function PlaylistEditor() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deployStatus, setDeployStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'local-newer' | 'file-newer' | 'local-only' | 'checking'>('checking');
 
   // Audio preview state
   const [expandedSongIndex, setExpandedSongIndex] = useState<number | null>(null);
@@ -44,6 +46,10 @@ export function PlaylistEditor() {
   useEffect(() => {
     if (!isNew && id) {
       loadPlaylist(id);
+      // Check sync status
+      checkPlaylistSyncStatus(id).then(setSyncStatus);
+    } else {
+      setSyncStatus('local-only');
     }
   }, [id, isNew]);
 
@@ -126,37 +132,41 @@ export function PlaylistEditor() {
       artist: '',
       audioFile: '',
     };
-    setSongs([...songs, newSong]);
+    setSongs(prevSongs => [...prevSongs, newSong]);
   };
 
   const updateSong = (index: number, field: keyof Song, value: string | number | boolean) => {
-    const updated = [...songs];
-    updated[index] = { ...updated[index], [field]: value };
+    setSongs(prevSongs => {
+      const updated = [...prevSongs];
+      updated[index] = { ...updated[index], [field]: value };
 
-    // Only auto-generate audio filename if it's empty (new songs)
-    // This allows editing title/artist for display without breaking the audio link
-    if (field === 'title' || field === 'artist') {
-      const song = updated[index];
-      if (song.title && song.artist && !song.audioFile) {
-        updated[index].audioFile = generateAudioFilename(song.title, song.artist);
+      // Only auto-generate audio filename if it's empty (new songs)
+      // This allows editing title/artist for display without breaking the audio link
+      if (field === 'title' || field === 'artist') {
+        const song = updated[index];
+        if (song.title && song.artist && !song.audioFile) {
+          updated[index].audioFile = generateAudioFilename(song.title, song.artist);
+        }
       }
-    }
 
-    // Auto-lock start time when manually edited
-    if (field === 'startTime') {
-      updated[index].startTimeManual = true;
-    }
+      // Auto-lock start time when manually edited
+      if (field === 'startTime') {
+        updated[index].startTimeManual = true;
+      }
 
-    setSongs(updated);
+      return updated;
+    });
   };
 
   const toggleStartTimeLock = (index: number) => {
-    const updated = [...songs];
-    updated[index] = {
-      ...updated[index],
-      startTimeManual: !updated[index].startTimeManual
-    };
-    setSongs(updated);
+    setSongs(prevSongs => {
+      const updated = [...prevSongs];
+      updated[index] = {
+        ...updated[index],
+        startTimeManual: !updated[index].startTimeManual
+      };
+      return updated;
+    });
   };
 
   // Audio preview functions
@@ -258,16 +268,18 @@ export function PlaylistEditor() {
   }, []);
 
   const removeSong = (index: number) => {
-    setSongs(songs.filter((_, i) => i !== index));
+    setSongs(prevSongs => prevSongs.filter((_, i) => i !== index));
   };
 
   const moveSong = (index: number, direction: 'up' | 'down') => {
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= songs.length) return;
+    setSongs(prevSongs => {
+      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      if (newIndex < 0 || newIndex >= prevSongs.length) return prevSongs;
 
-    const updated = [...songs];
-    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
-    setSongs(updated);
+      const updated = [...prevSongs];
+      [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+      return updated;
+    });
   };
 
   const parseBulkInput = () => {
@@ -291,7 +303,7 @@ export function PlaylistEditor() {
     }
 
     if (newSongs.length > 0) {
-      setSongs([...songs, ...newSongs]);
+      setSongs(prevSongs => [...prevSongs, ...newSongs]);
       setBulkInput('');
       setShowBulkInput(false);
     } else {
@@ -336,7 +348,7 @@ export function PlaylistEditor() {
     }
 
     if (newSongs.length > 0) {
-      setSongs([...songs, ...newSongs]);
+      setSongs(prevSongs => [...prevSongs, ...newSongs]);
       alert(`Added ${newSongs.length} songs from files`);
     }
 
@@ -846,29 +858,33 @@ export function PlaylistEditor() {
                 onClick={handleSave}
                 disabled={saving || !name.trim() || songs.length < 24}
               >
-                {saving ? 'Saving...' : 'Save Playlist'}
+                {saving ? 'Saving...' : 'Save to Browser'}
               </Button>
 
               <div className="border-t border-[var(--border-color)] pt-3">
-                <p className="text-xs text-[var(--text-muted)] mb-2">For deployment:</p>
+                <p className="text-xs text-[var(--text-muted)] mb-2">Export for backup/sync:</p>
                 <Button
                   variant="primary"
                   fullWidth
-                  onClick={handleSaveForDeployment}
-                  disabled={deployStatus === 'saving' || !name.trim() || songs.length < 24}
+                  onClick={() => {
+                    const playlist: Playlist = {
+                      id: isNew ? `playlist-${Date.now()}` : id!,
+                      name: name.trim(),
+                      description: description.trim() || undefined,
+                      baseAudioUrl: baseAudioUrl.trim(),
+                      songs,
+                      createdAt: Date.now(),
+                      updatedAt: Date.now(),
+                    };
+                    downloadPlaylistJson(playlist);
+                  }}
+                  disabled={!name.trim() || songs.length < 24}
                 >
-                  {deployStatus === 'saving' ? 'Saving...' : 'Save for Deployment'}
+                  Export JSON
                 </Button>
-                {deployStatus === 'success' && (
-                  <p className="text-xs text-[var(--status-success-text)] mt-1 text-center">
-                    Saved to public/packs/
-                  </p>
-                )}
-                {deployStatus === 'error' && (
-                  <p className="text-xs text-[var(--status-error-text)] mt-1 text-center">
-                    Failed (dev server required)
-                  </p>
-                )}
+                <p className="text-xs text-[var(--text-muted)] mt-1 text-center">
+                  Save to public/packs/{id || 'name'}/playlist.json
+                </p>
               </div>
 
               <Button variant="secondary" fullWidth onClick={() => navigate('/admin')}>
@@ -876,6 +892,45 @@ export function PlaylistEditor() {
               </Button>
             </div>
           </div>
+
+          {/* Sync Status Card */}
+          {!isNew && (
+            <div className="card">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 uppercase tracking-wide">Sync Status</h3>
+              <div className="flex items-center gap-2">
+                {syncStatus === 'checking' && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[var(--text-muted)] animate-pulse" />
+                    <span className="text-sm text-[var(--text-muted)]">Checking...</span>
+                  </>
+                )}
+                {syncStatus === 'synced' && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[var(--status-success-text)]" />
+                    <span className="text-sm text-[var(--status-success-text)]">Synced with file</span>
+                  </>
+                )}
+                {syncStatus === 'local-newer' && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[var(--status-warning-text)]" />
+                    <span className="text-sm text-[var(--status-warning-text)]">Local changes (export to save)</span>
+                  </>
+                )}
+                {syncStatus === 'file-newer' && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[var(--status-info-text)]" />
+                    <span className="text-sm text-[var(--status-info-text)]">File is newer</span>
+                  </>
+                )}
+                {syncStatus === 'local-only' && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[var(--text-muted)]" />
+                    <span className="text-sm text-[var(--text-muted)]">Not in repo yet</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Info Card */}
           <div className="card">

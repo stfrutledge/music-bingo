@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GameProvider } from './context/GameContext';
 import { AudioProvider } from './context/AudioContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { usePlaylistSync } from './hooks/usePlaylistSync';
 
 // Host components
 import { HomeScreen } from './components/host/HomeScreen';
@@ -22,36 +23,46 @@ import { AudioTester } from './components/admin/AudioTester';
 import { EventList } from './components/admin/EventList';
 import { EventCreator } from './components/admin/EventCreator';
 
+// Component that handles playlist sync on startup
+function AppContent() {
+  // Sync playlists from public/packs on app startup
+  usePlaylistSync();
+
+  return (
+    <Routes>
+      {/* Host Mode Routes */}
+      <Route path="/" element={<HomeScreen />} />
+      <Route path="/host/playlists" element={<PlaylistSelect />} />
+      <Route path="/host/download/:id" element={<AudioDownload />} />
+      <Route path="/host/setup/:id" element={<GameSetup />} />
+      <Route path="/host/game" element={<GameScreen />} />
+      <Route path="/host/verify" element={<WinnerVerification />} />
+      <Route path="/host/round-end" element={<RoundEnd />} />
+      <Route path="/host/game-over" element={<GameOver />} />
+      <Route path="/host/resume" element={<ResumeGame />} />
+
+      {/* Admin Mode Routes */}
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/playlist/:id" element={<PlaylistEditor />} />
+      <Route path="/admin/cards/:id" element={<CardGenerator />} />
+      <Route path="/admin/audio/:id" element={<AudioTester />} />
+      <Route path="/admin/events" element={<EventList />} />
+      <Route path="/admin/events/new" element={<EventCreator />} />
+      <Route path="/admin/events/:id" element={<EventCreator />} />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ThemeProvider>
         <AudioProvider>
           <GameProvider>
-            <Routes>
-            {/* Host Mode Routes */}
-            <Route path="/" element={<HomeScreen />} />
-            <Route path="/host/playlists" element={<PlaylistSelect />} />
-            <Route path="/host/download/:id" element={<AudioDownload />} />
-            <Route path="/host/setup/:id" element={<GameSetup />} />
-            <Route path="/host/game" element={<GameScreen />} />
-            <Route path="/host/verify" element={<WinnerVerification />} />
-            <Route path="/host/round-end" element={<RoundEnd />} />
-            <Route path="/host/game-over" element={<GameOver />} />
-            <Route path="/host/resume" element={<ResumeGame />} />
-
-            {/* Admin Mode Routes */}
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/playlist/:id" element={<PlaylistEditor />} />
-            <Route path="/admin/cards/:id" element={<CardGenerator />} />
-            <Route path="/admin/audio/:id" element={<AudioTester />} />
-            <Route path="/admin/events" element={<EventList />} />
-            <Route path="/admin/events/new" element={<EventCreator />} />
-            <Route path="/admin/events/:id" element={<EventCreator />} />
-
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            <AppContent />
           </GameProvider>
         </AudioProvider>
       </ThemeProvider>
