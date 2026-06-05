@@ -9,9 +9,27 @@ import { AppShell } from '../shared/AppShell';
 import { useConfirmDialog } from '../shared/ConfirmDialog';
 import type { BingoPattern } from '../../types';
 
+// Average duration per song clip in seconds (typical music bingo plays ~30s per song)
+const SONG_CLIP_SECONDS = 30;
+
+/**
+ * Format seconds into a readable time string (e.g., "~1.5 min" or "~30 sec")
+ */
+function formatTimeEstimate(seconds: number): string {
+  if (seconds < 60) {
+    return `~${seconds}s`;
+  }
+  const minutes = seconds / 60;
+  if (minutes < 2) {
+    return `~${minutes.toFixed(1)} min`;
+  }
+  return `~${Math.round(minutes)} min`;
+}
+
 interface PatternStatus {
   bingos: number;
-  closestMissing: number;
+  closestMissing: number;       // How many songs the card needs
+  songsUntilWin: number;        // How many songs until the card wins (based on shuffle order)
   closestCards: number[];
 }
 
@@ -22,7 +40,7 @@ export function RoundEnd() {
 
   const [selectedNextPattern, setSelectedNextPattern] = useState<string | null>(null);
 
-  // Calculate status for each pattern based on current called songs
+  // Calculate status for each pattern based on current called songs and shuffle order
   const patternStatuses = useMemo(() => {
     if (!game || !cards.length) return new Map<string, PatternStatus>();
 
@@ -34,9 +52,21 @@ export function RoundEnd() {
       ? cards.filter(c => c.cardNumber >= game.cardRangeStart! && c.cardNumber <= game.cardRangeEnd!)
       : cards;
 
+    // Get remaining songs in shuffle order (songs not yet called)
+    const remainingSongs = game.shuffledSongOrder.slice(game.currentSongIndex);
+
+    // Create a map of songId -> position in remaining shuffle (1-based: "in X songs")
+    const songPositionMap = new Map<string, number>();
+    remainingSongs.forEach((songId, idx) => {
+      if (!songPositionMap.has(songId)) {
+        songPositionMap.set(songId, idx + 1); // 1-based position
+      }
+    });
+
     for (const pattern of BINGO_PATTERNS) {
       let bingos = 0;
       let closestMissing = Infinity;
+      let bestSongsUntilWin = Infinity;
       const closestCards: number[] = [];
 
       for (const card of activeCards) {
@@ -45,24 +75,43 @@ export function RoundEnd() {
 
         if (missing === 0) {
           bingos++;
-        } else if (missing < closestMissing) {
-          closestMissing = missing;
-          closestCards.length = 0;
-          closestCards.push(card.cardNumber);
-        } else if (missing === closestMissing && closestCards.length < 3) {
-          closestCards.push(card.cardNumber);
+        } else {
+          // Calculate when this card will win based on shuffle order
+          // Find the LAST position of any missing song - that's when the card wins
+          let latestPosition = 0;
+          for (const missingSong of result.missingSongs) {
+            const pos = songPositionMap.get(missingSong.songId);
+            if (pos !== undefined && pos > latestPosition) {
+              latestPosition = pos;
+            }
+          }
+
+          // If any missing song isn't in the remaining shuffle, card can't win
+          const canWin = result.missingSongs.every(ms => songPositionMap.has(ms.songId));
+          const songsUntilWin = canWin ? latestPosition : Infinity;
+
+          // Track the card that wins soonest (by songsUntilWin, not by closestMissing)
+          if (songsUntilWin < bestSongsUntilWin) {
+            bestSongsUntilWin = songsUntilWin;
+            closestMissing = missing;
+            closestCards.length = 0;
+            closestCards.push(card.cardNumber);
+          } else if (songsUntilWin === bestSongsUntilWin && closestCards.length < 3) {
+            closestCards.push(card.cardNumber);
+          }
         }
       }
 
       statuses.set(pattern.id, {
         bingos,
         closestMissing: closestMissing === Infinity ? 0 : closestMissing,
+        songsUntilWin: bestSongsUntilWin === Infinity ? 0 : bestSongsUntilWin,
         closestCards,
       });
     }
 
     return statuses;
-  }, [game?.calledSongIds, cards, game?.cardRangeStart, game?.cardRangeEnd, excludedSongIds]);
+  }, [game?.calledSongIds, game?.shuffledSongOrder, game?.currentSongIndex, cards, game?.cardRangeStart, game?.cardRangeEnd, excludedSongIds]);
 
   if (!game || !playlist) {
     return <AppShell centered><div className="text-[var(--text-secondary)]">No active game</div></AppShell>;
@@ -82,26 +131,43 @@ export function RoundEnd() {
       };
     }
 
+    if (status.songsUntilWin === 0) {
+      return {
+        text: 'No winner possible',
+        color: 'text-[var(--text-muted)]',
+      };
+    }
+
     const cardLabel = status.closestCards.length > 0
       ? `#${status.closestCards[0]}`
       : '';
 
-    if (status.closestMissing === 1) {
+    // Time estimate based on actual songs until win
+    const timeEstimate = formatTimeEstimate(status.songsUntilWin * SONG_CLIP_SECONDS);
+
+    if (status.songsUntilWin === 1) {
       return {
-        text: `${cardLabel} is 1 away`,
+        text: `${cardLabel} wins next (${timeEstimate})`,
         color: 'text-[var(--status-warning-text)]',
       };
     }
 
-    if (status.closestMissing <= 3) {
+    if (status.songsUntilWin <= 5) {
       return {
-        text: `${cardLabel} is ${status.closestMissing} away`,
+        text: `${cardLabel} in ${status.songsUntilWin} songs (${timeEstimate})`,
+        color: 'text-[var(--status-warning-text)]',
+      };
+    }
+
+    if (status.songsUntilWin <= 10) {
+      return {
+        text: `${cardLabel} in ${status.songsUntilWin} songs (${timeEstimate})`,
         color: 'text-[var(--status-info-text)]',
       };
     }
 
     return {
-      text: `${cardLabel} is ${status.closestMissing} away`,
+      text: `${cardLabel} in ${status.songsUntilWin} songs (${timeEstimate})`,
       color: 'text-[var(--text-muted)]',
     };
   };

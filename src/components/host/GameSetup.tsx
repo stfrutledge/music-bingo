@@ -6,6 +6,7 @@ import { isSheetsConfigured, loadAndMergeFromSheets } from '../../lib/sheetsSync
 import { BINGO_PATTERNS, getPatternById } from '../../lib/patterns';
 import { getCacheStatus, isLocalUrl } from '../../lib/audioCache';
 import { checkWin } from '../../lib/winChecker';
+import { filterPlaylistForActiveCards } from '../../lib/cardGenerator';
 import { useGame } from '../../context/GameContext';
 import { Button } from '../shared/Button';
 import { PatternDisplay } from '../shared/PatternDisplay';
@@ -180,7 +181,7 @@ export function GameSetup() {
     if (!playlist || selectedPatterns.length === 0 || allCards.length === 0) return;
 
     const cardsToCheck = allCards.filter(c => c.cardNumber >= cardRangeStart && c.cardNumber <= cardRangeEnd);
-    const maxAttempts = 10000;
+    const maxAttempts = 50000; // Increased from 10000
     setAutoShuffling(true);
     setShuffleAttempts(0);
 
@@ -192,28 +193,51 @@ export function GameSetup() {
       return;
     }
 
+    const firstTargetRaw = Object.values(targetSongs).find(t => Number(t) > 0);
+    const firstTarget = firstTargetRaw ? Number(firstTargetRaw) : 0;
+
+    // Get callable songs (only songs on active cards, same filtering as game uses)
+    const allSongIds = playlist.songs.map(s => s.id);
+    const { callableSongIds } = filterPlaylistForActiveCards(cardsToCheck, allSongIds);
+    const callableSongList = allSongIds.filter(id => callableSongIds.has(id));
+
     // Run in batches to avoid blocking UI
-    const batchSize = 100;
+    const batchSize = 200;
     let attempts = 0;
     let found = false;
+    let bestShuffle: string[] | null = null;
+    let bestDiff = Infinity;
 
     const runBatch = () => {
       for (let i = 0; i < batchSize && attempts < maxAttempts; i++) {
         attempts++;
-        const shuffled = shuffleArray(playlist.songs.map(s => s.id));
+        // Shuffle only the callable songs (matches what game will use)
+        const shuffled = shuffleArray([...callableSongList]);
         const predictions = predictAllRounds(cardsToCheck, shuffled, selectedPatterns, playlist);
 
         // Check if all targets are met
         let allMatch = true;
+        let totalDiff = 0;
         for (const [roundStr, targetSong] of Object.entries(targetSongs)) {
           const roundNum = parseInt(roundStr);
-          if (targetSong > 0) {
+          const targetNum = typeof targetSong === 'string' ? parseInt(targetSong) : targetSong;
+          if (targetNum > 0) {
             const roundPred = predictions.find(p => p.roundNumber === roundNum);
-            if (!roundPred || roundPred.firstWinSong !== targetSong) {
+            if (!roundPred || roundPred.firstWinSong !== targetNum) {
               allMatch = false;
-              break;
+              if (roundPred) {
+                totalDiff += Math.abs(roundPred.firstWinSong - targetNum);
+              } else {
+                totalDiff += 100;
+              }
             }
           }
+        }
+
+        // Track best attempt
+        if (totalDiff < bestDiff) {
+          bestDiff = totalDiff;
+          bestShuffle = shuffled;
         }
 
         if (allMatch) {
@@ -230,7 +254,15 @@ export function GameSetup() {
       } else {
         setAutoShuffling(false);
         if (!found) {
-          alert(`Could not find matching order after ${maxAttempts} attempts. Try different targets.`);
+          // Use best attempt found
+          if (bestShuffle) {
+            setShuffledSongOrder(bestShuffle);
+            const bestPred = predictAllRounds(cardsToCheck, bestShuffle, selectedPatterns, playlist);
+            const actualWin = bestPred[0]?.firstWinSong || '?';
+            alert(`Could not find exact match after ${maxAttempts} attempts.\n\nBest found: winner at song ${actualWin}\n(Target was: ${firstTarget})\n\nUsing best match found.`);
+          } else {
+            alert(`Could not find matching order after ${maxAttempts} attempts. Try different targets.`);
+          }
         }
       }
     };
@@ -244,7 +276,11 @@ export function GameSetup() {
       return [];
     }
     const cardsToCheck = allCards.filter(c => c.cardNumber >= cardRangeStart && c.cardNumber <= cardRangeEnd);
-    return predictAllRounds(cardsToCheck, shuffledSongOrder, selectedPatterns, playlist);
+    // Filter song order to only songs on active cards (same as game does)
+    const allSongIds = playlist.songs.map(s => s.id);
+    const { callableSongIds } = filterPlaylistForActiveCards(cardsToCheck, allSongIds);
+    const filteredSongOrder = shuffledSongOrder.filter(id => callableSongIds.has(id));
+    return predictAllRounds(cardsToCheck, filteredSongOrder, selectedPatterns, playlist);
   }, [playlist, allCards, shuffledSongOrder, selectedPatterns, cardRangeStart, cardRangeEnd]);
 
   useEffect(() => {
