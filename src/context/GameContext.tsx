@@ -211,8 +211,9 @@ function gameReducer(state: GameContextState, action: GameAction): GameContextSt
 }
 
 interface GameStartOptions {
-  cardRangeStart: number;
-  cardRangeEnd: number;
+  cardRangeStart?: number;
+  cardRangeEnd?: number;
+  activeCardNumbers?: number[]; // Explicit cards in play; takes precedence over the range
   shuffledSongOrder?: string[]; // Optional pre-shuffled order from preview
 }
 
@@ -275,16 +276,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     const cards = await getCardsForPlaylist(playlist.id);
 
-    // Filter to only cards in play
-    const activeCards = options
-      ? cards.filter(c => c.cardNumber >= options.cardRangeStart && c.cardNumber <= options.cardRangeEnd)
-      : cards;
+    // Filter to only cards in play. An explicit card list takes precedence over
+    // the legacy contiguous range; with neither, all cards are in play.
+    const activeSet = options?.activeCardNumbers ? new Set(options.activeCardNumbers) : null;
+    const activeCards = activeSet
+      ? cards.filter(c => activeSet.has(c.cardNumber))
+      : (options?.cardRangeStart != null && options?.cardRangeEnd != null)
+        ? cards.filter(c => c.cardNumber >= options.cardRangeStart! && c.cardNumber <= options.cardRangeEnd!)
+        : cards;
 
     // Smart playlist filtering:
     // 1. Remove songs not on any active card
     // 2. Remove low-appearing songs if doing so doesn't block any card from winning
     const allSongIds = playlist.songs.map(s => s.id);
-    const { callableSongIds, removedCount } = filterPlaylistForActiveCards(activeCards, allSongIds);
+    const { callableSongIds, removedCount } = filterPlaylistForActiveCards(activeCards, allSongIds, patternIds);
 
     // Filter playlist to only callable songs
     const relevantSongs = playlist.songs.filter(s => callableSongIds.has(s.id));
@@ -316,6 +321,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       startedAt: Date.now(),
       cardRangeStart: options?.cardRangeStart,
       cardRangeEnd: options?.cardRangeEnd,
+      activeCardNumbers: options?.activeCardNumbers,
     };
 
     await saveGame(game);
@@ -374,13 +380,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const cardsInPlayList = useMemo(() => {
     if (!state.game || !state.cards.length) return state.cards;
 
-    const { cardRangeStart, cardRangeEnd } = state.game;
+    const { cardRangeStart, cardRangeEnd, activeCardNumbers } = state.game;
+
+    // Explicit card list takes precedence over the legacy contiguous range
+    if (activeCardNumbers && activeCardNumbers.length > 0) {
+      const activeSet = new Set(activeCardNumbers);
+      return state.cards.filter(card => activeSet.has(card.cardNumber));
+    }
+
     if (!cardRangeStart || !cardRangeEnd) return state.cards;
 
     return state.cards.filter(
       card => card.cardNumber >= cardRangeStart && card.cardNumber <= cardRangeEnd
     );
-  }, [state.game?.cardRangeStart, state.game?.cardRangeEnd, state.cards]);
+  }, [state.game?.cardRangeStart, state.game?.cardRangeEnd, state.game?.activeCardNumbers, state.cards]);
 
   const cardsInPlay = cardsInPlayList.length;
 

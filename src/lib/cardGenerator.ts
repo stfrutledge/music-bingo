@@ -1,4 +1,6 @@
 import type { BingoCard, Playlist, Song, GenerationStats, PacingTable, PacingEntry, GenerationResult } from '../types';
+import { getPatternById } from './patterns';
+import { cardCanCompletePattern } from './winChecker';
 
 interface GenerationOptions {
   cardCount: number;
@@ -421,8 +423,33 @@ export function shuffleSongOrder(songs: Song[]): string[] {
  */
 export function filterPlaylistForActiveCards(
   activeCards: BingoCard[],
-  allSongIds: string[]
+  allSongIds: string[],
+  patternIds?: string[]
 ): { callableSongIds: Set<string>; removedCount: number } {
+  // Whether to shorten the called-song list by dropping songs. OFF by default: we
+  // play the entire playlist in its shuffled order — including songs that aren't on
+  // any active card. This keeps win-song numbers true to playlist position and keeps
+  // every pattern (Blackout, Frame, …) reachable. Flip to true to re-enable pruning.
+  const PRUNE_PLAYLIST: boolean = false;
+  if (!PRUNE_PLAYLIST) {
+    return { callableSongIds: new Set(allSongIds), removedCount: 0 };
+  }
+
+  // When the selected patterns are known, a song may only be pruned if every card
+  // can still complete EVERY selected pattern without it. This matters for full-card
+  // patterns (Blackout, Frame, Letter X, …): pruning to "any line is still winnable"
+  // can otherwise make those patterns mathematically unreachable.
+  const selectedPatterns = (patternIds && patternIds.length > 0)
+    ? patternIds.map(getPatternById)
+    : null;
+
+  const cardCanWin = (card: BingoCard, callable: Set<string>): boolean => {
+    if (selectedPatterns) {
+      return selectedPatterns.every(p => cardCanCompletePattern(card, p, callable));
+    }
+    return cardCanStillWin(card, callable);
+  };
+
   // Build set of songs that appear on any active card
   const songsOnCards = new Set<string>();
   for (const card of activeCards) {
@@ -459,10 +486,11 @@ export function filterPlaylistForActiveCards(
     // Test if we can remove this song
     callableSongs.delete(songId);
 
-    // Check if all cards still have at least one completable winning line
+    // Check if all cards can still complete every selected pattern (or any line
+    // when no patterns were supplied)
     let allCardsCanWin = true;
     for (const card of activeCards) {
-      if (!cardCanStillWin(card, callableSongs)) {
+      if (!cardCanWin(card, callableSongs)) {
         allCardsCanWin = false;
         break;
       }

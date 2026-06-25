@@ -148,6 +148,41 @@ export function checkWin(
   };
 }
 
+// Can this card still complete the given pattern using only the callable songs?
+// Treats every callable song as if it will eventually be called, so this answers
+// "is this pattern reachable at all?" rather than "is it complete now?".
+// Used by playlist pruning so it never removes a song a selected pattern depends on.
+export function cardCanCompletePattern(
+  card: BingoCard,
+  pattern: BingoPattern,
+  callableSongIds: Set<string>
+): boolean {
+  let linesToCheck: number[][] = [];
+
+  if (pattern.id === 'single-line-h') {
+    linesToCheck = ALL_HORIZONTAL_LINES;
+  } else if (pattern.id === 'single-line-v') {
+    linesToCheck = ALL_VERTICAL_LINES;
+  } else if (pattern.id === 'single-line-d') {
+    linesToCheck = ALL_DIAGONAL_LINES;
+  }
+
+  // "Any line" pattern: reachable if at least one line has all its songs callable
+  if (linesToCheck.length > 0) {
+    return linesToCheck.some(line =>
+      line.every(gridIdx => {
+        if (gridIdx === 12) return true; // free space always counts
+        const slotIdx = gridIndexToSlotIndex(gridIdx)!;
+        return callableSongIds.has(card.slots[slotIdx]);
+      })
+    );
+  }
+
+  // Fixed pattern (frame, blackout, letter X, …): every required square must be callable
+  const slotIndices = patternIndicesToSlotIndices(getPatternIndices(pattern));
+  return slotIndices.every(slotIdx => callableSongIds.has(card.slots[slotIdx]));
+}
+
 // Check if a card has any winning pattern (for any line patterns)
 export function checkAnyLine(
   card: BingoCard,

@@ -80,8 +80,9 @@ export interface GameState {
   isPlaying: boolean;
   startedAt: number;
   endedAt?: number;
-  cardRangeStart?: number; // First card number in play
-  cardRangeEnd?: number; // Last card number in play
+  cardRangeStart?: number; // First card number in play (legacy contiguous range)
+  cardRangeEnd?: number; // Last card number in play (legacy contiguous range)
+  activeCardNumbers?: number[]; // Explicit set of cards in play; takes precedence over the range
 }
 
 export interface GameSettings {

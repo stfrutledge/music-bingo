@@ -47,8 +47,10 @@ export function RoundEnd() {
     const calledSet = new Set(game.calledSongIds);
     const statuses = new Map<string, PatternStatus>();
 
-    // Get active cards based on game range
-    const activeCards = game.cardRangeStart && game.cardRangeEnd
+    // Get active cards: explicit list takes precedence over the legacy range
+    const activeCards = game.activeCardNumbers && game.activeCardNumbers.length > 0
+      ? cards.filter(c => game.activeCardNumbers!.includes(c.cardNumber))
+      : game.cardRangeStart && game.cardRangeEnd
       ? cards.filter(c => c.cardNumber >= game.cardRangeStart! && c.cardNumber <= game.cardRangeEnd!)
       : cards;
 
@@ -111,7 +113,7 @@ export function RoundEnd() {
     }
 
     return statuses;
-  }, [game?.calledSongIds, game?.shuffledSongOrder, game?.currentSongIndex, cards, game?.cardRangeStart, game?.cardRangeEnd, excludedSongIds]);
+  }, [game?.calledSongIds, game?.shuffledSongOrder, game?.currentSongIndex, cards, game?.cardRangeStart, game?.cardRangeEnd, game?.activeCardNumbers, excludedSongIds]);
 
   if (!game || !playlist) {
     return <AppShell centered><div className="text-[var(--text-secondary)]">No active game</div></AppShell>;

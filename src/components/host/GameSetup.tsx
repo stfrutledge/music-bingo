@@ -154,15 +154,42 @@ export function GameSetup() {
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [loadingPacks, setLoadingPacks] = useState(false);
 
-  const [playerCount, setPlayerCount] = useState(eventConfig?.defaultPlayerCount || 30);
+  const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
   const [shuffledSongOrder, setShuffledSongOrder] = useState<string[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [targetSongs, setTargetSongs] = useState<{ [round: number]: number }>({});
   const [autoShuffling, setAutoShuffling] = useState(false);
   const [shuffleAttempts, setShuffleAttempts] = useState(0);
-  const cardRangeStart = 1;
-  const cardRangeEnd = Math.min(playerCount, allCards.length);
-  const cardsInPlay = cardRangeEnd - cardRangeStart + 1;
+  const [tolerance, setTolerance] = useState(1);
+
+  // Sorted list of every available card number (cards aren't guaranteed 1..N)
+  const allCardNumbers = useMemo(
+    () => allCards.map(c => c.cardNumber).sort((a, b) => a - b),
+    [allCards]
+  );
+  const cardsInPlay = selectedCards.size;
+
+  const selectFirstN = useCallback((n: number) => {
+    setSelectedCards(new Set(allCardNumbers.slice(0, Math.max(0, n))));
+  }, [allCardNumbers]);
+
+  const toggleCard = useCallback((cardNumber: number) => {
+    setSelectedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(cardNumber)) next.delete(cardNumber);
+      else next.add(cardNumber);
+      return next;
+    });
+  }, []);
+
+  // Default to the first N cards once cards load (or when the pack changes)
+  useEffect(() => {
+    if (allCardNumbers.length > 0 && selectedCards.size === 0) {
+      const n = Math.min(eventConfig?.defaultPlayerCount || 30, allCardNumbers.length);
+      setSelectedCards(new Set(allCardNumbers.slice(0, n)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allCardNumbers]);
 
   // Shuffle songs when playlist loads
   useEffect(() => {
@@ -180,7 +207,7 @@ export function GameSetup() {
   const handleAutoShuffle = useCallback(async () => {
     if (!playlist || selectedPatterns.length === 0 || allCards.length === 0) return;
 
-    const cardsToCheck = allCards.filter(c => c.cardNumber >= cardRangeStart && c.cardNumber <= cardRangeEnd);
+    const cardsToCheck = allCards.filter(c => selectedCards.has(c.cardNumber));
     const maxAttempts = 50000; // Increased from 10000
     setAutoShuffling(true);
     setShuffleAttempts(0);
@@ -193,55 +220,95 @@ export function GameSetup() {
       return;
     }
 
-    const firstTargetRaw = Object.values(targetSongs).find(t => Number(t) > 0);
-    const firstTarget = firstTargetRaw ? Number(firstTargetRaw) : 0;
-
     // Get callable songs (only songs on active cards, same filtering as game uses)
     const allSongIds = playlist.songs.map(s => s.id);
-    const { callableSongIds } = filterPlaylistForActiveCards(cardsToCheck, allSongIds);
+    const { callableSongIds } = filterPlaylistForActiveCards(cardsToCheck, allSongIds, selectedPatterns);
     const callableSongList = allSongIds.filter(id => callableSongIds.has(id));
 
-    // Run in batches to avoid blocking UI
+    // Active targets (round → desired first-win song)
+    const targetEntries = Object.entries(targetSongs)
+      .map(([roundStr, t]) => ({
+        roundNum: parseInt(roundStr),
+        targetNum: typeof t === 'string' ? parseInt(t) : t,
+      }))
+      .filter(e => e.targetNum > 0);
+
+    // Score an order: totalDiff is how far off it is (0 = every target within
+    // tolerance); allMatch is true only when every target is within tolerance.
+    const scoreOrder = (order: string[]): { totalDiff: number; allMatch: boolean } => {
+      const predictions = predictAllRounds(cardsToCheck, order, selectedPatterns, playlist);
+      let totalDiff = 0;
+      let allMatch = true;
+      for (const { roundNum, targetNum } of targetEntries) {
+        const pred = predictions.find(p => p.roundNumber === roundNum);
+        if (!pred) {
+          allMatch = false;
+          totalDiff += 100; // pattern unreachable — heavily penalized
+          continue;
+        }
+        const diff = Math.abs(pred.firstWinSong - targetNum);
+        if (diff > tolerance) {
+          allMatch = false;
+          totalDiff += diff;
+        }
+      }
+      return { totalDiff, allMatch };
+    };
+
+    // Local move: swap two songs in the order
+    const swap = (order: string[]): string[] => {
+      const next = [...order];
+      const a = Math.floor(Math.random() * next.length);
+      let b = Math.floor(Math.random() * next.length);
+      if (b === a) b = (b + 1) % next.length;
+      [next[a], next[b]] = [next[b], next[a]];
+      return next;
+    };
+
+    // Random-restart hill climbing: take small swap steps from the current order,
+    // accepting any non-worse candidate; if stuck for a while, restart from a fresh
+    // random order. This converges on tight multi-round targets far faster than
+    // re-rolling the whole order every attempt.
     const batchSize = 200;
+    const restartAfter = 150; // restart when no new global best for this many steps
     let attempts = 0;
     let found = false;
-    let bestShuffle: string[] | null = null;
-    let bestDiff = Infinity;
+
+    let current = shuffleArray([...callableSongList]);
+    let currentScore = scoreOrder(current);
+    let bestShuffle: string[] | null = current;
+    let bestDiff = currentScore.totalDiff;
+    let sinceImprovement = 0;
 
     const runBatch = () => {
       for (let i = 0; i < batchSize && attempts < maxAttempts; i++) {
         attempts++;
-        // Shuffle only the callable songs (matches what game will use)
-        const shuffled = shuffleArray([...callableSongList]);
-        const predictions = predictAllRounds(cardsToCheck, shuffled, selectedPatterns, playlist);
 
-        // Check if all targets are met
-        let allMatch = true;
-        let totalDiff = 0;
-        for (const [roundStr, targetSong] of Object.entries(targetSongs)) {
-          const roundNum = parseInt(roundStr);
-          const targetNum = typeof targetSong === 'string' ? parseInt(targetSong) : targetSong;
-          if (targetNum > 0) {
-            const roundPred = predictions.find(p => p.roundNumber === roundNum);
-            if (!roundPred || roundPred.firstWinSong !== targetNum) {
-              allMatch = false;
-              if (roundPred) {
-                totalDiff += Math.abs(roundPred.firstWinSong - targetNum);
-              } else {
-                totalDiff += 100;
-              }
-            }
-          }
+        const restart = sinceImprovement >= restartAfter;
+        const candidate = restart
+          ? shuffleArray([...callableSongList])
+          : swap(current);
+        const score = scoreOrder(candidate);
+
+        // On a restart, always jump to the fresh order; otherwise climb (accept
+        // anything no worse so we can drift across plateaus)
+        if (restart || score.totalDiff <= currentScore.totalDiff) {
+          current = candidate;
+          currentScore = score;
         }
 
-        // Track best attempt
-        if (totalDiff < bestDiff) {
-          bestDiff = totalDiff;
-          bestShuffle = shuffled;
+        if (score.totalDiff < bestDiff) {
+          bestDiff = score.totalDiff;
+          bestShuffle = candidate;
+          sinceImprovement = 0;
+        } else if (restart) {
+          sinceImprovement = 0;
+        } else {
+          sinceImprovement++;
         }
 
-        if (allMatch) {
-          setShuffledSongOrder(shuffled);
+        if (score.allMatch) {
+          setShuffledSongOrder(candidate);
           found = true;
           break;
         }
@@ -258,8 +325,20 @@ export function GameSetup() {
           if (bestShuffle) {
             setShuffledSongOrder(bestShuffle);
             const bestPred = predictAllRounds(cardsToCheck, bestShuffle, selectedPatterns, playlist);
-            const actualWin = bestPred[0]?.firstWinSong || '?';
-            alert(`Could not find exact match after ${maxAttempts} attempts.\n\nBest found: winner at song ${actualWin}\n(Target was: ${firstTarget})\n\nUsing best match found.`);
+            // Build a per-round summary so it's clear which round(s) missed
+            const lines = Object.entries(targetSongs)
+              .map(([roundStr, targetSong]) => {
+                const roundNum = parseInt(roundStr);
+                const targetNum = typeof targetSong === 'string' ? parseInt(targetSong) : targetSong;
+                if (!targetNum || targetNum <= 0) return null;
+                const pred = bestPred.find(p => p.roundNumber === roundNum);
+                const actual = pred ? pred.firstWinSong : null;
+                const ok = actual !== null && Math.abs(actual - targetNum) <= tolerance;
+                return `Round ${roundNum}: winner at song ${actual ?? '?'} (target ${targetNum}) ${ok ? '✓' : '✗'}`;
+              })
+              .filter(Boolean)
+              .join('\n');
+            alert(`Could not find an order where every round matches within ±${tolerance} song after ${maxAttempts} attempts.\n\nBest order found:\n${lines}\n\nUsing best match found.`);
           } else {
             alert(`Could not find matching order after ${maxAttempts} attempts. Try different targets.`);
           }
@@ -268,20 +347,46 @@ export function GameSetup() {
     };
 
     requestAnimationFrame(runBatch);
-  }, [playlist, selectedPatterns, allCards, cardRangeStart, cardRangeEnd, targetSongs]);
+  }, [playlist, selectedPatterns, allCards, selectedCards, targetSongs, tolerance]);
 
   // Calculate win predictions for all selected rounds
   const roundPredictions = useMemo(() => {
     if (!playlist || allCards.length === 0 || shuffledSongOrder.length === 0 || selectedPatterns.length === 0) {
       return [];
     }
-    const cardsToCheck = allCards.filter(c => c.cardNumber >= cardRangeStart && c.cardNumber <= cardRangeEnd);
+    const cardsToCheck = allCards.filter(c => selectedCards.has(c.cardNumber));
     // Filter song order to only songs on active cards (same as game does)
     const allSongIds = playlist.songs.map(s => s.id);
-    const { callableSongIds } = filterPlaylistForActiveCards(cardsToCheck, allSongIds);
+    const { callableSongIds } = filterPlaylistForActiveCards(cardsToCheck, allSongIds, selectedPatterns);
     const filteredSongOrder = shuffledSongOrder.filter(id => callableSongIds.has(id));
     return predictAllRounds(cardsToCheck, filteredSongOrder, selectedPatterns, playlist);
-  }, [playlist, allCards, shuffledSongOrder, selectedPatterns, cardRangeStart, cardRangeEnd]);
+  }, [playlist, allCards, shuffledSongOrder, selectedPatterns, selectedCards]);
+
+  // How many songs will actually play for the current card range — the ceiling for targets
+  const playableSongCount = useMemo(() => {
+    if (!playlist) return 0;
+    const cardsToCheck = allCards.filter(c => selectedCards.has(c.cardNumber));
+    if (cardsToCheck.length === 0) return playlist.songs.length;
+    const allSongIds = playlist.songs.map(s => s.id);
+    const { callableSongIds } = filterPlaylistForActiveCards(cardsToCheck, allSongIds, selectedPatterns);
+    return callableSongIds.size;
+  }, [playlist, allCards, selectedPatterns, selectedCards]);
+
+  // Cards that are predicted to win more than one round with the current order
+  const repeatWinners = useMemo(() => {
+    const cardToRounds = new Map<number, number[]>();
+    for (const round of roundPredictions) {
+      for (const cardNum of round.firstWinCards) {
+        const rounds = cardToRounds.get(cardNum) ?? [];
+        rounds.push(round.roundNumber);
+        cardToRounds.set(cardNum, rounds);
+      }
+    }
+    return [...cardToRounds.entries()]
+      .filter(([, rounds]) => rounds.length > 1)
+      .map(([cardNumber, rounds]) => ({ cardNumber, rounds }))
+      .sort((a, b) => a.cardNumber - b.cardNumber);
+  }, [roundPredictions]);
 
   useEffect(() => {
     if (id) {
@@ -328,7 +433,7 @@ export function GameSetup() {
       const response = await fetch(`${import.meta.env.BASE_URL}packs/${playlist.id}/card-packs/${packId}.json`);
       if (response.ok) {
         const data = await response.json();
-        const cards = data.cards || [];
+        const cards: BingoCard[] = data.cards || [];
         const pacing = data.pacingTable || null;
 
         // Clear existing cards and save new ones to IndexedDB
@@ -343,7 +448,9 @@ export function GameSetup() {
         setSelectedPackId(packId);
 
         if (cards.length > 0) {
-          setPlayerCount(Math.min(30, cards.length));
+          const sorted = cards.map(c => c.cardNumber).sort((a, b) => a - b);
+          const n = Math.min(eventConfig?.defaultPlayerCount || 30, sorted.length);
+          setSelectedCards(new Set(sorted.slice(0, n)));
         }
       }
     } catch (error) {
@@ -371,7 +478,9 @@ export function GameSetup() {
       setPlaylist(playlistData);
       setAllCards(cards);
       if (cards.length > 0) {
-        setPlayerCount(Math.min(30, cards.length));
+        const sorted = cards.map(c => c.cardNumber).sort((a, b) => a - b);
+        const n = Math.min(eventConfig?.defaultPlayerCount || 30, sorted.length);
+        setSelectedCards(new Set(sorted.slice(0, n)));
       }
 
       // Check cache status for offline indicator
@@ -398,8 +507,7 @@ export function GameSetup() {
     if (!playlist) return;
     setStarting(true);
     await startNewGame(playlist, selectedPatterns, {
-      cardRangeStart,
-      cardRangeEnd,
+      activeCardNumbers: [...selectedCards].sort((a, b) => a - b),
       shuffledSongOrder,
     });
     navigate('/host/game');
@@ -530,8 +638,13 @@ export function GameSetup() {
 
               {/* Target Song Inputs */}
               <div className="bg-[var(--bg-hover)] rounded-lg p-4 mb-4">
-                <div className="text-sm font-medium text-[var(--text-primary)] mb-3">
-                  Target Win Songs (optional)
+                <div className="flex items-baseline justify-between mb-3">
+                  <div className="text-sm font-medium text-[var(--text-primary)]">
+                    Target Win Songs (optional)
+                  </div>
+                  <div className="text-xs text-[var(--text-muted)]">
+                    {playableSongCount} songs play &bull; targets must be ≤ {playableSongCount}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-4 items-end">
                   {selectedPatterns.map((_, idx) => (
@@ -542,7 +655,7 @@ export function GameSetup() {
                       <input
                         type="number"
                         min="1"
-                        max={playlist?.songs.length || 50}
+                        max={playableSongCount || playlist?.songs.length || 50}
                         value={targetSongs[idx + 1] || ''}
                         onChange={(e) => setTargetSongs(prev => ({
                           ...prev,
@@ -554,6 +667,20 @@ export function GameSetup() {
                       />
                     </div>
                   ))}
+                  <div className="min-w-[90px]">
+                    <label className="block text-xs text-[var(--text-secondary)] mb-1">
+                      Tolerance (±)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={playlist?.songs.length || 50}
+                      value={tolerance}
+                      onChange={(e) => setTolerance(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="input w-full text-center"
+                      disabled={autoShuffling}
+                    />
+                  </div>
                   <Button
                     variant="primary"
                     size="sm"
@@ -564,34 +691,91 @@ export function GameSetup() {
                   </Button>
                 </div>
                 <p className="text-xs text-[var(--text-muted)] mt-2">
-                  Set target song numbers and click "Find Order" to auto-shuffle until found
+                  Set target song numbers and click "Find Order" to auto-shuffle until found (matches within ±{tolerance} song{tolerance === 1 ? '' : 's'})
                 </p>
               </div>
 
+              {/* Repeat-winner warning */}
+              {repeatWinners.length > 0 && (
+                <div className="mb-4 p-3 rounded-lg bg-[var(--status-warning-bg)] border border-[var(--status-warning-text)]">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-5 h-5 text-[var(--status-warning-text)] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    <div className="text-sm">
+                      <div className="font-semibold text-[var(--status-warning-text)]">
+                        Same card wins multiple rounds
+                      </div>
+                      <ul className="text-[var(--text-secondary)] mt-1 space-y-0.5">
+                        {repeatWinners.map(({ cardNumber, rounds }) => (
+                          <li key={cardNumber}>
+                            Card #{cardNumber} wins rounds {rounds.join(', ')}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="text-xs text-[var(--text-muted)] mt-1">
+                        Re-shuffle or run "Find Order" again for a different order.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Round Summary Cards */}
               <div className="space-y-3 mb-4">
-                {roundPredictions.map((round) => (
+                {roundPredictions.map((round) => {
+                  const reached = round.firstWinSong > 0;
+                  const isRepeat = round.firstWinCards.some(
+                    c => repeatWinners.some(r => r.cardNumber === c)
+                  );
+                  return (
                   <div
                     key={round.roundNumber}
-                    className="bg-[var(--status-success-bg)] border border-[var(--accent-green)] rounded-lg p-4"
+                    className={`border rounded-lg p-4 ${
+                      !reached
+                        ? 'bg-[var(--status-error-bg)] border-[var(--status-error-text)]'
+                        : isRepeat
+                        ? 'bg-[var(--status-warning-bg)] border-[var(--status-warning-text)]'
+                        : 'bg-[var(--status-success-bg)] border-[var(--accent-green)]'
+                    }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="font-semibold text-[var(--text-primary)]">
                         Round {round.roundNumber}: {round.patternName}
                       </div>
-                      <div className="text-2xl font-bold text-[var(--accent-green)]">
-                        Song #{round.firstWinSong}
+                      <div className={`text-2xl font-bold ${reached ? 'text-[var(--accent-green)]' : 'text-[var(--status-error-text)]'}`}>
+                        {reached ? `Song #${round.firstWinSong}` : 'No winner'}
                       </div>
                     </div>
-                    <div className="text-sm text-[var(--text-secondary)]">
-                      {round.firstWinTitle}
-                    </div>
-                    <div className="text-sm text-[var(--text-muted)] mt-1">
-                      Winner{round.firstWinCards.length > 1 ? 's' : ''}: {round.firstWinCards.map(c => `#${c}`).join(', ')}
-                      {round.firstWinCards.length > 1 && ` (${round.firstWinCards.length} tied)`}
-                    </div>
+                    {reached ? (
+                      <>
+                        <div className="text-sm text-[var(--text-secondary)]">
+                          {round.firstWinTitle}
+                        </div>
+                        <div className="text-sm text-[var(--text-muted)] mt-1">
+                          Winner{round.firstWinCards.length > 1 ? 's' : ''}:{' '}
+                          {round.firstWinCards.map((c, i) => {
+                            const repeat = repeatWinners.some(r => r.cardNumber === c);
+                            return (
+                              <span key={c}>
+                                {i > 0 && ', '}
+                                <span className={repeat ? 'font-semibold text-[var(--status-warning-text)]' : ''}>
+                                  #{c}{repeat && ' ⚠'}
+                                </span>
+                              </span>
+                            );
+                          })}
+                          {round.firstWinCards.length > 1 && ` (${round.firstWinCards.length} tied)`}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-sm text-[var(--text-secondary)]">
+                        This pattern can't be completed with the available songs — not enough songs are called to fill it on any card.
+                      </div>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Total songs summary */}
@@ -692,51 +876,73 @@ export function GameSetup() {
             </div>
           )}
 
-          {/* Player Count */}
+          {/* Cards in Play */}
           {totalCards > 0 ? (
             <div className="card">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
-                Player Count
-              </h3>
-
-              <div className="mb-4">
-                <input
-                  type="number"
-                  value={playerCount}
-                  onChange={e => {
-                    const val = Math.max(1, Math.min(parseInt(e.target.value) || 1, totalCards));
-                    setPlayerCount(val);
-                  }}
-                  className="input w-full text-center text-2xl font-bold"
-                  min="1"
-                  max={totalCards}
-                />
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                  Cards in Play
+                </h3>
+                <span className="text-sm font-semibold text-[var(--accent-green)]">
+                  {cardsInPlay} of {totalCards}
+                </span>
               </div>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">
+                Tap card numbers to choose exactly which cards are in play.
+              </p>
 
-              <div className="flex flex-wrap gap-2 mb-4">
+              {/* Presets */}
+              <div className="flex flex-wrap gap-2 mb-3">
                 {[10, 20, 30, 50].filter(n => n <= totalCards).map(count => (
                   <button
                     key={count}
-                    onClick={() => setPlayerCount(count)}
-                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                      playerCount === count
-                        ? 'bg-[var(--accent-green)] text-white'
-                        : 'bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)] border border-[var(--border-color)]'
-                    }`}
+                    onClick={() => selectFirstN(count)}
+                    className="px-3 py-1.5 rounded text-sm font-medium bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)] border border-[var(--border-color)] transition-colors"
                   >
-                    {count}
+                    First {count}
                   </button>
                 ))}
+                <button
+                  onClick={() => setSelectedCards(new Set(allCardNumbers))}
+                  className="px-3 py-1.5 rounded text-sm font-medium bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)] border border-[var(--border-color)] transition-colors"
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setSelectedCards(new Set())}
+                  className="px-3 py-1.5 rounded text-sm font-medium bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)] border border-[var(--border-color)] transition-colors"
+                >
+                  None
+                </button>
               </div>
 
-              <div className="bg-[var(--status-success-bg)] border border-[var(--accent-green)] rounded-lg p-4 text-center">
-                <div className="text-sm text-[var(--status-success-text)] mb-1 font-medium">Distribute cards:</div>
-                <div className="text-2xl font-bold text-[var(--text-primary)]">
-                  #1 - #{cardsInPlay}
-                </div>
+              {/* Toggle grid */}
+              <div className="grid grid-cols-6 gap-1.5 max-h-64 overflow-y-auto p-1 mb-2">
+                {allCardNumbers.map(num => {
+                  const on = selectedCards.has(num);
+                  return (
+                    <button
+                      key={num}
+                      onClick={() => toggleCard(num)}
+                      aria-pressed={on}
+                      className={`py-1.5 rounded text-sm font-medium transition-colors ${
+                        on
+                          ? 'bg-[var(--accent-green)] text-white'
+                          : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:bg-[var(--bg-card)] border border-[var(--border-color)]'
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  );
+                })}
               </div>
 
-                          </div>
+              {cardsInPlay === 0 && (
+                <p className="text-sm text-[var(--status-warning-text)] mt-2">
+                  Select at least one card to start the game.
+                </p>
+              )}
+            </div>
           ) : (
             <div className="card">
               <p className="text-[var(--status-warning-text)] text-sm">
@@ -791,7 +997,7 @@ export function GameSetup() {
             size="lg"
             fullWidth
             onClick={handleStartGame}
-            disabled={starting || selectedPatterns.length === 0 || (!eventConfig && availablePacks.length > 0 && !selectedPackId) || totalCards === 0}
+            disabled={starting || selectedPatterns.length === 0 || (!eventConfig && availablePacks.length > 0 && !selectedPackId) || totalCards === 0 || cardsInPlay === 0}
           >
             {starting ? 'Starting...' : 'Start Game'}
           </Button>
