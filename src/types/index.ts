@@ -75,6 +75,7 @@ export interface GameState {
   playlistId: string;
   packId?: string; // Which card pack is being used
   rounds: GameRound[];
+  plannedPatternIds?: string[]; // Pattern sequence pre-selected at setup; used to pre-fill each round's pattern
   currentRound: number;
   calledSongIds: string[];
   shuffledSongOrder: string[];

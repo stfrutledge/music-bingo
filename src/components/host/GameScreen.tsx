@@ -24,7 +24,8 @@ export function GameScreen() {
   const [showWinnerTracker, setShowWinnerTracker] = useState(true);
   const [hasLoadedCurrentSong, setHasLoadedCurrentSong] = useState(false);
   const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
-  const [loopEnabled, setLoopEnabled] = useState(false);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const [loopEnabled, setLoopEnabled] = useState(true);
   const [previewCardNumber, setPreviewCardNumber] = useState<number | null>(null);
 
   // Get the current audio URL for artwork extraction
@@ -110,17 +111,39 @@ export function GameScreen() {
   const handlePlayPause = () => audio.isPlaying ? audio.pause() : audio.play();
 
   const handleNextSong = async () => {
-    await audio.stopWithFade();
-    setShouldAutoPlay(true);
-    setHasLoadedCurrentSong(false);
-    nextSong();
+    if (isAdvancing) return;
+    setIsAdvancing(true);
+    try {
+      // Crossfade into the already-preloaded next song (keeps audio playing
+      // through the transition — no silence). Advance game state only after the
+      // crossfade so the load effect doesn't reload the song we just faded in.
+      const crossfaded = await audio.transitionToPreloaded();
+      if (crossfaded) {
+        setShouldAutoPlay(false);
+        setHasLoadedCurrentSong(true);
+      } else {
+        // Nothing preloaded yet — fall back to fade-out then load.
+        await audio.stopWithFade();
+        setShouldAutoPlay(true);
+        setHasLoadedCurrentSong(false);
+      }
+      nextSong();
+    } finally {
+      setIsAdvancing(false);
+    }
   };
 
   const handlePrevSong = async () => {
-    await audio.stopWithFade();
-    setShouldAutoPlay(true);
-    setHasLoadedCurrentSong(false);
-    prevSong();
+    if (isAdvancing) return;
+    setIsAdvancing(true);
+    try {
+      await audio.stopWithFade();
+      setShouldAutoPlay(true);
+      setHasLoadedCurrentSong(false);
+      prevSong();
+    } finally {
+      setIsAdvancing(false);
+    }
   };
 
   const handleEndGame = async () => {
@@ -239,7 +262,7 @@ export function GameScreen() {
 
             {/* Primary Actions */}
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="success" size="lg" fullWidth onClick={handleNextSong} disabled={songNumber >= totalSongs}>
+              <Button variant="success" size="lg" fullWidth onClick={handleNextSong} disabled={isAdvancing || songNumber >= totalSongs}>
                 Next Song
               </Button>
               <Button variant="secondary" size="lg" fullWidth onClick={() => navigate('/host/verify')}>
@@ -249,7 +272,7 @@ export function GameScreen() {
 
             {/* Secondary Actions */}
             <div className="flex flex-wrap gap-3">
-              <Button variant="secondary" size="sm" onClick={handlePrevSong} disabled={songNumber <= 1}>
+              <Button variant="secondary" size="sm" onClick={handlePrevSong} disabled={isAdvancing || songNumber <= 1}>
                 Previous Song
               </Button>
               <Button variant="secondary" size="sm" onClick={() => navigate('/host/round-end')}>

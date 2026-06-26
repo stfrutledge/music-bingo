@@ -66,7 +66,13 @@ export function WinnerVerification() {
     setLoading(false);
   };
 
-  const handleConfirmWinner = () => {
+  const handleConfirmAndEndRound = () => {
+    if (!card) return;
+    recordWinner(card.cardNumber);
+    navigate('/host/round-end');
+  };
+
+  const handleConfirmAndContinue = () => {
     if (!card) return;
     recordWinner(card.cardNumber);
     navigate('/host/game');
@@ -175,14 +181,24 @@ export function WinnerVerification() {
               {/* Actions */}
               <div className="space-y-3">
                 {result.isWin && (
-                  <Button
-                    variant="success"
-                    size="lg"
-                    fullWidth
-                    onClick={handleConfirmWinner}
-                  >
-                    Confirm Winner
-                  </Button>
+                  <>
+                    <Button
+                      variant="success"
+                      size="lg"
+                      fullWidth
+                      onClick={handleConfirmAndEndRound}
+                    >
+                      Confirm Winner & End Round
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      fullWidth
+                      onClick={handleConfirmAndContinue}
+                    >
+                      Confirm Winner & Continue Round
+                    </Button>
+                  </>
                 )}
 
                 <Button

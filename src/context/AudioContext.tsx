@@ -3,6 +3,7 @@ import { getAudioFromCache, isLocalUrl } from '../lib/audioCache';
 import { getAudioSource } from '../lib/audioSettings';
 
 const FADE_DURATION = 200; // ms for fade in/out (quick transitions for bingo)
+const CROSSFADE_DURATION = 1000; // ms to fade the outgoing and incoming songs into each other
 
 interface AudioContextState {
   isPlaying: boolean;
@@ -23,7 +24,9 @@ interface AudioContextValue extends AudioContextState {
   seek: (time: number) => void;
   loadAudio: (url: string, startTime?: number, autoPlay?: boolean) => Promise<void>;
   preloadAudio: (url: string, startTime?: number) => void;
-  transitionToPreloaded: () => Promise<void>;
+  // Crossfade into the preloaded next song. Resolves true if a crossfade was
+  // performed, false if nothing was preloaded (caller should fall back).
+  transitionToPreloaded: () => Promise<boolean>;
 }
 
 const AudioContext = createContext<AudioContextValue | null>(null);
@@ -48,60 +51,78 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     isPreloading: false,
   });
 
-  // Initialize audio elements
+  // Initialize audio elements. The two elements swap roles on every crossfade
+  // (the preloaded element becomes the player), so both carry the same core
+  // listeners — each guarded to only drive state while it is the active player.
   useEffect(() => {
     const audio = new Audio();
     const preloadAudio = new Audio();
     audioRef.current = audio;
     preloadAudioRef.current = preloadAudio;
 
-    audio.addEventListener('timeupdate', () => {
-      setState(prev => ({ ...prev, currentTime: audio.currentTime }));
-    });
+    const attachCoreListeners = (el: HTMLAudioElement) => {
+      const isActive = () => audioRef.current === el;
 
-    audio.addEventListener('loadedmetadata', () => {
-      const startTime = startTimeRef.current;
-      if (startTime > 0 && startTime < audio.duration) {
-        audio.currentTime = startTime;
-      }
-      setState(prev => ({
-        ...prev,
-        duration: audio.duration,
-        isLoading: false,
-        currentTime: startTime,
-      }));
-    });
+      el.addEventListener('timeupdate', () => {
+        if (!isActive()) return;
+        setState(prev => ({ ...prev, currentTime: el.currentTime }));
+      });
 
-    audio.addEventListener('ended', () => {
-      const startTime = startTimeRef.current;
-      audio.currentTime = startTime;
-      setState(prev => ({ ...prev, isPlaying: false, currentTime: startTime }));
-    });
+      el.addEventListener('loadedmetadata', () => {
+        if (!isActive()) return;
+        const startTime = startTimeRef.current;
+        if (startTime > 0 && startTime < el.duration) {
+          el.currentTime = startTime;
+        }
+        setState(prev => ({
+          ...prev,
+          duration: el.duration,
+          isLoading: false,
+          currentTime: startTime,
+        }));
+      });
 
-    audio.addEventListener('error', () => {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: 'Failed to load audio',
-      }));
-    });
+      el.addEventListener('ended', () => {
+        if (!isActive()) return;
+        const startTime = startTimeRef.current;
+        el.currentTime = startTime;
+        setState(prev => ({ ...prev, isPlaying: false, currentTime: startTime }));
+      });
 
-    audio.addEventListener('play', () => {
-      setState(prev => ({ ...prev, isPlaying: true }));
-    });
+      el.addEventListener('error', () => {
+        if (!isActive()) return;
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: 'Failed to load audio',
+        }));
+      });
 
-    audio.addEventListener('pause', () => {
-      setState(prev => ({ ...prev, isPlaying: false }));
-    });
+      el.addEventListener('play', () => {
+        if (!isActive()) return;
+        setState(prev => ({ ...prev, isPlaying: true }));
+      });
 
-    // Preload audio ready listener
-    preloadAudio.addEventListener('canplaythrough', () => {
-      setState(prev => ({ ...prev, isPreloading: false }));
-    });
+      el.addEventListener('pause', () => {
+        if (!isActive()) return;
+        setState(prev => ({ ...prev, isPlaying: false }));
+      });
+
+      // Buffering of the preloaded (inactive) element is done
+      el.addEventListener('canplaythrough', () => {
+        if (preloadAudioRef.current === el) {
+          setState(prev => ({ ...prev, isPreloading: false }));
+        }
+      });
+    };
+
+    attachCoreListeners(audio);
+    attachCoreListeners(preloadAudio);
 
     return () => {
       audio.pause();
       audio.src = '';
+      preloadAudio.pause();
       preloadAudio.src = '';
     };
   }, []);
@@ -233,55 +254,101 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }, { once: true });
   }, []);
 
-  const transitionToPreloaded = useCallback(async (): Promise<void> => {
-    const audio = audioRef.current;
-    const preload = preloadAudioRef.current;
-    if (!audio || !preload || !preloadUrlRef.current) return;
+  // Simultaneously fade the outgoing element to silence and the incoming one up
+  // to full volume over CROSSFADE_DURATION. Both elements are playing during it.
+  const crossfade = useCallback((from: HTMLAudioElement, to: HTMLAudioElement): Promise<void> => {
+    return new Promise((resolve) => {
+      const steps = 30;
+      const stepDuration = CROSSFADE_DURATION / steps;
+      let currentStep = 0;
 
-    // Wait for preload to be ready if still loading
+      if (fadeIntervalRef.current) {
+        clearInterval(fadeIntervalRef.current);
+      }
+      setState(prev => ({ ...prev, isFading: true }));
+
+      fadeIntervalRef.current = window.setInterval(() => {
+        currentStep++;
+        const t = currentStep / steps;
+        from.volume = Math.max(0, 1 - t);
+        to.volume = Math.min(1, t);
+
+        if (currentStep >= steps) {
+          if (fadeIntervalRef.current) {
+            clearInterval(fadeIntervalRef.current);
+            fadeIntervalRef.current = null;
+          }
+          from.volume = 0;
+          to.volume = 1;
+          setState(prev => ({ ...prev, isFading: false }));
+          resolve();
+        }
+      }, stepDuration);
+    });
+  }, []);
+
+  const transitionToPreloaded = useCallback(async (): Promise<boolean> => {
+    const current = audioRef.current;
+    const preload = preloadAudioRef.current;
+    // Nothing preloaded — let the caller fall back to a normal load.
+    if (!current || !preload || !preloadUrlRef.current) return false;
+
+    // Keep the current song playing until the next one is actually ready —
+    // this is what prevents a silent gap on slower loads.
     if (preload.readyState < 3) {
       await new Promise<void>((resolve) => {
-        preload.addEventListener('canplay', () => resolve(), { once: true });
+        if (preload.readyState >= 3) return resolve();
+        preload.addEventListener('canplay', function onCanPlay() {
+          preload.removeEventListener('canplay', onCanPlay);
+          resolve();
+        }, { once: true });
       });
     }
 
-    // Fade out current
-    await stopWithFade();
+    // Make sure the incoming song starts at its intended offset, then begin
+    // playing it silently underneath the current song.
+    const incomingStart = preloadStartTimeRef.current;
+    if (incomingStart > 0 && incomingStart < preload.duration) {
+      preload.currentTime = incomingStart;
+    }
+    preload.volume = 0;
+    try {
+      await preload.play();
+    } catch (err) {
+      console.warn('Crossfade play failed:', err);
+      return false;
+    }
 
-    // Swap the audio elements
-    startTimeRef.current = preloadStartTimeRef.current;
+    // Fade the two into each other.
+    await crossfade(current, preload);
+
+    // Swap roles: the preloaded element is now the player. Do this before
+    // pausing the old element so its 'pause' event is ignored by the guards.
+    audioRef.current = preload;
+    preloadAudioRef.current = current;
+    startTimeRef.current = incomingStart;
     currentUrlRef.current = preloadUrlRef.current;
-    audio.src = preloadUrlRef.current;
-    audio.load();
 
-    // Wait for it to be ready and play
-    await new Promise<void>((resolve) => {
-      audio.addEventListener('canplay', async function onCanPlay() {
-        audio.removeEventListener('canplay', onCanPlay);
-        if (preloadStartTimeRef.current > 0) {
-          audio.currentTime = preloadStartTimeRef.current;
-        }
-        try {
-          audio.volume = 0;
-          await audio.play();
-          fadeIn(audio);
-        } catch (err) {
-          console.warn('Auto-play failed:', err);
-          audio.volume = 1;
-        }
-        resolve();
-      }, { once: true });
-    });
+    // Park the outgoing element so it's free to preload the next song.
+    current.pause();
+    current.volume = 1;
+
+    // Clear preload bookkeeping.
+    preloadUrlRef.current = '';
+    preloadStartTimeRef.current = 0;
 
     setState(prev => ({
       ...prev,
-      startOffset: preloadStartTimeRef.current,
-      duration: audio.duration,
+      isPlaying: true,
+      isFading: false,
+      isPreloading: false,
+      startOffset: incomingStart,
+      duration: preload.duration,
+      currentTime: preload.currentTime,
     }));
 
-    // Clear preload
-    preloadUrlRef.current = '';
-  }, [fadeIn]);
+    return true;
+  }, [crossfade]);
 
   const play = useCallback(async () => {
     const audio = audioRef.current;

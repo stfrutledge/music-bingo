@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
 import { getAllPatterns, getPatternById } from '../../lib/patterns';
@@ -39,6 +39,16 @@ export function RoundEnd() {
   const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const [selectedNextPattern, setSelectedNextPattern] = useState<string | null>(null);
+
+  // Pre-select the pattern the host chose for the next round at setup time.
+  // currentRound is a 0-based index, so the next round's planned pattern lives
+  // at plannedPatternIds[currentRound + 1]. Falls back to manual selection when
+  // no plan exists (older games) or the plan has fewer rounds than played.
+  useEffect(() => {
+    if (!game) return;
+    const planned = game.plannedPatternIds?.[game.currentRound + 1];
+    setSelectedNextPattern(planned ?? null);
+  }, [game?.id, game?.currentRound]);
 
   // Calculate status for each pattern based on current called songs and shuffle order
   const patternStatuses = useMemo(() => {
@@ -227,6 +237,49 @@ export function RoundEnd() {
             )}
           </div>
 
+          {/* Previous Rounds */}
+          {game.currentRound > 0 && (
+            <div className="card">
+              <h2 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 uppercase tracking-wide">
+                Previous Rounds
+              </h2>
+              <div className="space-y-3">
+                {game.rounds.slice(0, game.currentRound).map(round => {
+                  const roundPattern = getPatternById(round.patternId);
+                  return (
+                    <div
+                      key={round.roundNumber}
+                      className="flex items-start justify-between gap-3 pb-3 border-b border-[var(--border-color)] last:border-0 last:pb-0"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-[var(--text-primary)]">
+                          Round {round.roundNumber}
+                        </div>
+                        <div className="text-xs text-[var(--text-secondary)] truncate">
+                          {roundPattern.name}
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        {round.winners.length > 0 ? (
+                          <>
+                            <div className="text-sm font-semibold text-[var(--status-success-text)]">
+                              {round.winners.length} winner{round.winners.length !== 1 ? 's' : ''}
+                            </div>
+                            <div className="text-xs text-[var(--text-secondary)]">
+                              {round.winners.map(w => `#${w.cardNumber}`).join(', ')}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-sm text-[var(--text-muted)]">No winners</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Reset Cards Option */}
           <div className="card">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Card Reset</h3>
@@ -270,7 +323,9 @@ export function RoundEnd() {
               Start Next Round
             </h2>
             <p className="text-sm text-[var(--text-secondary)] mb-6">
-              Select a pattern for Round {currentRound.roundNumber + 1}
+              {game.plannedPatternIds?.[game.currentRound + 1]
+                ? `Pre-selected from setup for Round ${currentRound.roundNumber + 1} — tap another to change`
+                : `Select a pattern for Round ${currentRound.roundNumber + 1}`}
             </p>
 
             {/* Pattern Selection */}

@@ -313,6 +313,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           startedAt: Date.now(),
         },
       ],
+      plannedPatternIds: patternIds,
       currentRound: 0,
       calledSongIds: [firstSongId],
       shuffledSongOrder: shuffledOrder,
