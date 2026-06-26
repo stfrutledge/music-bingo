@@ -130,8 +130,56 @@ export const BINGO_PATTERNS: BingoPattern[] = [
   },
 ];
 
+// In-memory registry of user-defined custom patterns. Populated at app startup
+// from IndexedDB (see main.tsx) so the synchronous getPattern/getPatternById
+// lookups used across the game flow can resolve custom pattern IDs too.
+const customPatterns = new Map<string, BingoPattern>();
+
+// Replace the entire custom-pattern registry (used on startup load).
+export function setCustomPatterns(patterns: BingoPattern[]): void {
+  customPatterns.clear();
+  for (const p of patterns) {
+    customPatterns.set(p.id, { ...p, isCustom: true });
+  }
+}
+
+// Add or update a single custom pattern in the registry.
+export function registerCustomPattern(pattern: BingoPattern): void {
+  customPatterns.set(pattern.id, { ...pattern, isCustom: true });
+}
+
+export function unregisterCustomPattern(id: string): void {
+  customPatterns.delete(id);
+}
+
+export function getCustomPatterns(): BingoPattern[] {
+  return [...customPatterns.values()];
+}
+
+// Presets followed by custom patterns — the full selectable list.
+export function getAllPatterns(): BingoPattern[] {
+  return [...BINGO_PATTERNS, ...customPatterns.values()];
+}
+
+// Build a BingoPattern from a 5x5 grid and a name. The center (index 12) is
+// always the free space and is forced off regardless of the grid passed in.
+export function createCustomPattern(name: string, grid: boolean[][]): BingoPattern {
+  const normalized = grid.map((row, r) =>
+    row.map((cell, c) => (r === 2 && c === 2 ? false : cell))
+  );
+  const count = normalized.flat().filter(Boolean).length;
+  return {
+    id: `custom-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
+    name: name.trim() || 'Custom Pattern',
+    description: `Custom pattern (${count} square${count === 1 ? '' : 's'})`,
+    grid: normalized,
+    isCustom: true,
+    createdAt: Date.now(),
+  };
+}
+
 export function getPattern(id: string): BingoPattern | undefined {
-  return BINGO_PATTERNS.find(p => p.id === id);
+  return BINGO_PATTERNS.find(p => p.id === id) ?? customPatterns.get(id);
 }
 
 export function getPatternById(id: string): BingoPattern {

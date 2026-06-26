@@ -1,15 +1,17 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import type { Playlist, BingoCard, CacheStatus, CardPackInfo, EventConfig } from '../../types';
-import { getPlaylist, getCardsForPlaylist, saveCards, savePacingTable, deleteCardsForPlaylist } from '../../lib/db';
+import { getPlaylist, getCardsForPlaylist, saveCards, savePacingTable, deleteCardsForPlaylist, saveCustomPattern, deleteCustomPattern } from '../../lib/db';
 import { isSheetsConfigured, loadAndMergeFromSheets } from '../../lib/sheetsSync';
-import { BINGO_PATTERNS, getPatternById } from '../../lib/patterns';
+import { getAllPatterns, getPatternById, registerCustomPattern, unregisterCustomPattern } from '../../lib/patterns';
 import { getCacheStatus, isLocalUrl } from '../../lib/audioCache';
 import { checkWin } from '../../lib/winChecker';
 import { filterPlaylistForActiveCards } from '../../lib/cardGenerator';
 import { useGame } from '../../context/GameContext';
+import type { BingoPattern } from '../../types';
 import { Button } from '../shared/Button';
 import { PatternDisplay } from '../shared/PatternDisplay';
+import { CustomPatternEditor } from '../shared/CustomPatternEditor';
 import { AppShell } from '../shared/AppShell';
 
 interface CardWinPrediction {
@@ -142,6 +144,9 @@ export function GameSetup() {
   const [selectedPatterns, setSelectedPatterns] = useState<string[]>(
     eventConfig?.defaultPatterns || ['single-line-h']
   );
+  // Full selectable pattern list (presets + saved custom patterns)
+  const [patterns, setPatterns] = useState<BingoPattern[]>(() => getAllPatterns());
+  const [editorOpen, setEditorOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
 
@@ -503,6 +508,26 @@ export function GameSetup() {
     });
   };
 
+  const handleSaveCustomPattern = async (pattern: BingoPattern) => {
+    await saveCustomPattern(pattern);
+    registerCustomPattern(pattern);
+    setPatterns(getAllPatterns());
+    // Auto-add the new pattern as the next round
+    setSelectedPatterns(prev => (prev.includes(pattern.id) ? prev : [...prev, pattern.id]));
+    setEditorOpen(false);
+  };
+
+  const handleDeleteCustomPattern = async (patternId: string) => {
+    await deleteCustomPattern(patternId);
+    unregisterCustomPattern(patternId);
+    setPatterns(getAllPatterns());
+    setSelectedPatterns(prev => {
+      const next = prev.filter(p => p !== patternId);
+      // Never leave the selection empty
+      return next.length > 0 ? next : ['single-line-h'];
+    });
+  };
+
   const handleStartGame = async () => {
     if (!playlist) return;
     setStarting(true);
@@ -569,24 +594,48 @@ export function GameSetup() {
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {BINGO_PATTERNS.map(pattern => (
-                <div
-                  key={pattern.id}
-                  onClick={() => togglePattern(pattern.id)}
-                  className="cursor-pointer"
-                >
-                  <PatternDisplay
-                    pattern={pattern}
-                    size="sm"
-                    selected={selectedPatterns.includes(pattern.id)}
-                  />
-                  {selectedPatterns.includes(pattern.id) && (
-                    <div className="text-center text-xs text-[var(--accent-green)] mt-1 font-medium">
-                      Round {selectedPatterns.indexOf(pattern.id) + 1}
-                    </div>
+              {patterns.map(pattern => (
+                <div key={pattern.id} className="relative">
+                  <div
+                    onClick={() => togglePattern(pattern.id)}
+                    className="cursor-pointer"
+                  >
+                    <PatternDisplay
+                      pattern={pattern}
+                      size="sm"
+                      selected={selectedPatterns.includes(pattern.id)}
+                    />
+                    {selectedPatterns.includes(pattern.id) && (
+                      <div className="text-center text-xs text-[var(--accent-green)] mt-1 font-medium">
+                        Round {selectedPatterns.indexOf(pattern.id) + 1}
+                      </div>
+                    )}
+                  </div>
+                  {pattern.isCustom && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleDeleteCustomPattern(pattern.id); }}
+                      aria-label={`Delete ${pattern.name}`}
+                      title="Delete custom pattern"
+                      className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center rounded-full bg-[var(--accent-red)] text-white text-sm leading-none shadow hover:bg-[var(--accent-red-light)]"
+                    >
+                      &times;
+                    </button>
                   )}
                 </div>
               ))}
+
+              {/* Create custom pattern tile */}
+              <button
+                type="button"
+                onClick={() => setEditorOpen(true)}
+                className="flex flex-col items-center justify-center gap-1 min-h-[88px] rounded-lg border-2 border-dashed border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent-green)] hover:text-[var(--accent-green)] transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="text-xs font-medium">Create Custom</span>
+              </button>
             </div>
 
             {/* Selected Order */}
@@ -595,7 +644,7 @@ export function GameSetup() {
                 <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Round Order</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedPatterns.map((patternId, idx) => {
-                    const pattern = BINGO_PATTERNS.find(p => p.id === patternId);
+                    const pattern = patterns.find(p => p.id === patternId);
                     return (
                       <span
                         key={patternId}
@@ -1008,6 +1057,12 @@ export function GameSetup() {
           )}
         </div>
       </div>
+
+      <CustomPatternEditor
+        isOpen={editorOpen}
+        onSave={handleSaveCustomPattern}
+        onCancel={() => setEditorOpen(false)}
+      />
     </AppShell>
   );
 }

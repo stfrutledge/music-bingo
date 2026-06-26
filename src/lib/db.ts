@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Playlist, BingoCard, GameState, AppSettings, PacingTable } from '../types';
+import type { Playlist, BingoCard, GameState, AppSettings, PacingTable, BingoPattern } from '../types';
 
 export class MusicBingoDatabase extends Dexie {
   playlists!: Table<Playlist, string>;
@@ -7,6 +7,7 @@ export class MusicBingoDatabase extends Dexie {
   games!: Table<GameState, string>;
   settings!: Table<AppSettings, string>;
   pacingTables!: Table<PacingTable, string>;
+  customPatterns!: Table<BingoPattern, string>;
 
   constructor() {
     super('MusicBingoDB');
@@ -25,6 +26,16 @@ export class MusicBingoDatabase extends Dexie {
       games: 'id, playlistId, startedAt',
       settings: 'mode',
       pacingTables: 'playlistId, createdAt',
+    });
+
+    // Version 3: Add user-defined custom win patterns
+    this.version(3).stores({
+      playlists: 'id, name, createdAt, updatedAt',
+      cards: 'id, playlistId, cardNumber',
+      games: 'id, playlistId, startedAt',
+      settings: 'mode',
+      pacingTables: 'playlistId, createdAt',
+      customPatterns: 'id, name, createdAt',
     });
   }
 }
@@ -96,6 +107,19 @@ export async function getSettings(): Promise<AppSettings | undefined> {
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
   await db.settings.put(settings);
+}
+
+// Custom pattern operations
+export async function getAllCustomPatterns(): Promise<BingoPattern[]> {
+  return db.customPatterns.orderBy('createdAt').toArray();
+}
+
+export async function saveCustomPattern(pattern: BingoPattern): Promise<void> {
+  await db.customPatterns.put(pattern);
+}
+
+export async function deleteCustomPattern(id: string): Promise<void> {
+  await db.customPatterns.delete(id);
 }
 
 // Pacing table operations

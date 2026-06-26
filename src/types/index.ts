@@ -52,6 +52,8 @@ export interface BingoPattern {
   name: string;
   description: string;
   grid: boolean[][]; // 5x5 grid, true = required for win
+  isCustom?: boolean; // User-defined pattern (persisted in IndexedDB), not a built-in preset
+  createdAt?: number; // When a custom pattern was created
 }
 
 export interface GameRound {

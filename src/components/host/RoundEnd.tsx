@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
-import { BINGO_PATTERNS, getPatternById } from '../../lib/patterns';
+import { getAllPatterns, getPatternById } from '../../lib/patterns';
 import { checkWin } from '../../lib/winChecker';
 import { Button } from '../shared/Button';
 import { PatternDisplay } from '../shared/PatternDisplay';
@@ -65,7 +65,7 @@ export function RoundEnd() {
       }
     });
 
-    for (const pattern of BINGO_PATTERNS) {
+    for (const pattern of getAllPatterns()) {
       let bingos = 0;
       let closestMissing = Infinity;
       let bestSongsUntilWin = Infinity;
@@ -275,7 +275,7 @@ export function RoundEnd() {
 
             {/* Pattern Selection */}
             <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-              {BINGO_PATTERNS.map(p => {
+              {getAllPatterns().map(p => {
                 const statusLabel = getStatusLabel(p);
                 return (
                   <div
