@@ -43,6 +43,39 @@ export function GameScreen() {
     return () => { wakeLock.release(); };
   }, []);
 
+  // Push-to-talk ducking: hold Space to dip the music under your voice, release
+  // to bring it back. Space is safe re: Windows Sticky/Filter keys (those need
+  // Shift/NumLock); we only guard the browser default (scroll / focused-button
+  // click) and ignore auto-repeat. Window-blur is a failsafe so the music can
+  // never get stuck quiet if focus leaves mid-talk.
+  useEffect(() => {
+    const isTypingTarget = (el: EventTarget | null) => {
+      const node = el as HTMLElement | null;
+      if (!node) return false;
+      return node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || node.isContentEditable;
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.repeat || isTypingTarget(e.target)) return;
+      e.preventDefault();
+      audio.duck();
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || isTypingTarget(e.target)) return;
+      e.preventDefault();
+      audio.unduck();
+    };
+    const onBlur = () => audio.unduck();
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+      audio.unduck();
+    };
+  }, [audio.duck, audio.unduck]);
+
   useEffect(() => {
     if (currentSong && playlist && !hasLoadedCurrentSong) {
       const url = getAudioUrl(playlist.baseAudioUrl, currentSong.audioFile);
@@ -259,6 +292,24 @@ export function GameScreen() {
                 onLoopToggle={() => setLoopEnabled(!loopEnabled)}
               />
             </div>
+
+            {/* Push-to-Talk — hold to duck the music under your voice */}
+            <button
+              type="button"
+              onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture?.(e.pointerId); audio.duck(); }}
+              onPointerUp={(e) => { e.preventDefault(); audio.unduck(); }}
+              onPointerCancel={() => audio.unduck()}
+              onContextMenu={(e) => e.preventDefault()}
+              aria-pressed={audio.isDucked}
+              aria-label="Hold to talk over the music"
+              className={`w-full select-none touch-none rounded-xl py-4 font-semibold text-base transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-green)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] ${
+                audio.isDucked
+                  ? 'bg-[var(--accent-amber)] text-black shadow-inner'
+                  : 'bg-[var(--bg-hover)] text-[var(--text-primary)] hover:bg-[var(--border-color)]'
+              }`}
+            >
+              {audio.isDucked ? '🎤 Talking — music ducked' : '🎤 Hold to Talk  ·  or hold Space'}
+            </button>
 
             {/* Primary Actions */}
             <div className="grid grid-cols-2 gap-4">

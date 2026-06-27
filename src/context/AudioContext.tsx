@@ -4,6 +4,8 @@ import { getAudioSource } from '../lib/audioSettings';
 
 const FADE_DURATION = 200; // ms for fade in/out (quick transitions for bingo)
 const CROSSFADE_DURATION = 1000; // ms to fade the outgoing and incoming songs into each other
+const DUCK_LEVEL = 0.25; // volume the music drops to while the host talks over it
+const DUCK_FADE = 150; // ms — quick but smooth dip/restore, not a cliff drop
 
 interface AudioContextState {
   isPlaying: boolean;
@@ -14,6 +16,7 @@ interface AudioContextState {
   startOffset: number;
   isFading: boolean;
   isPreloading: boolean;
+  isDucked: boolean;
 }
 
 interface AudioContextValue extends AudioContextState {
@@ -27,6 +30,10 @@ interface AudioContextValue extends AudioContextState {
   // Crossfade into the preloaded next song. Resolves true if a crossfade was
   // performed, false if nothing was preloaded (caller should fall back).
   transitionToPreloaded: () => Promise<boolean>;
+  // Push-to-talk ducking: drop the music under the host's voice and bring it
+  // back, both with a quick smooth ramp. Safe to call repeatedly.
+  duck: () => void;
+  unduck: () => void;
 }
 
 const AudioContext = createContext<AudioContextValue | null>(null);
@@ -37,6 +44,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const startTimeRef = useRef<number>(0);
   const preloadStartTimeRef = useRef<number>(0);
   const fadeIntervalRef = useRef<number | null>(null);
+  const duckIntervalRef = useRef<number | null>(null);
+  const isDuckedRef = useRef<boolean>(false);
   const preloadUrlRef = useRef<string>('');
   const currentUrlRef = useRef<string>('');
 
@@ -49,7 +58,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     startOffset: 0,
     isFading: false,
     isPreloading: false,
+    isDucked: false,
   });
+
+  // The volume music should sit at when no duck/fade is animating: full
+  // normally, or the ducked level while the host is talking. Fades target this
+  // so releasing the talk key never snaps back to full mid-crossfade.
+  const baseVolume = () => (isDuckedRef.current ? DUCK_LEVEL : 1);
 
   // Initialize audio elements. The two elements swap roles on every crossfade
   // (the preloaded element becomes the player), so both carry the same core
@@ -120,6 +135,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     attachCoreListeners(preloadAudio);
 
     return () => {
+      if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+      if (duckIntervalRef.current) clearInterval(duckIntervalRef.current);
       audio.pause();
       audio.src = '';
       preloadAudio.pause();
@@ -143,14 +160,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     fadeIntervalRef.current = window.setInterval(() => {
       currentStep++;
-      audio.volume = Math.min(1, volumeStep * currentStep);
+      audio.volume = Math.min(baseVolume(), volumeStep * currentStep);
 
       if (currentStep >= steps) {
         if (fadeIntervalRef.current) {
           clearInterval(fadeIntervalRef.current);
           fadeIntervalRef.current = null;
         }
-        audio.volume = 1;
+        audio.volume = baseVolume();
         setState(prev => ({ ...prev, isFading: false }));
       }
     }, stepDuration);
@@ -271,7 +288,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         currentStep++;
         const t = currentStep / steps;
         from.volume = Math.max(0, 1 - t);
-        to.volume = Math.min(1, t);
+        to.volume = Math.min(baseVolume(), t);
 
         if (currentStep >= steps) {
           if (fadeIntervalRef.current) {
@@ -279,7 +296,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             fadeIntervalRef.current = null;
           }
           from.volume = 0;
-          to.volume = 1;
+          to.volume = baseVolume();
           setState(prev => ({ ...prev, isFading: false }));
           resolve();
         }
@@ -375,10 +392,15 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         clearInterval(fadeIntervalRef.current);
         fadeIntervalRef.current = null;
       }
+      if (duckIntervalRef.current) {
+        clearInterval(duckIntervalRef.current);
+        duckIntervalRef.current = null;
+      }
+      isDuckedRef.current = false;
       audio.pause();
       audio.volume = 1;
       audio.currentTime = startTimeRef.current;
-      setState(prev => ({ ...prev, currentTime: startTimeRef.current, isFading: false }));
+      setState(prev => ({ ...prev, currentTime: startTimeRef.current, isFading: false, isDucked: false }));
     }
   }, []);
 
@@ -411,10 +433,15 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             clearInterval(fadeIntervalRef.current);
             fadeIntervalRef.current = null;
           }
+          if (duckIntervalRef.current) {
+            clearInterval(duckIntervalRef.current);
+            duckIntervalRef.current = null;
+          }
+          isDuckedRef.current = false;
           audio.pause();
           audio.volume = 1;
           audio.currentTime = startTimeRef.current;
-          setState(prev => ({ ...prev, currentTime: startTimeRef.current, isFading: false }));
+          setState(prev => ({ ...prev, currentTime: startTimeRef.current, isFading: false, isDucked: false }));
           resolve();
         }
       }, stepDuration);
@@ -428,6 +455,50 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Ramp the active element's volume to `target` over DUCK_FADE on its own
+  // interval (separate from fades, so it never clobbers a crossfade's flags).
+  const rampDuck = useCallback((target: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (duckIntervalRef.current) {
+      clearInterval(duckIntervalRef.current);
+      duckIntervalRef.current = null;
+    }
+
+    const startVolume = audio.volume;
+    const steps = 15;
+    const stepDuration = DUCK_FADE / steps;
+    const delta = (target - startVolume) / steps;
+    let currentStep = 0;
+
+    duckIntervalRef.current = window.setInterval(() => {
+      currentStep++;
+      audio.volume = Math.max(0, Math.min(1, startVolume + delta * currentStep));
+      if (currentStep >= steps) {
+        if (duckIntervalRef.current) {
+          clearInterval(duckIntervalRef.current);
+          duckIntervalRef.current = null;
+        }
+        audio.volume = Math.max(0, Math.min(1, target));
+      }
+    }, stepDuration);
+  }, []);
+
+  const duck = useCallback(() => {
+    if (isDuckedRef.current) return;
+    isDuckedRef.current = true;
+    setState(prev => ({ ...prev, isDucked: true }));
+    rampDuck(DUCK_LEVEL);
+  }, [rampDuck]);
+
+  const unduck = useCallback(() => {
+    if (!isDuckedRef.current) return;
+    isDuckedRef.current = false;
+    setState(prev => ({ ...prev, isDucked: false }));
+    rampDuck(1);
+  }, [rampDuck]);
+
   const value: AudioContextValue = {
     ...state,
     play,
@@ -438,6 +509,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     loadAudio,
     preloadAudio,
     transitionToPreloaded,
+    duck,
+    unduck,
   };
 
   return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;
