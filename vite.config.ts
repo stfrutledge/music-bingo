@@ -4,8 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import fs from 'fs'
 
-// Base path for GitHub Pages deployment
-const base = process.env.NODE_ENV === 'production' ? '/music-bingo/' : '/'
+// Base path for GitHub Pages deployment.
+// VITE_BASE overrides it (e.g. `VITE_BASE=/` for an all-local phone build served at localhost root).
+const base = process.env.VITE_BASE ?? (process.env.NODE_ENV === 'production' ? '/music-bingo/' : '/')
 
 export default defineConfig({
   plugins: [
@@ -44,6 +45,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // App bundle is ~2.8 MB; default precache cap is 2 MiB, which blocks SW generation.
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /\.mp3$/,
