@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './Button';
 
 interface ConfirmDialogProps {
@@ -8,6 +8,8 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: 'danger' | 'default';
+  checkboxLabel?: string; // when set, shows an optional checkbox (e.g. "Don't show again")
+  onCheckboxChange?: (checked: boolean) => void;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -19,9 +21,12 @@ export function ConfirmDialog({
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   variant = 'default',
+  checkboxLabel,
+  onCheckboxChange,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const [checked, setChecked] = useState(false);
 
   // Handle escape key
   useEffect(() => {
@@ -36,6 +41,11 @@ export function ConfirmDialog({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onCancel]);
+
+  // Reset the checkbox each time the dialog opens
+  useEffect(() => {
+    if (isOpen) setChecked(false);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -72,6 +82,24 @@ export function ConfirmDialog({
           </p>
         </div>
 
+        {/* Optional checkbox (e.g. "Don't show again") */}
+        {checkboxLabel && (
+          <div className="px-6 pb-2">
+            <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => {
+                  setChecked(e.target.checked);
+                  onCheckboxChange?.(e.target.checked);
+                }}
+                className="w-4 h-4 rounded accent-[var(--accent-green)]"
+              />
+              {checkboxLabel}
+            </label>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex justify-end gap-3 px-6 pb-6">
           <Button variant="secondary" onClick={onCancel}>
@@ -91,7 +119,7 @@ export function ConfirmDialog({
 }
 
 // Hook for easier usage with state management
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 
 interface UseConfirmDialogOptions {
   title: string;
@@ -99,6 +127,8 @@ interface UseConfirmDialogOptions {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: 'danger' | 'default';
+  checkboxLabel?: string;
+  onCheckboxChange?: (checked: boolean) => void;
 }
 
 export function useConfirmDialog() {
@@ -135,6 +165,8 @@ export function useConfirmDialog() {
       confirmLabel={options.confirmLabel}
       cancelLabel={options.cancelLabel}
       variant={options.variant}
+      checkboxLabel={options.checkboxLabel}
+      onCheckboxChange={options.onCheckboxChange}
       onConfirm={handleConfirm}
       onCancel={handleCancel}
     />

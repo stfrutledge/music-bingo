@@ -422,19 +422,24 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const cardsInPlay = cardsInPlayList.length;
 
   // Bring the next *new* winner forward. Picks the closest card (fewest missing
-  // songs) that hasn't already completed the pattern and hasn't been confirmed,
+  // songs) that hasn't already completed the pattern and hasn't won ANY round,
   // then reorders the upcoming songs so it wins ASAP. Used when a predicted
   // winner doesn't claim, so the round doesn't drag waiting for the next one.
+  // Excluding winners from every round (not just this one) keeps the no-card-
+  // wins-twice rule intact even after a live reorder.
   const forceNextWinner = useCallback((): { cardNumber: number; songsAway: number } | null => {
     if (!state.game || !cardsInPlayList.length) return null;
     const round = state.game.rounds[state.game.currentRound];
     const pattern = getPatternById(round.patternId);
     const calledSet = new Set(state.game.calledSongIds);
-    const confirmed = new Set(round.winners.map(w => w.cardNumber));
+    const priorWinners = new Set<number>();
+    for (const r of state.game.rounds) {
+      for (const w of r.winners) priorWinners.add(w.cardNumber);
+    }
 
     let best: { cardNumber: number; missingSongIds: string[] } | null = null;
     for (const card of cardsInPlayList) {
-      if (confirmed.has(card.cardNumber)) continue;
+      if (priorWinners.has(card.cardNumber)) continue;
       const result = checkWin(card, pattern, calledSet, state.excludedSongIds);
       // Skip cards that are already complete (the unclaimed "ghost" winners) —
       // we want a different, fresh winner.

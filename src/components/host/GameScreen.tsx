@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
 import { useAudio } from '../../context/AudioContext';
@@ -28,6 +28,25 @@ export function GameScreen() {
   const [loopEnabled, setLoopEnabled] = useState(true);
   const [previewCardNumber, setPreviewCardNumber] = useState<number | null>(null);
   const [nextWinnerNotice, setNextWinnerNotice] = useState<string | null>(null);
+
+  // Wall-clock time the current song appeared, to catch an accidental double-tap
+  // of "Next Song" right after advancing.
+  const songStartedAtRef = useRef<number>(Date.now());
+  // Per-game opt-out of the quick-skip warning. Persisted in sessionStorage keyed
+  // by game id so it survives navigating to Verify Winner and back.
+  const [skipWarningDisabled, setSkipWarningDisabled] = useState(false);
+
+  useEffect(() => {
+    if (!game) return;
+    setSkipWarningDisabled(sessionStorage.getItem(`mb-skipwarn-${game.id}`) === '1');
+  }, [game?.id]);
+
+  const disableSkipWarning = (checked: boolean) => {
+    setSkipWarningDisabled(checked);
+    if (!game) return;
+    if (checked) sessionStorage.setItem(`mb-skipwarn-${game.id}`, '1');
+    else sessionStorage.removeItem(`mb-skipwarn-${game.id}`);
+  };
 
   // Get the current audio URL for artwork extraction
   const currentAudioUrl = currentSong && playlist
@@ -107,6 +126,11 @@ export function GameScreen() {
     setPlaying(audio.isPlaying);
   }, [audio.isPlaying]);
 
+  // Reset the "song started" stopwatch whenever the song changes.
+  useEffect(() => {
+    songStartedAtRef.current = Date.now();
+  }, [currentSong?.id]);
+
   // Handle loop: restart from 0:00 when song ends if loop is enabled
   useEffect(() => {
     if (loopEnabled && audio.duration > 0 && audio.currentTime >= audio.duration - 0.5 && !audio.isPlaying) {
@@ -149,6 +173,23 @@ export function GameScreen() {
 
   const handleNextSong = async () => {
     if (isAdvancing) return;
+
+    // Guard against an accidental double-tap: if barely any time has passed since
+    // this song started, confirm before skipping (unless disabled for this game).
+    const elapsedMs = Date.now() - songStartedAtRef.current;
+    if (elapsedMs < 5000 && !skipWarningDisabled) {
+      const seconds = Math.max(1, Math.round(elapsedMs / 1000));
+      const proceed = await confirm({
+        title: 'Skip already?',
+        message: `This song started only ${seconds} second${seconds === 1 ? '' : 's'} ago. Skip to the next song?`,
+        confirmLabel: 'Skip Song',
+        cancelLabel: 'Stay',
+        checkboxLabel: "Don't warn me again this game",
+        onCheckboxChange: disableSkipWarning,
+      });
+      if (!proceed) return;
+    }
+
     setNextWinnerNotice(null);
     setIsAdvancing(true);
     try {
