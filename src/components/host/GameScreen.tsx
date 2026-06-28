@@ -13,6 +13,14 @@ import { ThemeToggle } from '../shared/ThemeToggle';
 import { CardPreviewModal } from './CardPreviewModal';
 import { useConfirmDialog } from '../shared/ConfirmDialog';
 
+// Format milliseconds as m:ss for the "how long has this song been playing" timer
+function formatElapsed(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 export function GameScreen() {
   const navigate = useNavigate();
   const { game, playlist, cards, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners, cardsInPlay, forceNextWinner, endGame } = useGame();
@@ -47,6 +55,13 @@ export function GameScreen() {
     if (checked) sessionStorage.setItem(`mb-skipwarn-${game.id}`, '1');
     else sessionStorage.removeItem(`mb-skipwarn-${game.id}`);
   };
+
+  // "How long has this song been playing" stopwatch. Counts actual playing time
+  // (excludes paused stretches) and resets to 0:00 on each new song, independent
+  // of where in the track the clip actually starts.
+  const [songElapsedMs, setSongElapsedMs] = useState(0);
+  const playSegmentStartRef = useRef<number | null>(null);
+  const accumulatedMsRef = useRef(0);
 
   // Get the current audio URL for artwork extraction
   const currentAudioUrl = currentSong && playlist
@@ -130,6 +145,35 @@ export function GameScreen() {
   useEffect(() => {
     songStartedAtRef.current = Date.now();
   }, [currentSong?.id]);
+
+  // Reset the playing-time stopwatch on each new song.
+  useEffect(() => {
+    accumulatedMsRef.current = 0;
+    playSegmentStartRef.current = audio.isPlaying ? Date.now() : null;
+    setSongElapsedMs(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSong?.id]);
+
+  // Open/close a play segment as playback starts/stops, banking elapsed time.
+  useEffect(() => {
+    if (audio.isPlaying) {
+      if (playSegmentStartRef.current === null) playSegmentStartRef.current = Date.now();
+    } else if (playSegmentStartRef.current !== null) {
+      accumulatedMsRef.current += Date.now() - playSegmentStartRef.current;
+      playSegmentStartRef.current = null;
+      setSongElapsedMs(accumulatedMsRef.current);
+    }
+  }, [audio.isPlaying]);
+
+  // Tick the visible timer while playing.
+  useEffect(() => {
+    if (!audio.isPlaying) return;
+    const id = setInterval(() => {
+      const live = playSegmentStartRef.current !== null ? Date.now() - playSegmentStartRef.current : 0;
+      setSongElapsedMs(accumulatedMsRef.current + live);
+    }, 250);
+    return () => clearInterval(id);
+  }, [audio.isPlaying]);
 
   // Handle loop: restart from 0:00 when song ends if loop is enabled
   useEffect(() => {
@@ -332,6 +376,24 @@ export function GameScreen() {
                   <p className="text-lg lg:text-xl text-[var(--text-secondary)]">
                     {currentSong.artist}
                   </p>
+                  <div className="mt-3 flex items-center justify-center sm:justify-start gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-sm font-semibold tabular-nums ${
+                        audio.isPlaying
+                          ? 'bg-[var(--status-success-bg)] text-[var(--status-success-text)]'
+                          : 'bg-[var(--bg-hover)] text-[var(--text-secondary)]'
+                      }`}
+                      aria-label="Time this song has been playing"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {formatElapsed(songElapsedMs)}
+                    </span>
+                    {!audio.isPlaying && (
+                      <span className="text-xs text-[var(--text-muted)] uppercase tracking-wide">Paused</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
