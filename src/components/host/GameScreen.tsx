@@ -15,7 +15,7 @@ import { useConfirmDialog } from '../shared/ConfirmDialog';
 
 export function GameScreen() {
   const navigate = useNavigate();
-  const { game, playlist, cards, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners, cardsInPlay, endGame } = useGame();
+  const { game, playlist, cards, currentSong, nextSong, prevSong, setPlaying, isLoading, potentialWinners, confirmedWinners, cardsInPlay, forceNextWinner, endGame } = useGame();
   const audio = useAudio();
   const wakeLock = useWakeLock();
   const { confirm, ConfirmDialog } = useConfirmDialog();
@@ -27,6 +27,7 @@ export function GameScreen() {
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [loopEnabled, setLoopEnabled] = useState(true);
   const [previewCardNumber, setPreviewCardNumber] = useState<number | null>(null);
+  const [nextWinnerNotice, setNextWinnerNotice] = useState<string | null>(null);
 
   // Get the current audio URL for artwork extraction
   const currentAudioUrl = currentSong && playlist
@@ -97,7 +98,10 @@ export function GameScreen() {
         }
       }
     }
-  }, [currentSong?.id, game?.currentSongIndex, audio.isLoading]);
+    // shuffledSongOrder is a dep so that reordering the upcoming songs (e.g.
+    // "Bring Next Winner Forward") re-preloads the correct next track — otherwise
+    // the crossfade would play the previously-preloaded song.
+  }, [currentSong?.id, game?.currentSongIndex, game?.shuffledSongOrder, audio.isLoading]);
 
   useEffect(() => {
     setPlaying(audio.isPlaying);
@@ -145,6 +149,7 @@ export function GameScreen() {
 
   const handleNextSong = async () => {
     if (isAdvancing) return;
+    setNextWinnerNotice(null);
     setIsAdvancing(true);
     try {
       // Crossfade into the already-preloaded next song (keeps audio playing
@@ -176,6 +181,17 @@ export function GameScreen() {
       prevSong();
     } finally {
       setIsAdvancing(false);
+    }
+  };
+
+  const handleForceNextWinner = () => {
+    const result = forceNextWinner();
+    if (result) {
+      setNextWinnerNotice(
+        `Card #${result.cardNumber} will win in ${result.songsAway} more song${result.songsAway === 1 ? '' : 's'}. Keep playing.`
+      );
+    } else {
+      setNextWinnerNotice('No other winner available among the cards in play.');
     }
   };
 
@@ -321,8 +337,26 @@ export function GameScreen() {
               </Button>
             </div>
 
+            {/* Next-winner notice — shown after queueing a backup winner */}
+            {nextWinnerNotice && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[var(--status-info-bg)] border border-[var(--status-info-text)]">
+                <span className="text-lg leading-none" aria-hidden="true">🎯</span>
+                <p className="flex-1 text-sm text-[var(--status-info-text)] font-medium">{nextWinnerNotice}</p>
+                <button
+                  onClick={() => setNextWinnerNotice(null)}
+                  aria-label="Dismiss"
+                  className="text-[var(--status-info-text)] hover:opacity-70 text-lg leading-none"
+                >
+                  &times;
+                </button>
+              </div>
+            )}
+
             {/* Secondary Actions */}
             <div className="flex flex-wrap gap-3">
+              <Button variant="secondary" size="sm" onClick={handleForceNextWinner}>
+                Bring Next Winner Forward
+              </Button>
               <Button variant="secondary" size="sm" onClick={handlePrevSong} disabled={isAdvancing || songNumber <= 1}>
                 Previous Song
               </Button>

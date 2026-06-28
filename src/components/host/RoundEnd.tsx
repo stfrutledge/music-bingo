@@ -39,6 +39,9 @@ export function RoundEnd() {
   const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const [selectedNextPattern, setSelectedNextPattern] = useState<string | null>(null);
+  // When false we show just the pre-selected next design; when true we reveal the
+  // full pattern grid so the host can switch to a different one.
+  const [changingPattern, setChangingPattern] = useState(false);
 
   // Pre-select the pattern the host chose for the next round at setup time.
   // currentRound is a 0-based index, so the next round's planned pattern lives
@@ -48,6 +51,8 @@ export function RoundEnd() {
     if (!game) return;
     const planned = game.plannedPatternIds?.[game.currentRound + 1];
     setSelectedNextPattern(planned ?? null);
+    // No plan to preview → open the grid so the host can pick.
+    setChangingPattern(!planned);
   }, [game?.id, game?.currentRound]);
 
   // Calculate status for each pattern based on current called songs and shuffle order
@@ -323,33 +328,77 @@ export function RoundEnd() {
               Start Next Round
             </h2>
             <p className="text-sm text-[var(--text-secondary)] mb-6">
-              {game.plannedPatternIds?.[game.currentRound + 1]
-                ? `Pre-selected from setup for Round ${currentRound.roundNumber + 1} — tap another to change`
-                : `Select a pattern for Round ${currentRound.roundNumber + 1}`}
+              {!changingPattern && selectedNextPattern
+                ? `Pre-selected from setup for Round ${currentRound.roundNumber + 1}`
+                : `Choose a pattern for Round ${currentRound.roundNumber + 1}`}
             </p>
 
             {/* Pattern Selection */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-              {getAllPatterns().map(p => {
-                const statusLabel = getStatusLabel(p);
+            {!changingPattern && selectedNextPattern ? (
+              (() => {
+                const nextPattern = getPatternById(selectedNextPattern);
+                const statusLabel = getStatusLabel(nextPattern);
                 return (
-                  <div
-                    key={p.id}
-                    onClick={() => setSelectedNextPattern(p.id)}
-                    className="cursor-pointer"
-                  >
-                    <PatternDisplay
-                      pattern={p}
-                      size="sm"
-                      selected={selectedNextPattern === p.id}
-                    />
-                    <div className={`text-xs text-center mt-1 ${statusLabel.color}`}>
-                      {statusLabel.text}
+                  <div className="mb-6">
+                    <div className="flex flex-col sm:flex-row items-center gap-6 p-6 rounded-lg bg-[var(--bg-hover)] border border-[var(--border-color)]">
+                      <PatternDisplay pattern={nextPattern} size="lg" showLabel={false} selected />
+                      <div className="text-center sm:text-left">
+                        <div className="text-xs uppercase tracking-wide text-[var(--text-muted)] mb-1">
+                          Next design
+                        </div>
+                        <div className="text-xl font-bold text-[var(--text-primary)]">
+                          {nextPattern.name}
+                        </div>
+                        {nextPattern.description && (
+                          <div className="text-sm text-[var(--text-secondary)] mt-1">
+                            {nextPattern.description}
+                          </div>
+                        )}
+                        {statusLabel.text && (
+                          <div className={`text-sm mt-2 ${statusLabel.color}`}>
+                            {statusLabel.text}
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => setChangingPattern(true)}
+                    >
+                      Change design
+                    </Button>
                   </div>
                 );
-              })}
-            </div>
+              })()
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+                {getAllPatterns().map(p => {
+                  const statusLabel = getStatusLabel(p);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedNextPattern(p.id);
+                        // Collapse back to the single preview showing the new choice
+                        setChangingPattern(false);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <PatternDisplay
+                        pattern={p}
+                        size="sm"
+                        selected={selectedNextPattern === p.id}
+                      />
+                      <div className={`text-xs text-center mt-1 ${statusLabel.color}`}>
+                        {statusLabel.text}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             <Button
               variant="primary"

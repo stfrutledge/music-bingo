@@ -31,6 +31,7 @@ type GameAction =
   | { type: 'ADD_WINNER'; payload: WinRecord }
   | { type: 'NEXT_ROUND'; payload: string }
   | { type: 'RESET_CALLED_SONGS' }
+  | { type: 'FORCE_NEXT_WINNER'; payload: string[] }
   | { type: 'END_GAME' }
   | { type: 'SET_LOADING'; payload: boolean };
 
@@ -194,6 +195,27 @@ function gameReducer(state: GameContextState, action: GameAction): GameContextSt
       };
     }
 
+    case 'FORCE_NEXT_WINNER': {
+      if (!state.game) return state;
+      // Reorder only the *uncalled* tail of the song order so the chosen card's
+      // missing songs play next — guaranteeing a fresh winner within a song or
+      // two when the predicted winner doesn't claim. Songs already called and the
+      // current song are untouched.
+      const idx = state.game.currentSongIndex;
+      const order = state.game.shuffledSongOrder;
+      const head = order.slice(0, idx + 1);
+      const tail = order.slice(idx + 1);
+      const tailSet = new Set(tail);
+      // Only promote songs that are genuinely still upcoming, preserve their given order
+      const promoted = action.payload.filter(id => tailSet.has(id));
+      const promotedSet = new Set(promoted);
+      const remainder = tail.filter(id => !promotedSet.has(id));
+      return {
+        ...state,
+        game: { ...state.game, shuffledSongOrder: [...head, ...promoted, ...remainder] },
+      };
+    }
+
     case 'END_GAME': {
       if (!state.game) return state;
       return {
@@ -227,6 +249,7 @@ interface GameContextValue extends GameContextState {
   recordWinner: (cardNumber: number) => void;
   advanceRound: (newPatternId: string) => void;
   resetCalledSongs: () => void;
+  forceNextWinner: () => { cardNumber: number; songsAway: number } | null;
   endGame: () => void;
   clearGame: () => void;
   potentialWinners: PotentialWinner[];
@@ -398,6 +421,38 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const cardsInPlay = cardsInPlayList.length;
 
+  // Bring the next *new* winner forward. Picks the closest card (fewest missing
+  // songs) that hasn't already completed the pattern and hasn't been confirmed,
+  // then reorders the upcoming songs so it wins ASAP. Used when a predicted
+  // winner doesn't claim, so the round doesn't drag waiting for the next one.
+  const forceNextWinner = useCallback((): { cardNumber: number; songsAway: number } | null => {
+    if (!state.game || !cardsInPlayList.length) return null;
+    const round = state.game.rounds[state.game.currentRound];
+    const pattern = getPatternById(round.patternId);
+    const calledSet = new Set(state.game.calledSongIds);
+    const confirmed = new Set(round.winners.map(w => w.cardNumber));
+
+    let best: { cardNumber: number; missingSongIds: string[] } | null = null;
+    for (const card of cardsInPlayList) {
+      if (confirmed.has(card.cardNumber)) continue;
+      const result = checkWin(card, pattern, calledSet, state.excludedSongIds);
+      // Skip cards that are already complete (the unclaimed "ghost" winners) —
+      // we want a different, fresh winner.
+      if (result.missingSlots.length === 0) continue;
+      const missingSongIds = result.missingSongs
+        .map(m => m.songId)
+        .filter(id => !calledSet.has(id));
+      if (missingSongIds.length === 0) continue;
+      if (!best || missingSongIds.length < best.missingSongIds.length) {
+        best = { cardNumber: card.cardNumber, missingSongIds };
+      }
+    }
+
+    if (!best) return null;
+    dispatch({ type: 'FORCE_NEXT_WINNER', payload: best.missingSongIds });
+    return { cardNumber: best.cardNumber, songsAway: best.missingSongIds.length };
+  }, [state.game, cardsInPlayList, state.excludedSongIds]);
+
   // Compute potential winners based on current called songs and pattern
   // Excluded songs are treated as "already marked" (dead squares)
   const potentialWinners = useMemo((): PotentialWinner[] => {
@@ -451,6 +506,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     recordWinner,
     advanceRound,
     resetCalledSongs,
+    forceNextWinner,
     endGame,
     clearGame,
     potentialWinners,

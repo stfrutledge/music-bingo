@@ -14,10 +14,22 @@ import { PatternDisplay } from '../shared/PatternDisplay';
 import { CustomPatternEditor } from '../shared/CustomPatternEditor';
 import { AppShell } from '../shared/AppShell';
 
+// Backup-winner clustering: we want this many winners total (the first plus
+// backups) to fall within CLUSTER_WINDOW songs of the first win, so the round
+// always has a claimable winner close behind if the first one doesn't claim.
+const BACKUP_WINNER_TARGET = 3;
+const CLUSTER_WINDOW = 4;
+const MAX_BACKUP_LOOKAHEAD = 30; // songs past the first win to scan for backups
+
 interface CardWinPrediction {
   cardNumber: number;
   winSongIndex: number; // 1-based song number when card wins
   winSongTitle: string;
+}
+
+interface WinTimelineEntry {
+  winSongIndex: number;
+  cardNumbers: number[];
 }
 
 interface RoundPrediction {
@@ -28,6 +40,9 @@ interface RoundPrediction {
   firstWinTitle: string;
   firstWinCards: number[];
   allPredictions: CardWinPrediction[];
+  winTimeline: WinTimelineEntry[];   // distinct win songs in order (first + backups)
+  clusterWinnerCount: number;        // winners within CLUSTER_WINDOW songs of the first
+  clusterLastSong: number;           // song index of the BACKUP_WINNER_TARGET-th winner (0 if not reached)
 }
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -52,69 +67,70 @@ function predictAllRounds(
   for (let roundNum = 0; roundNum < patternIds.length; roundNum++) {
     const pattern = getPatternById(patternIds[roundNum]);
     const predictions: CardWinPrediction[] = [];
-    const cardsStillPlaying = new Set(cards.map(c => c.cardNumber));
+    const wonCards = new Set<number>();
 
-    // Continue from where last round ended
-    while (songIdx < songOrder.length && predictions.length === 0) {
-      const songId = songOrder[songIdx];
-      calledSongIds.add(songId);
+    const recordWin = (card: BingoCard, idx: number, called: Set<string>) => {
+      if (wonCards.has(card.cardNumber)) return;
+      const result = checkWin(card, pattern, called);
+      if (!result.isWin) return;
+      const song = playlist.songs.find(s => s.id === songOrder[idx]);
+      predictions.push({
+        cardNumber: card.cardNumber,
+        winSongIndex: idx + 1,
+        winSongTitle: song ? `${song.title} - ${song.artist}` : 'Unknown',
+      });
+      wonCards.add(card.cardNumber);
+    };
 
-      // Check each card that hasn't won this round
-      for (const card of cards) {
-        if (!cardsStillPlaying.has(card.cardNumber)) continue;
-        if (predictions.some(p => p.cardNumber === card.cardNumber)) continue;
-
-        const result = checkWin(card, pattern, calledSongIds);
-        if (result.isWin) {
-          const song = playlist.songs.find(s => s.id === songId);
-          predictions.push({
-            cardNumber: card.cardNumber,
-            winSongIndex: songIdx + 1,
-            winSongTitle: song ? `${song.title} - ${song.artist}` : 'Unknown',
-          });
-        }
-      }
-
+    // 1) Advance the shared cursor until the first winner of this round. The
+    //    next round resumes from just past here (a round ends when someone wins),
+    //    so the look-ahead below must NOT move this cursor.
+    let firstWinSong = 0;
+    while (songIdx < songOrder.length && firstWinSong === 0) {
+      calledSongIds.add(songOrder[songIdx]);
+      for (const card of cards) recordWin(card, songIdx, calledSongIds);
+      if (predictions.length > 0) firstWinSong = predictions[0].winSongIndex;
       songIdx++;
     }
 
-    // Continue to find all winners at the same song
-    const firstWinSong = predictions[0]?.winSongIndex || 0;
-
-    // Keep checking remaining cards until we've found all who win on firstWinSong
-    // (they already won above, but let's continue to get more predictions for display)
-    while (songIdx < songOrder.length) {
-      const songId = songOrder[songIdx];
-      calledSongIds.add(songId);
-
-      for (const card of cards) {
-        if (predictions.some(p => p.cardNumber === card.cardNumber)) continue;
-
-        const result = checkWin(card, pattern, calledSongIds);
-        if (result.isWin) {
-          const song = playlist.songs.find(s => s.id === songId);
-          predictions.push({
-            cardNumber: card.cardNumber,
-            winSongIndex: songIdx + 1,
-            winSongTitle: song ? `${song.title} - ${song.artist}` : 'Unknown',
-          });
-        }
+    // 2) Look ahead (on a copy of the called set, leaving the cursor put) to find
+    //    backup winners — how tightly the next winners cluster behind the first.
+    if (firstWinSong > 0) {
+      const lookCalled = new Set(calledSongIds);
+      const maxLookSong = firstWinSong + MAX_BACKUP_LOOKAHEAD;
+      for (
+        let lookIdx = songIdx;
+        lookIdx < songOrder.length && lookIdx < maxLookSong && wonCards.size < cards.length;
+        lookIdx++
+      ) {
+        lookCalled.add(songOrder[lookIdx]);
+        for (const card of cards) recordWin(card, lookIdx, lookCalled);
       }
-
-      // Stop after finding first winner(s) for this round
-      if (predictions.length > 0 && predictions.every(p => p.winSongIndex === firstWinSong)) {
-        // Found all tied first winners, stop here for this round
-        break;
-      }
-      if (predictions.length > 0) break;
-
-      songIdx++;
     }
 
     const sortedPredictions = predictions.sort((a, b) => a.winSongIndex - b.winSongIndex);
     const firstWinCards = sortedPredictions
       .filter(p => p.winSongIndex === firstWinSong)
       .map(p => p.cardNumber);
+
+    // Group winners by the song they win on, in order (first win + backups)
+    const timelineMap = new Map<number, number[]>();
+    for (const p of sortedPredictions) {
+      const arr = timelineMap.get(p.winSongIndex) ?? [];
+      arr.push(p.cardNumber);
+      timelineMap.set(p.winSongIndex, arr);
+    }
+    const winTimeline: WinTimelineEntry[] = [...timelineMap.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([winSongIndex, cardNumbers]) => ({ winSongIndex, cardNumbers }));
+
+    // Cluster metrics
+    const clusterCutoff = firstWinSong + CLUSTER_WINDOW - 1;
+    const clusterWinnerCount = firstWinSong > 0
+      ? sortedPredictions.filter(p => p.winSongIndex <= clusterCutoff).length
+      : 0;
+    const nthWinner = sortedPredictions[BACKUP_WINNER_TARGET - 1];
+    const clusterLastSong = nthWinner ? nthWinner.winSongIndex : 0;
 
     roundPredictions.push({
       roundNumber: roundNum + 1,
@@ -124,6 +140,9 @@ function predictAllRounds(
       firstWinTitle: sortedPredictions[0]?.winSongTitle || '',
       firstWinCards,
       allPredictions: sortedPredictions,
+      winTimeline,
+      clusterWinnerCount,
+      clusterLastSong,
     });
   }
 
@@ -238,25 +257,53 @@ export function GameSetup() {
       }))
       .filter(e => e.targetNum > 0);
 
-    // Score an order: totalDiff is how far off it is (0 = every target within
-    // tolerance); allMatch is true only when every target is within tolerance.
+    // Can't cluster more winners than there are cards in play
+    const clusterTarget = Math.min(BACKUP_WINNER_TARGET, cardsToCheck.length);
+
+    // Score an order LEXICOGRAPHICALLY: hitting the target song is the primary
+    // goal, tight backup clustering is secondary. We fold both into one number
+    // by weighting the target penalty far above any achievable cluster penalty,
+    // so the optimizer never sacrifices a target to cluster better — it clusters
+    // as tightly as possible *among* the orders that already hit the targets.
+    // allMatch (perfect) is true only when both are fully satisfied.
+    const TARGET_WEIGHT = 1000;
     const scoreOrder = (order: string[]): { totalDiff: number; allMatch: boolean } => {
       const predictions = predictAllRounds(cardsToCheck, order, selectedPatterns, playlist);
-      let totalDiff = 0;
+      let targetPenalty = 0;
+      let clusterPenalty = 0;
       let allMatch = true;
+
+      // Primary: target matching (only rounds with a target set)
       for (const { roundNum, targetNum } of targetEntries) {
         const pred = predictions.find(p => p.roundNumber === roundNum);
-        if (!pred) {
+        if (!pred || pred.firstWinSong === 0) {
           allMatch = false;
-          totalDiff += 100; // pattern unreachable — heavily penalized
+          targetPenalty += 100; // pattern unreachable — heavily penalized
           continue;
         }
         const diff = Math.abs(pred.firstWinSong - targetNum);
         if (diff > tolerance) {
           allMatch = false;
-          totalDiff += diff;
+          targetPenalty += diff;
         }
       }
+
+      // Secondary: backup clustering — every reachable round should land
+      // clusterTarget winners within CLUSTER_WINDOW songs of the first.
+      for (const pred of predictions) {
+        if (pred.firstWinSong === 0) continue; // unreachable handled in target loop / UI
+        if (pred.clusterWinnerCount < clusterTarget) {
+          allMatch = false;
+          const shortfall = clusterTarget - pred.clusterWinnerCount;
+          const spill = pred.clusterLastSong > 0
+            ? Math.max(0, pred.clusterLastSong - (pred.firstWinSong + CLUSTER_WINDOW - 1))
+            : MAX_BACKUP_LOOKAHEAD;
+          clusterPenalty += shortfall * 2 + spill;
+        }
+      }
+
+      const totalDiff = targetPenalty * TARGET_WEIGHT + clusterPenalty;
+
       return { totalDiff, allMatch };
     };
 
@@ -331,6 +378,7 @@ export function GameSetup() {
             setShuffledSongOrder(bestShuffle);
             const bestPred = predictAllRounds(cardsToCheck, bestShuffle, selectedPatterns, playlist);
             // Build a per-round summary so it's clear which round(s) missed
+            const clusterTarget = Math.min(BACKUP_WINNER_TARGET, cardsToCheck.length);
             const lines = Object.entries(targetSongs)
               .map(([roundStr, targetSong]) => {
                 const roundNum = parseInt(roundStr);
@@ -339,11 +387,15 @@ export function GameSetup() {
                 const pred = bestPred.find(p => p.roundNumber === roundNum);
                 const actual = pred ? pred.firstWinSong : null;
                 const ok = actual !== null && Math.abs(actual - targetNum) <= tolerance;
-                return `Round ${roundNum}: winner at song ${actual ?? '?'} (target ${targetNum}) ${ok ? '✓' : '✗'}`;
+                const clusterOk = pred ? pred.clusterWinnerCount >= clusterTarget : false;
+                const clusterNote = pred
+                  ? ` · ${pred.clusterWinnerCount}/${clusterTarget} winners within ${CLUSTER_WINDOW} songs ${clusterOk ? '✓' : '✗'}`
+                  : '';
+                return `Round ${roundNum}: winner at song ${actual ?? '?'} (target ${targetNum}) ${ok ? '✓' : '✗'}${clusterNote}`;
               })
               .filter(Boolean)
               .join('\n');
-            alert(`Could not find an order where every round matches within ±${tolerance} song after ${maxAttempts} attempts.\n\nBest order found:\n${lines}\n\nUsing best match found.`);
+            alert(`Could not fully match every round (target ±${tolerance} song and ${clusterTarget} winners within ${CLUSTER_WINDOW} songs) after ${maxAttempts} attempts.\n\nBest order found:\n${lines}\n\nUsing best match found.`);
           } else {
             alert(`Could not find matching order after ${maxAttempts} attempts. Try different targets.`);
           }
@@ -740,7 +792,7 @@ export function GameSetup() {
                   </Button>
                 </div>
                 <p className="text-xs text-[var(--text-muted)] mt-2">
-                  Set target song numbers and click "Find Order" to auto-shuffle until found (matches within ±{tolerance} song{tolerance === 1 ? '' : 's'})
+                  Set target song numbers and click "Find Order" to auto-shuffle until found (first win within ±{tolerance} song{tolerance === 1 ? '' : 's'}, plus {Math.min(BACKUP_WINNER_TARGET, cardsInPlay)} winners within {CLUSTER_WINDOW} songs as a backup)
                 </p>
               </div>
 
@@ -816,6 +868,31 @@ export function GameSetup() {
                           })}
                           {round.firstWinCards.length > 1 && ` (${round.firstWinCards.length} tied)`}
                         </div>
+                        {/* Backup winners — the safety net if the first winner doesn't claim */}
+                        {(() => {
+                          const clusterTarget = Math.min(BACKUP_WINNER_TARGET, cardsInPlay);
+                          const clusterMet = round.clusterWinnerCount >= clusterTarget;
+                          const backups = round.winTimeline.filter(t => t.winSongIndex !== round.firstWinSong).slice(0, 3);
+                          return (
+                            <div className="mt-2 pt-2 border-t border-[var(--border-color)]/50">
+                              <div className={`text-xs font-medium ${clusterMet ? 'text-[var(--status-success-text)]' : 'text-[var(--status-warning-text)]'}`}>
+                                {clusterMet ? '✓' : '⚠'} {round.clusterWinnerCount} of {clusterTarget} winners within {CLUSTER_WINDOW} songs
+                                {!clusterMet && ' — round may drag if the first winner doesn’t claim'}
+                              </div>
+                              {backups.length > 0 && (
+                                <div className="text-xs text-[var(--text-muted)] mt-1">
+                                  Backups:{' '}
+                                  {backups.map((t, i) => (
+                                    <span key={t.winSongIndex}>
+                                      {i > 0 && ', '}
+                                      {t.cardNumbers.map(c => `#${c}`).join(' / ')} (song {t.winSongIndex})
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </>
                     ) : (
                       <div className="text-sm text-[var(--text-secondary)]">
