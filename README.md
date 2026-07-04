@@ -14,6 +14,17 @@ A mobile-first Progressive Web App (PWA) for hosting music bingo events. Feature
 - **Wake Lock**: Screen stays on during gameplay
 - **PWA**: Install as an app on your phone or tablet
 
+## Team Setup (Android)
+
+The app is deployed at **https://stfrutledge.github.io/music-bingo/** and each host runs it from their own phone. One-time setup per device:
+
+1. Open the URL above in Chrome on the phone (needs internet for this step).
+2. Install it: Chrome menu (⋮) → **Add to Home screen** → **Install**. Installing also lets the browser protect the downloaded audio from being cleared.
+3. Open the installed app, tap **Start New Game**, pick the playlist, and on the download screen tap **Download Audio Files** (~1.7 GB — use good wifi; it resumes if interrupted, and re-tapping skips songs already downloaded).
+4. Verify offline: turn on airplane mode, reopen the app, and confirm a song plays. After that, the game runs fully offline — venue wifi doesn't matter.
+
+Audio streams from Cloudflare R2 by default on the hosted app; the download step copies it into the app's offline cache. Game data (playlists, card packs, events) ships with the app and works offline automatically.
+
 ## Quick Start
 
 ### Development

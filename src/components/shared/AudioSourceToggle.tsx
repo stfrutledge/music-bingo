@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { getAudioSource, setAudioSource } from '../../lib/audioSettings';
+import { getAudioSource, setAudioSource, isLocalOrigin } from '../../lib/audioSettings';
 import type { AudioSource } from '../../types';
 
 export function AudioSourceToggle() {
   const [source, setSource] = useState<AudioSource>(() => getAudioSource());
+  const localAvailable = isLocalOrigin();
 
   useEffect(() => {
     setAudioSource(source);
@@ -15,13 +16,15 @@ export function AudioSourceToggle() {
       <div className="flex rounded-lg overflow-hidden border border-[var(--border-color)]" role="radiogroup" aria-label="Audio source">
         <button
           onClick={() => setSource('local')}
+          disabled={!localAvailable}
+          title={localAvailable ? undefined : 'Local audio files are only available in dev or an on-device build'}
           role="radio"
           aria-checked={source === 'local'}
           className={`px-4 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--accent-green)] ${
             source === 'local'
               ? 'bg-[var(--accent-green)] text-white'
               : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
-          }`}
+          } ${!localAvailable ? 'opacity-40 cursor-not-allowed' : ''}`}
         >
           Local
         </button>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import type { Playlist, EventConfig } from '../../types';
 import { getPlaylist } from '../../lib/db';
-import { downloadPlaylistAudio, getCacheStatus, clearPlaylistCache, checkAudioAvailability } from '../../lib/audioCache';
+import { downloadPlaylistAudio, getCacheStatus, clearPlaylistCache, checkAudioAvailability, getStorageInfo, requestPersistentStorage, type StorageInfo } from '../../lib/audioCache';
 import { Button } from '../shared/Button';
 import { AppShell } from '../shared/AppShell';
 
@@ -21,6 +21,7 @@ export function AudioDownload() {
   const [checking, setChecking] = useState(true);
   const [isLocal, setIsLocal] = useState(false);
   const [failedSongs, setFailedSongs] = useState<string[]>([]);
+  const [storage, setStorage] = useState<StorageInfo | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -48,6 +49,7 @@ export function AudioDownload() {
       const status = await getCacheStatus(data);
       setCachedCount(status.cachedSongs);
       setProgress({ downloaded: status.cachedSongs, total: status.totalSongs });
+      setStorage(await getStorageInfo());
 
       if (status.isComplete) {
         navigate(`/host/setup/${data.id}`, { replace: true, state: { eventConfig } });
@@ -63,12 +65,14 @@ export function AudioDownload() {
 
     setDownloading(true);
     setFailedSongs([]);
+    await requestPersistentStorage();
 
     const result = await downloadPlaylistAudio(playlist, (downloaded, total) => {
       setProgress({ downloaded, total });
     });
 
     setDownloading(false);
+    setStorage(await getStorageInfo());
 
     if (result.failedSongs.length > 0) {
       setFailedSongs(result.failedSongs);
@@ -202,6 +206,23 @@ export function AudioDownload() {
             'Downloaded audio will be cached for offline use.'
           )}
         </p>
+
+        {/* Storage status */}
+        {storage && (
+          <div className="mt-2 text-xs text-[var(--text-muted)]">
+            <p>
+              Device storage: {(storage.usageMB / 1024).toFixed(1)} GB used of{' '}
+              {(storage.quotaMB / 1024).toFixed(1)} GB available to this app
+            </p>
+            {!storage.persisted && (
+              <p className="mt-1 text-[var(--status-error-text)]">
+                Storage persistence not granted — the device may clear downloaded
+                audio when space runs low. Install the app to your home screen to
+                protect it.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Failed Songs List */}
         {failedSongs.length > 0 && (

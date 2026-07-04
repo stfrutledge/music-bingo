@@ -44,7 +44,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // json included so playlists, card packs, and event manifests work offline.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json}'],
         // App bundle is ~2.8 MB; default precache cap is 2 MiB, which blocks SW generation.
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [
@@ -53,13 +54,17 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'music-bingo-audio-v1',
+              // No max age: a downloaded audio pack must survive until the host
+              // explicitly clears it, not silently expire before an event.
               expiration: {
                 maxEntries: 500,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
               cacheableResponse: {
                 statuses: [0, 200],
               },
+              // <audio> elements issue Range requests when seeking; serve
+              // partial content from the cached full response.
+              rangeRequests: true,
             },
           },
         ],

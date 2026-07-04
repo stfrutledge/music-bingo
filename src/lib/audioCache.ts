@@ -101,72 +101,108 @@ export async function getCacheStatus(playlist: Playlist): Promise<CacheStatus> {
   };
 }
 
+const DOWNLOAD_CONCURRENCY = 4;
+const DOWNLOAD_ATTEMPTS = 3;
+
+/**
+ * Ask the browser to protect our storage from eviction. Without this, Android
+ * can silently drop the ~1.7 GB audio cache under storage pressure — fatal for
+ * an offline gig. Safe to call repeatedly.
+ */
+export async function requestPersistentStorage(): Promise<boolean> {
+  if (!navigator.storage?.persist) return false;
+  try {
+    if (await navigator.storage.persisted()) return true;
+    return await navigator.storage.persist();
+  } catch {
+    return false;
+  }
+}
+
+export interface StorageInfo {
+  usageMB: number;
+  quotaMB: number;
+  persisted: boolean;
+}
+
+export async function getStorageInfo(): Promise<StorageInfo | null> {
+  if (!navigator.storage?.estimate) return null;
+  try {
+    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    const persisted = navigator.storage.persisted
+      ? await navigator.storage.persisted()
+      : false;
+    return {
+      usageMB: Math.round(usage / 1048576),
+      quotaMB: Math.round(quota / 1048576),
+      persisted,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchWithRetry(url: string): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= DOWNLOAD_ATTEMPTS; attempt++) {
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      if (response.ok) return response;
+      lastError = new Error(`HTTP ${response.status}`);
+    } catch (error) {
+      lastError = error;
+    }
+    if (attempt < DOWNLOAD_ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+  throw lastError;
+}
+
 export async function downloadPlaylistAudio(
   playlist: Playlist,
   onProgress?: (downloaded: number, total: number, error?: string) => void
 ): Promise<{ success: number; failed: number; failedSongs: string[] }> {
   const cache = await openAudioCache();
+  await requestPersistentStorage();
+
   const total = playlist.songs.length;
   let downloaded = 0;
   let success = 0;
   let failed = 0;
   const failedSongs: string[] = [];
+  const queue = [...playlist.songs];
 
-  for (const song of playlist.songs) {
-    const url = getAudioUrl(playlist.baseAudioUrl, song.audioFile);
+  const worker = async () => {
+    for (;;) {
+      const song = queue.shift();
+      if (!song) return;
+      const url = getAudioUrl(playlist.baseAudioUrl, song.audioFile);
 
-    // Check if already cached
-    const existing = await cache.match(url);
-    if (existing) {
-      success++;
-      downloaded++;
-      onProgress?.(downloaded, total);
-      continue;
-    }
-
-    try {
-      console.log(`Fetching: ${url}`);
-      const response = await fetch(url, { mode: 'cors' });
-      console.log(`Response: ${response.status} ${response.statusText}, ok: ${response.ok}`);
-
-      if (response.ok) {
-        // Clone the response since we can only read it once
-        const clone = response.clone();
-
-        try {
-          await cache.put(url, clone);
-          console.log(`Cached: ${song.title}`);
-
-          // Verify it was cached
+      try {
+        const existing = await cache.match(url);
+        if (!existing) {
+          const response = await fetchWithRetry(url);
+          await cache.put(url, response);
           const verify = await cache.match(url);
-          if (verify) {
-            success++;
-          } else {
-            console.warn(`Cache put succeeded but verify failed for ${song.title}`);
-            failed++;
-            failedSongs.push(`${song.title} - ${song.artist}`);
-          }
-        } catch (cacheError) {
-          console.error(`Cache.put failed for ${song.title}:`, cacheError);
-          failed++;
-          failedSongs.push(`${song.title} - ${song.artist}`);
+          if (!verify) throw new Error('cached entry failed verification');
         }
-      } else {
-        console.warn(`HTTP ${response.status} for ${song.title}`);
+        success++;
+      } catch (error) {
+        console.error(`Failed to download ${song.title}:`, error);
         failed++;
         failedSongs.push(`${song.title} - ${song.artist}`);
-        onProgress?.(downloaded, total, `HTTP ${response.status}: ${song.audioFile}`);
+        onProgress?.(downloaded, total, `Error: ${song.audioFile}`);
       }
-    } catch (error) {
-      console.error(`Failed to download ${song.title}:`, error);
-      failed++;
-      failedSongs.push(`${song.title} - ${song.artist}`);
-      onProgress?.(downloaded, total, `Error: ${song.audioFile}`);
-    }
 
-    downloaded++;
-    onProgress?.(downloaded, total);
-  }
+      downloaded++;
+      onProgress?.(downloaded, total);
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(DOWNLOAD_CONCURRENCY, total) }, worker)
+  );
 
   console.log(`Download complete: ${success} success, ${failed} failed out of ${total}`);
   if (failedSongs.length > 0) {

@@ -66,6 +66,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   // so releasing the talk key never snaps back to full mid-crossfade.
   const baseVolume = () => (isDuckedRef.current ? DUCK_LEVEL : 1);
 
+  // Cache-served songs play via object URLs whose Blobs stay in memory until
+  // revoked — over a full game night that's dozens of whole MP3s. Release the
+  // old one whenever an element gets a new source.
+  const setElementSrc = (el: HTMLAudioElement, src: string) => {
+    if (el.src.startsWith('blob:')) {
+      URL.revokeObjectURL(el.src);
+    }
+    el.src = src;
+  };
+
   // Initialize audio elements. The two elements swap roles on every crossfade
   // (the preloaded element becomes the player), so both carry the same core
   // listeners — each guarded to only drive state while it is the active player.
@@ -137,10 +147,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
       if (duckIntervalRef.current) clearInterval(duckIntervalRef.current);
-      audio.pause();
-      audio.src = '';
-      preloadAudio.pause();
-      preloadAudio.src = '';
+      for (const el of [audio, preloadAudio]) {
+        el.pause();
+        if (el.src.startsWith('blob:')) {
+          URL.revokeObjectURL(el.src);
+        }
+        el.src = '';
+      }
     };
   }, []);
 
@@ -216,7 +229,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    audio.src = audioSrc;
+    setElementSrc(audio, audioSrc);
     audio.load();
 
     if (autoPlay) {
@@ -259,7 +272,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    preload.src = audioSrc;
+    setElementSrc(preload, audioSrc);
     preload.load();
 
     // Seek to start time when metadata loads
