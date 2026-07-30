@@ -416,12 +416,13 @@ export default defineConfig({
         })
       },
     },
-    // Serve MP3 files from the external folder
+    // Serve MP3 files with explicit URL decoding — Vite's own public-dir
+    // serving misses filenames containing '&' when they arrive %26-encoded.
     {
       name: 'serve-mp3s',
       configureServer(server) {
         server.middlewares.use('/audio', (req, res, next) => {
-          const audioPath = path.join("C:/Users/sfrut/OneDrive/Desktop/Music Bingo MP3's", decodeURIComponent(req.url || '').slice(1))
+          const audioPath = path.join(__dirname, 'public', 'audio', decodeURIComponent(req.url || '').slice(1))
 
           // Add CORS headers for jsmediatags to read ID3 tags
           res.setHeader('Access-Control-Allow-Origin', '*')

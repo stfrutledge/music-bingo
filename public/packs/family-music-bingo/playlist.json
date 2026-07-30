@@ -69,16 +69,16 @@
       "_confidence": 1.0
     },
     {
-      "id": "flo-rida-david-guetta-club-can-t-handle-me-feat-da",
+      "id": "flo-rida-club-can-t-handle-me-feat-david-guetta",
       "title": "Club Can't Handle Me (feat. David Guetta)",
-      "artist": "Flo Rida/David Guetta",
+      "artist": "Flo Rida",
       "audioFile": "Club Can't Handle Me (feat. David Guetta) - Flo Rida - SpotubeDL.com.mp3",
       "startTime": 32.0,
       "_confidence": 1.0
     },
     {
-      "id": "the-cranberries-dreams-remastered-2026",
-      "title": "Dreams - Remastered 2026",
+      "id": "the-cranberries-dreams",
+      "title": "Dreams",
       "artist": "The Cranberries",
       "audioFile": "Dreams - Remastered 2026 - The Cranberries - SpotubeDL.com.mp3",
       "startTime": 63.0,
@@ -109,9 +109,9 @@
       "_confidence": 1.0
     },
     {
-      "id": "huntr-x-ejae-audrey-nuna-rei-ami-kpop-demon-hunter",
+      "id": "huntr-x-golden",
       "title": "Golden",
-      "artist": "HUNTR/X/EJAE/AUDREY NUNA/REI AMI/KPop Demon Hunters Cast",
+      "artist": "HUNTR/X",
       "audioFile": "Golden - HUNTRX - SpotubeDL.com.mp3",
       "startTime": 48.0,
       "_confidence": 1.0
@@ -133,16 +133,16 @@
       "_confidence": 1.0
     },
     {
-      "id": "mark-keali-i-ho-omalu-kamehameha-schools-children-",
+      "id": "mark-keali-i-ho-omalu-hawaiian-roller-coaster-ride",
       "title": "Hawaiian Roller Coaster Ride",
-      "artist": "Mark Keali'i Ho'omalu/Kamehameha Schools Children's Chorus",
+      "artist": "Mark Keali'i Ho'omalu",
       "audioFile": "Hawaiian Roller Coaster Ride - Mark Keali'i Ho'omalu - SpotubeDL.com.mp3",
       "startTime": 67.0,
       "_confidence": 1.0
     },
     {
-      "id": "the-beatles-here-comes-the-sun-remastered-2009",
-      "title": "Here Comes The Sun - Remastered 2009",
+      "id": "the-beatles-here-comes-the-sun",
+      "title": "Here Comes The Sun",
       "artist": "The Beatles",
       "audioFile": "Here Comes The Sun - Remastered 2009 - The Beatles - SpotubeDL.com.mp3",
       "startTime": 71.0,
@@ -157,8 +157,8 @@
       "_confidence": 1.0
     },
     {
-      "id": "eagles-hotel-california-2013-remaster",
-      "title": "Hotel California - 2013 Remaster",
+      "id": "eagles-hotel-california",
+      "title": "Hotel California",
       "artist": "Eagles",
       "audioFile": "Hotel California - 2013 Remaster - Eagles - SpotubeDL.com.mp3",
       "startTime": 158.0,
@@ -181,32 +181,32 @@
       "_confidence": 1.0
     },
     {
-      "id": "talk-talk-it-s-my-life-1997-remaster",
-      "title": "It's My Life - 1997 Remaster",
+      "id": "talk-talk-it-s-my-life",
+      "title": "It's My Life",
       "artist": "Talk Talk",
       "audioFile": "It's My Life - 1997 Remaster - Talk Talk - SpotubeDL.com.mp3",
       "startTime": 36.0,
       "_confidence": 1.0
     },
     {
-      "id": "amble-jersey-giant-live-from-dublin",
-      "title": "Jersey Giant - Live from Dublin",
+      "id": "amble-jersey-giant",
+      "title": "Jersey Giant",
       "artist": "Amble",
       "audioFile": "Jersey Giant - Live from Dublin - Amble - SpotubeDL.com.mp3",
       "startTime": 77.0,
       "_confidence": 1.0
     },
     {
-      "id": "dr-evil-bill-appleberry-john-houlihan-just-the-two",
-      "title": "Just The Two Of Us - Dr. Evil Mix",
-      "artist": "Dr. Evil/Bill Appleberry/John Houlihan",
+      "id": "dr-evil-just-the-two-of-us",
+      "title": "Just The Two Of Us",
+      "artist": "Dr. Evil",
       "audioFile": "Just The Two Of Us - Dr. Evil Mix - Dr. Evil - SpotubeDL.com.mp3",
       "startTime": 32.0,
       "_confidence": 1.0
     },
     {
-      "id": "david-bowie-let-s-dance-2018-remaster",
-      "title": "Let's Dance - 2018 Remaster",
+      "id": "david-bowie-let-s-dance",
+      "title": "Let's Dance",
       "artist": "David Bowie",
       "audioFile": "Let's Dance - 2018 Remaster - David Bowie - SpotubeDL.com.mp3",
       "startTime": 166.0,
@@ -293,8 +293,8 @@
       "_confidence": 1.0
     },
     {
-      "id": "the-clash-rock-the-casbah-remastered",
-      "title": "Rock the Casbah - Remastered",
+      "id": "the-clash-rock-the-casbah",
+      "title": "Rock the Casbah",
       "artist": "The Clash",
       "audioFile": "Rock the Casbah - Remastered - The Clash - SpotubeDL.com.mp3",
       "startTime": 89.0,
@@ -454,5 +454,5 @@
     }
   ],
   "createdAt": 1785381367931,
-  "updatedAt": 1785381380975
+  "updatedAt": 1785382948779
 }
