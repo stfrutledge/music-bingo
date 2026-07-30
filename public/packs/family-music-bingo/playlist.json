@@ -1,0 +1,458 @@
+{
+  "id": "family-music-bingo",
+  "name": "Family Music Bingo",
+  "description": "Family-friendly music bingo playlist (56 songs)",
+  "baseAudioUrl": "/audio/",
+  "songs": [
+    {
+      "id": "coldplay-a-sky-full-of-stars",
+      "title": "A Sky Full of Stars",
+      "artist": "Coldplay",
+      "audioFile": "A Sky Full of Stars - Coldplay - SpotubeDL.com.mp3",
+      "startTime": 63.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ray-charles-america-the-beautiful",
+      "title": "America the Beautiful",
+      "artist": "Ray Charles",
+      "audioFile": "America the Beautiful - Ray Charles - SpotubeDL.com.mp3",
+      "startTime": 44.0,
+      "_confidence": 0.88
+    },
+    {
+      "id": "kidz-bop-kids-apt",
+      "title": "APT.",
+      "artist": "Kidz Bop Kids",
+      "audioFile": "APT. - Kidz Bop Kids - SpotubeDL.com.mp3",
+      "startTime": 67.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ella-bright-baby-now-that-i-found-you",
+      "title": "Baby Now That I Found You",
+      "artist": "Ella Bright",
+      "audioFile": "Baby Now That I Found You - Ella Bright - SpotubeDL.com.mp3",
+      "startTime": 22.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "jack-johnson-banana-pancakes",
+      "title": "Banana Pancakes",
+      "artist": "Jack Johnson",
+      "audioFile": "Banana Pancakes - Jack Johnson - SpotubeDL.com.mp3",
+      "startTime": 24.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-weeknd-blinding-lights",
+      "title": "Blinding Lights",
+      "artist": "The Weeknd",
+      "audioFile": "Blinding Lights - The Weeknd - SpotubeDL.com.mp3",
+      "startTime": 42.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "billy-ocean-caribbean-queen-no-more-love-on-the-ru",
+      "title": "Caribbean Queen (No More Love On the Run)",
+      "artist": "Billy Ocean",
+      "audioFile": "Caribbean Queen (No More Love On the Run) - Billy Ocean - SpotubeDL.com.mp3",
+      "startTime": 163.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "coldplay-clocks",
+      "title": "Clocks",
+      "artist": "Coldplay",
+      "audioFile": "Clocks - Coldplay - SpotubeDL.com.mp3",
+      "startTime": 25.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "flo-rida-david-guetta-club-can-t-handle-me-feat-da",
+      "title": "Club Can't Handle Me (feat. David Guetta)",
+      "artist": "Flo Rida/David Guetta",
+      "audioFile": "Club Can't Handle Me (feat. David Guetta) - Flo Rida - SpotubeDL.com.mp3",
+      "startTime": 32.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-cranberries-dreams-remastered-2026",
+      "title": "Dreams - Remastered 2026",
+      "artist": "The Cranberries",
+      "audioFile": "Dreams - Remastered 2026 - The Cranberries - SpotubeDL.com.mp3",
+      "startTime": 63.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "eddy-grant-electric-avenue",
+      "title": "Electric Avenue",
+      "artist": "Eddy Grant",
+      "audioFile": "Electric Avenue - Eddy Grant - SpotubeDL.com.mp3",
+      "startTime": 29.0,
+      "_confidence": 0.99
+    },
+    {
+      "id": "hank-ballard-the-midnighters-finger-poppin-time",
+      "title": "Finger Poppin' Time",
+      "artist": "Hank Ballard & The Midnighters",
+      "audioFile": "Finger Poppin' Time - Hank Ballard & The Midnighters - SpotubeDL.com.mp3",
+      "startTime": 60.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-cure-friday-i-m-in-love",
+      "title": "Friday I'm In Love",
+      "artist": "The Cure",
+      "audioFile": "Friday I'm In Love - The Cure - SpotubeDL.com.mp3",
+      "startTime": 86.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "huntr-x-ejae-audrey-nuna-rei-ami-kpop-demon-hunter",
+      "title": "Golden",
+      "artist": "HUNTR/X/EJAE/AUDREY NUNA/REI AMI/KPop Demon Hunters Cast",
+      "audioFile": "Golden - HUNTRX - SpotubeDL.com.mp3",
+      "startTime": 48.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-saw-doctors-green-and-red-of-mayo",
+      "title": "Green and Red of Mayo",
+      "artist": "The Saw Doctors",
+      "audioFile": "Green and Red of Mayo - The Saw Doctors - SpotubeDL.com.mp3",
+      "startTime": 91.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "booker-t-the-m-g-s-green-onions",
+      "title": "Green Onions",
+      "artist": "Booker T. & the M.G.'s",
+      "audioFile": "Green Onions - Booker T. & the M.G.'s - SpotubeDL.com.mp3",
+      "startTime": 70.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "mark-keali-i-ho-omalu-kamehameha-schools-children-",
+      "title": "Hawaiian Roller Coaster Ride",
+      "artist": "Mark Keali'i Ho'omalu/Kamehameha Schools Children's Chorus",
+      "audioFile": "Hawaiian Roller Coaster Ride - Mark Keali'i Ho'omalu - SpotubeDL.com.mp3",
+      "startTime": 67.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-beatles-here-comes-the-sun-remastered-2009",
+      "title": "Here Comes The Sun - Remastered 2009",
+      "artist": "The Beatles",
+      "audioFile": "Here Comes The Sun - Remastered 2009 - The Beatles - SpotubeDL.com.mp3",
+      "startTime": 71.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-lumineers-ho-hey",
+      "title": "Ho Hey",
+      "artist": "The Lumineers",
+      "audioFile": "Ho Hey - The Lumineers - SpotubeDL.com.mp3",
+      "startTime": 65.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "eagles-hotel-california-2013-remaster",
+      "title": "Hotel California - 2013 Remaster",
+      "artist": "Eagles",
+      "audioFile": "Hotel California - 2013 Remaster - Eagles - SpotubeDL.com.mp3",
+      "startTime": 158.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "daryl-hall-john-oates-i-can-t-go-for-that-no-can-d",
+      "title": "I Can't Go for That (No Can Do)",
+      "artist": "Daryl Hall & John Oates",
+      "audioFile": "I Can't Go for That (No Can Do) - Daryl Hall & John Oates - SpotubeDL.com.mp3",
+      "startTime": 118.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "taylor-swift-i-knew-it-i-knew-you",
+      "title": "I Knew It, I Knew You",
+      "artist": "Taylor Swift",
+      "audioFile": "I Knew It, I Knew You - Taylor Swift - SpotubeDL.com.mp3",
+      "startTime": 49.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "talk-talk-it-s-my-life-1997-remaster",
+      "title": "It's My Life - 1997 Remaster",
+      "artist": "Talk Talk",
+      "audioFile": "It's My Life - 1997 Remaster - Talk Talk - SpotubeDL.com.mp3",
+      "startTime": 36.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "amble-jersey-giant-live-from-dublin",
+      "title": "Jersey Giant - Live from Dublin",
+      "artist": "Amble",
+      "audioFile": "Jersey Giant - Live from Dublin - Amble - SpotubeDL.com.mp3",
+      "startTime": 77.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "dr-evil-bill-appleberry-john-houlihan-just-the-two",
+      "title": "Just The Two Of Us - Dr. Evil Mix",
+      "artist": "Dr. Evil/Bill Appleberry/John Houlihan",
+      "audioFile": "Just The Two Of Us - Dr. Evil Mix - Dr. Evil - SpotubeDL.com.mp3",
+      "startTime": 32.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "david-bowie-let-s-dance-2018-remaster",
+      "title": "Let's Dance - 2018 Remaster",
+      "artist": "David Bowie",
+      "audioFile": "Let's Dance - 2018 Remaster - David Bowie - SpotubeDL.com.mp3",
+      "startTime": 166.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-b-52-s-love-shack",
+      "title": "Love Shack",
+      "artist": "The B-52's",
+      "audioFile": "Love Shack - The B-52's - SpotubeDL.com.mp3",
+      "startTime": 108.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "taylor-swift-love-story",
+      "title": "Love Story",
+      "artist": "Taylor Swift",
+      "audioFile": "Love Story - Taylor Swift - SpotubeDL.com.mp3",
+      "startTime": 94.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-killers-mr-brightside",
+      "title": "Mr. Brightside",
+      "artist": "The Killers",
+      "audioFile": "Mr. Brightside - The Killers - SpotubeDL.com.mp3",
+      "startTime": 56.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "inxs-need-you-tonight",
+      "title": "Need You Tonight",
+      "artist": "INXS",
+      "audioFile": "Need You Tonight - INXS - SpotubeDL.com.mp3",
+      "startTime": 70.0,
+      "_confidence": 0.99
+    },
+    {
+      "id": "talking-heads-once-in-a-lifetime",
+      "title": "Once in a Lifetime",
+      "artist": "Talking Heads",
+      "audioFile": "Once in a Lifetime - Talking Heads - SpotubeDL.com.mp3",
+      "startTime": 92.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "amble-one-man-s-love",
+      "title": "One Man's Love",
+      "artist": "Amble",
+      "audioFile": "One Man's Love - Amble - SpotubeDL.com.mp3",
+      "startTime": 76.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "alex-warren-ordinary",
+      "title": "Ordinary",
+      "artist": "Alex Warren",
+      "audioFile": "Ordinary - Alex Warren - SpotubeDL.com.mp3",
+      "startTime": 75.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "daryl-hall-john-oates-out-of-touch",
+      "title": "Out of Touch",
+      "artist": "Daryl Hall & John Oates",
+      "audioFile": "Out of Touch - Daryl Hall & John Oates - SpotubeDL.com.mp3",
+      "startTime": 48.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "chappell-roan-pink-pony-club",
+      "title": "Pink Pony Club",
+      "artist": "Chappell Roan",
+      "audioFile": "Pink Pony Club - Chappell Roan - SpotubeDL.com.mp3",
+      "startTime": 103.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "father-john-misty-real-love-baby",
+      "title": "Real Love Baby",
+      "artist": "Father John Misty",
+      "audioFile": "Real Love Baby - Father John Misty - SpotubeDL.com.mp3",
+      "startTime": 43.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-clash-rock-the-casbah-remastered",
+      "title": "Rock the Casbah - Remastered",
+      "artist": "The Clash",
+      "audioFile": "Rock the Casbah - Remastered - The Clash - SpotubeDL.com.mp3",
+      "startTime": 89.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bill-black-s-combo-smokie-part-2",
+      "title": "Smokie Part 2",
+      "artist": "Bill Black's Combo",
+      "audioFile": "Smokie Part 2 - Bill Black's Combo - SpotubeDL.com.mp3",
+      "startTime": 10.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "israel-kamakawiwo-ole-somewhere-over-the-rainbow-w",
+      "title": "Somewhere Over The Rainbow/What A Wonderful World",
+      "artist": "Israel Kamakawiwo'ole",
+      "audioFile": "Somewhere Over The RainbowWhat A Wonderful World - Israel Kamakawiwo'ole - SpotubeDL.com.mp3",
+      "startTime": 80.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "noah-kahan-stick-season",
+      "title": "Stick Season",
+      "artist": "Noah Kahan",
+      "audioFile": "Stick Season - Noah Kahan - SpotubeDL.com.mp3",
+      "startTime": 73.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "franz-ferdinand-take-me-out",
+      "title": "Take Me Out",
+      "artist": "Franz Ferdinand",
+      "audioFile": "Take Me Out - Franz Ferdinand - SpotubeDL.com.mp3",
+      "startTime": 95.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-champs-tequila",
+      "title": "Tequila",
+      "artist": "The Champs",
+      "audioFile": "Tequila - The Champs - SpotubeDL.com.mp3",
+      "startTime": 54.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-tokens-the-lion-sleeps-tonight-wimoweh",
+      "title": "The Lion Sleeps Tonight (Wimoweh)",
+      "artist": "The Tokens",
+      "audioFile": "The Lion Sleeps Tonight (Wimoweh) - The Tokens - SpotubeDL.com.mp3",
+      "startTime": 42.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "rajiv-surendra-the-mathlete-rap",
+      "title": "The Mathlete Rap",
+      "artist": "Rajiv Surendra",
+      "audioFile": "The Mathlete Rap - Rajiv Surendra - SpotubeDL.com.mp3",
+      "startTime": 0.0,
+      "_confidence": 0.5
+    },
+    {
+      "id": "the-drifters-there-goes-my-baby",
+      "title": "There Goes My Baby",
+      "artist": "The Drifters",
+      "audioFile": "There Goes My Baby - The Drifters - SpotubeDL.com.mp3",
+      "startTime": 46.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-drifters-this-magic-moment",
+      "title": "This Magic Moment",
+      "artist": "The Drifters",
+      "audioFile": "This Magic Moment - The Drifters - SpotubeDL.com.mp3",
+      "startTime": 31.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "ac-dc-thunderstruck",
+      "title": "Thunderstruck",
+      "artist": "AC/DC",
+      "audioFile": "Thunderstruck - ACDC - SpotubeDL.com.mp3",
+      "startTime": 116.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "amble-tonnta",
+      "title": "Tonnta",
+      "artist": "Amble",
+      "audioFile": "Tonnta - Amble - SpotubeDL.com.mp3",
+      "startTime": 53.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "chumbawamba-tubthumping",
+      "title": "Tubthumping",
+      "artist": "Chumbawamba",
+      "audioFile": "Tubthumping - Chumbawamba - SpotubeDL.com.mp3",
+      "startTime": 108.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "spice-girls-wannabe",
+      "title": "Wannabe",
+      "artist": "Spice Girls",
+      "audioFile": "Wannabe - Spice Girls - SpotubeDL.com.mp3",
+      "startTime": 69.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "sister-sledge-we-are-family",
+      "title": "We Are Family",
+      "artist": "Sister Sledge",
+      "audioFile": "We Are Family - Sister Sledge - SpotubeDL.com.mp3",
+      "startTime": 75.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "bleachers-we-should-talk",
+      "title": "we should talk",
+      "artist": "Bleachers",
+      "audioFile": "we should talk - Bleachers - SpotubeDL.com.mp3",
+      "startTime": 73.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "hilary-duff-what-dreams-are-made-of",
+      "title": "What Dreams Are Made Of",
+      "artist": "Hilary Duff",
+      "audioFile": "What Dreams Are Made Of - Hilary Duff - SpotubeDL.com.mp3",
+      "startTime": 90.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "raye-where-is-my-husband",
+      "title": "WHERE IS MY HUSBAND!",
+      "artist": "RAYE",
+      "audioFile": "WHERE IS MY HUSBAND! - RAYE - SpotubeDL.com.mp3",
+      "startTime": 79.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "baha-men-who-let-the-dogs-out",
+      "title": "Who Let The Dogs Out",
+      "artist": "Baha Men",
+      "audioFile": "Who Let The Dogs Out - Baha Men - SpotubeDL.com.mp3",
+      "startTime": 5.0,
+      "_confidence": 1.0
+    },
+    {
+      "id": "the-surfaris-wipe-out",
+      "title": "Wipe Out",
+      "artist": "The Surfaris",
+      "audioFile": "Wipe Out - The Surfaris - SpotubeDL.com.mp3",
+      "startTime": 64.0,
+      "_confidence": 1.0
+    }
+  ],
+  "createdAt": 1785381367931,
+  "updatedAt": 1785381380975
+}

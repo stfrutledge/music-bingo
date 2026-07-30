@@ -13,6 +13,14 @@
           "path": "hen-party/card-packs/hen-party.json"
         }
       ]
+    },
+    {
+      "id": "family-music-bingo",
+      "name": "Family Music Bingo",
+      "songCount": 56,
+      "path": "/packs/family-music-bingo/playlist.json",
+      "updatedAt": 1785381367931,
+      "cardPacks": []
     }
   ]
 }
