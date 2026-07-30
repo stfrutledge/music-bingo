@@ -20,7 +20,14 @@
       "songCount": 56,
       "path": "/packs/family-music-bingo/playlist.json",
       "updatedAt": 1785381367931,
-      "cardPacks": []
+      "cardPacks": [
+        {
+          "id": "family-music-bingo",
+          "name": "Family Music Bingo",
+          "cardCount": 20,
+          "path": "family-music-bingo/card-packs/family-music-bingo.json"
+        }
+      ]
     }
   ]
 }
