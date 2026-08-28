@@ -90,8 +90,16 @@ export async function getGame(id: string): Promise<GameState | undefined> {
   return db.games.get(id);
 }
 
+/**
+ * The most recently started unfinished game. Ordering matters: exiting a game
+ * leaves it active on purpose, so a stale rehearsal session can sit in the DB
+ * for weeks. Iterating by primary key (`game-<timestamp>`) would return the
+ * OLDEST one, which after a mid-game crash means resuming the wrong game.
+ */
 export async function getActiveGame(): Promise<GameState | undefined> {
   return db.games
+    .orderBy('startedAt')
+    .reverse()
     .filter(g => !g.endedAt)
     .first();
 }

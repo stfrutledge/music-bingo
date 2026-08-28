@@ -1,0 +1,610 @@
+{
+  "id": "nmy-vesta",
+  "name": "NMY / Vesta",
+  "description": "NMY / Vesta music bingo playlist (75 songs)",
+  "baseAudioUrl": "/audio/",
+  "songs": [
+    {
+      "id": "elvis-crespo-suavemente",
+      "title": "Suavemente",
+      "artist": "Elvis Crespo",
+      "audioFile": "Suavemente - Elvis Crespo.mp3",
+      "startTime": 19,
+      "_confidence": 1
+    },
+    {
+      "id": "anotr-talk-to-you",
+      "title": "Talk To You",
+      "artist": "ANOTR",
+      "audioFile": "Talk To You - ANOTR.mp3",
+      "startTime": 22,
+      "_confidence": 1
+    },
+    {
+      "id": "ronan-keating-lovin-each-day",
+      "title": "Lovin' Each Day",
+      "artist": "Ronan Keating",
+      "audioFile": "Lovin' Each Day - Ronan Keating.mp3",
+      "startTime": 10,
+      "_confidence": 1
+    },
+    {
+      "id": "fontaines-d-c-starburster",
+      "title": "Starburster",
+      "artist": "Fontaines D.C.",
+      "audioFile": "Starburster - Fontaines D.C. [nmy].mp3",
+      "startTime": 81,
+      "_confidence": 1
+    },
+    {
+      "id": "the-clash-rock-the-casbah",
+      "title": "Rock the Casbah",
+      "artist": "The Clash",
+      "audioFile": "Rock the Casbah - The Clash.mp3",
+      "startTime": 89,
+      "_confidence": 1
+    },
+    {
+      "id": "daryl-hall-john-oates-maneater",
+      "title": "Maneater",
+      "artist": "Daryl Hall & John Oates",
+      "audioFile": "Maneater - Daryl Hall & John Oates.mp3",
+      "startTime": 64,
+      "_confidence": 1
+    },
+    {
+      "id": "the-b-52-s-love-shack",
+      "title": "Love Shack",
+      "artist": "The B-52's",
+      "audioFile": "Love Shack - The B-52's.mp3",
+      "startTime": 94,
+      "_confidence": 1
+    },
+    {
+      "id": "fatboy-slim-praise-you",
+      "title": "Praise You",
+      "artist": "Fatboy Slim",
+      "audioFile": "Praise You - Fatboy Slim.mp3",
+      "startTime": 70,
+      "_confidence": 1
+    },
+    {
+      "id": "talk-talk-it-s-my-life",
+      "title": "It's My Life",
+      "artist": "Talk Talk",
+      "audioFile": "It's My Life - Talk Talk.mp3",
+      "startTime": 39,
+      "_confidence": 1
+    },
+    {
+      "id": "eddy-grant-electric-avenue",
+      "title": "Electric Avenue",
+      "artist": "Eddy Grant",
+      "audioFile": "Electric Avenue - Eddy Grant [nmy].mp3",
+      "startTime": 61,
+      "_confidence": 0.97
+    },
+    {
+      "id": "ella-langley-choosin-texas",
+      "title": "Choosin' Texas",
+      "artist": "Ella Langley",
+      "audioFile": "Choosin' Texas - Ella Langley.mp3",
+      "startTime": 92,
+      "_confidence": 1
+    },
+    {
+      "id": "anita-ward-ring-my-bell",
+      "title": "Ring My Bell",
+      "artist": "Anita Ward",
+      "audioFile": "Ring My Bell - Anita Ward.mp3",
+      "startTime": 136,
+      "_confidence": 1
+    },
+    {
+      "id": "maroon-5-makes-me-wonder",
+      "title": "Makes Me Wonder",
+      "artist": "Maroon 5",
+      "audioFile": "Makes Me Wonder - Maroon 5.mp3",
+      "startTime": 87,
+      "_confidence": 1
+    },
+    {
+      "id": "dua-lipa-dance-the-night",
+      "title": "Dance The Night",
+      "artist": "Dua Lipa",
+      "audioFile": "Dance The Night - Dua Lipa.mp3",
+      "startTime": 68,
+      "_confidence": 1
+    },
+    {
+      "id": "the-shapeshifters-lola-s-theme",
+      "title": "Lola's Theme",
+      "artist": "The Shapeshifters",
+      "audioFile": "Lola's Theme - The Shapeshifters.mp3",
+      "startTime": 33,
+      "_confidence": 1
+    },
+    {
+      "id": "sean-paul-give-it-up-to-me",
+      "title": "Give It Up to Me",
+      "artist": "Sean Paul",
+      "audioFile": "Give It Up to Me - Sean Paul.mp3",
+      "startTime": 9,
+      "_confidence": 1
+    },
+    {
+      "id": "bad-bunny-nuevayol",
+      "title": "NUEVAYoL",
+      "artist": "Bad Bunny",
+      "audioFile": "NUEVAYoL - Bad Bunny.mp3",
+      "startTime": 52,
+      "_confidence": 1
+    },
+    {
+      "id": "beyonc-cuff-it",
+      "title": "CUFF IT",
+      "artist": "Beyoncé",
+      "audioFile": "CUFF IT - Beyoncé.mp3",
+      "startTime": 46,
+      "_confidence": 1
+    },
+    {
+      "id": "cher-believe",
+      "title": "Believe",
+      "artist": "Cher",
+      "audioFile": "Believe - Cher.mp3",
+      "startTime": 44,
+      "_confidence": 1
+    },
+    {
+      "id": "natasha-bedingfield-pocketful-of-sunshine",
+      "title": "Pocketful of Sunshine",
+      "artist": "Natasha Bedingfield",
+      "audioFile": "Pocketful of Sunshine - Natasha Bedingfield.mp3",
+      "startTime": 50,
+      "_confidence": 1
+    },
+    {
+      "id": "charli-xcx-apple",
+      "title": "Apple",
+      "artist": "Charli xcx",
+      "audioFile": "Apple - Charli xcx [nmy].mp3",
+      "startTime": 16,
+      "_confidence": 1
+    },
+    {
+      "id": "zerb-addicted",
+      "title": "Addicted",
+      "artist": "Zerb",
+      "audioFile": "Addicted - Zerb.mp3",
+      "startTime": 45,
+      "_confidence": 1
+    },
+    {
+      "id": "britney-spears-baby-one-more-time",
+      "title": "...Baby One More Time",
+      "artist": "Britney Spears",
+      "audioFile": "...Baby One More Time - Britney Spears.mp3",
+      "startTime": 89,
+      "_confidence": 1
+    },
+    {
+      "id": "foster-the-people-pumped-up-kicks",
+      "title": "Pumped Up Kicks",
+      "artist": "Foster The People",
+      "audioFile": "Pumped Up Kicks - Foster The People.mp3",
+      "startTime": 63,
+      "_confidence": 1
+    },
+    {
+      "id": "the-kid-laroi-girls",
+      "title": "GIRLS",
+      "artist": "The Kid LAROI",
+      "audioFile": "GIRLS - The Kid LAROI.mp3",
+      "startTime": 33,
+      "_confidence": 1
+    },
+    {
+      "id": "noah-kahan-stick-season",
+      "title": "Stick Season",
+      "artist": "Noah Kahan",
+      "audioFile": "Stick Season - Noah Kahan.mp3",
+      "startTime": 79,
+      "_confidence": 1
+    },
+    {
+      "id": "sombr-12-to-12",
+      "title": "12 to 12",
+      "artist": "sombr",
+      "audioFile": "12 to 12 - sombr.mp3",
+      "startTime": 37,
+      "_confidence": 1
+    },
+    {
+      "id": "amble-tonnta",
+      "title": "Tonnta",
+      "artist": "Amble",
+      "audioFile": "Tonnta - Amble.mp3",
+      "startTime": 61,
+      "_confidence": 1
+    },
+    {
+      "id": "temper-city-self-aware",
+      "title": "Self Aware",
+      "artist": "Temper City",
+      "audioFile": "Self Aware - Temper City.mp3",
+      "startTime": 36,
+      "_confidence": 1
+    },
+    {
+      "id": "the-bucketheads-the-bomb",
+      "title": "The Bomb",
+      "artist": "The Bucketheads",
+      "audioFile": "The Bomb - The Bucketheads.mp3",
+      "startTime": 20,
+      "_confidence": 1
+    },
+    {
+      "id": "shawn-mendes-treat-you-better",
+      "title": "Treat You Better",
+      "artist": "Shawn Mendes",
+      "audioFile": "Treat You Better - Shawn Mendes.mp3",
+      "startTime": 102,
+      "_confidence": 1
+    },
+    {
+      "id": "luke-combs-fast-car",
+      "title": "Fast Car",
+      "artist": "Luke Combs",
+      "audioFile": "Fast Car - Luke Combs.mp3",
+      "startTime": 105,
+      "_confidence": 1
+    },
+    {
+      "id": "bts-dynamite",
+      "title": "Dynamite",
+      "artist": "BTS",
+      "audioFile": "Dynamite - BTS.mp3",
+      "startTime": 89,
+      "_confidence": 1
+    },
+    {
+      "id": "the-chemical-brothers-go",
+      "title": "Go",
+      "artist": "The Chemical Brothers",
+      "audioFile": "Go - The Chemical Brothers.mp3",
+      "startTime": 64,
+      "_confidence": 1
+    },
+    {
+      "id": "jonas-blue-edge-of-desire",
+      "title": "Edge of Desire",
+      "artist": "Jonas Blue",
+      "audioFile": "Edge of Desire - Jonas Blue.mp3",
+      "startTime": 11,
+      "_confidence": 1
+    },
+    {
+      "id": "calvin-harris-satisfy",
+      "title": "Satisfy",
+      "artist": "Calvin Harris",
+      "audioFile": "Satisfy - Calvin Harris.mp3",
+      "startTime": 59,
+      "_confidence": 1
+    },
+    {
+      "id": "aitana-superestrella",
+      "title": "SUPERESTRELLA",
+      "artist": "Aitana",
+      "audioFile": "SUPERESTRELLA - Aitana.mp3",
+      "startTime": 52,
+      "_confidence": 1
+    },
+    {
+      "id": "duke-dumont-ocean-drive",
+      "title": "Ocean Drive",
+      "artist": "Duke Dumont",
+      "audioFile": "Ocean Drive - Duke Dumont.mp3",
+      "startTime": 39,
+      "_confidence": 1
+    },
+    {
+      "id": "rosal-a-la-perla",
+      "title": "La Perla",
+      "artist": "ROSALÍA",
+      "audioFile": "La Perla - ROSALÍA.mp3",
+      "startTime": 84,
+      "_confidence": 1
+    },
+    {
+      "id": "the-cure-just-like-heaven",
+      "title": "Just Like Heaven",
+      "artist": "The Cure",
+      "audioFile": "Just Like Heaven - The Cure.mp3",
+      "startTime": 80,
+      "_confidence": 1
+    },
+    {
+      "id": "cmat-stay-for-something",
+      "title": "Stay For Something",
+      "artist": "CMAT",
+      "audioFile": "Stay For Something - CMAT.mp3",
+      "startTime": 70,
+      "_confidence": 1
+    },
+    {
+      "id": "gorillaz-feel-good-inc",
+      "title": "Feel Good Inc.",
+      "artist": "Gorillaz",
+      "audioFile": "Feel Good Inc. - Gorillaz [nmy].mp3",
+      "startTime": 102,
+      "_confidence": 1
+    },
+    {
+      "id": "gracie-abrams-that-s-so-true",
+      "title": "That’s So True",
+      "artist": "Gracie Abrams",
+      "audioFile": "That’s So True - Gracie Abrams.mp3",
+      "startTime": 67,
+      "_confidence": 1
+    },
+    {
+      "id": "david-gray-babylon",
+      "title": "Babylon",
+      "artist": "David Gray",
+      "audioFile": "Babylon - David Gray [nmy].mp3",
+      "startTime": 84,
+      "_confidence": 1
+    },
+    {
+      "id": "tate-mcrae-greedy",
+      "title": "greedy",
+      "artist": "Tate McRae",
+      "audioFile": "greedy - Tate McRae [nmy].mp3",
+      "startTime": 62,
+      "_confidence": 1
+    },
+    {
+      "id": "sophie-ellis-bextor-murder-on-the-dancefloor",
+      "title": "Murder On The Dancefloor",
+      "artist": "Sophie Ellis-Bextor",
+      "audioFile": "Murder On The Dancefloor - Sophie Ellis-Bextor.mp3",
+      "startTime": 93,
+      "_confidence": 1
+    },
+    {
+      "id": "raye-where-is-my-husband",
+      "title": "WHERE IS MY HUSBAND!",
+      "artist": "RAYE",
+      "audioFile": "WHERE IS MY HUSBAND! - RAYE.mp3",
+      "startTime": 79,
+      "_confidence": 1
+    },
+    {
+      "id": "chappell-roan-pink-pony-club",
+      "title": "Pink Pony Club",
+      "artist": "Chappell Roan",
+      "audioFile": "Pink Pony Club - Chappell Roan [nmy].mp3",
+      "startTime": 109,
+      "_confidence": 1
+    },
+    {
+      "id": "disco-lines-no-broke-boys",
+      "title": "No Broke Boys",
+      "artist": "Disco Lines",
+      "audioFile": "No Broke Boys - Disco Lines.mp3",
+      "startTime": 30,
+      "_confidence": 1
+    },
+    {
+      "id": "99-souls-the-girl-is-mine",
+      "title": "The Girl Is Mine",
+      "artist": "99 Souls",
+      "audioFile": "The Girl Is Mine - 99 Souls.mp3",
+      "startTime": 28,
+      "_confidence": 1
+    },
+    {
+      "id": "sister-sledge-we-are-family",
+      "title": "We Are Family",
+      "artist": "Sister Sledge",
+      "audioFile": "We Are Family - Sister Sledge.mp3",
+      "startTime": 160,
+      "_confidence": 1
+    },
+    {
+      "id": "madonna-like-a-prayer",
+      "title": "Like a Prayer",
+      "artist": "Madonna",
+      "audioFile": "Like a Prayer - Madonna.mp3",
+      "startTime": 135,
+      "_confidence": 1
+    },
+    {
+      "id": "bob-sinclar-world-hold-on",
+      "title": "World Hold On",
+      "artist": "Bob Sinclar",
+      "audioFile": "World Hold On - Bob Sinclar.mp3",
+      "startTime": 38,
+      "_confidence": 1
+    },
+    {
+      "id": "chaka-khan-ain-t-nobody",
+      "title": "Ain't Nobody",
+      "artist": "Chaka Khan",
+      "audioFile": "Ain't Nobody - Chaka Khan.mp3",
+      "startTime": 71,
+      "_confidence": 1
+    },
+    {
+      "id": "kneecap-h-o-o-d",
+      "title": "H.O.O.D",
+      "artist": "KNEECAP",
+      "audioFile": "H.O.O.D - KNEECAP.mp3",
+      "startTime": 11,
+      "_confidence": 1
+    },
+    {
+      "id": "mumford-sons-i-will-wait",
+      "title": "I Will Wait",
+      "artist": "Mumford & Sons",
+      "audioFile": "I Will Wait - Mumford & Sons.mp3",
+      "startTime": 119,
+      "_confidence": 1
+    },
+    {
+      "id": "coldplay-adventure-of-a-lifetime",
+      "title": "Adventure of a Lifetime",
+      "artist": "Coldplay",
+      "audioFile": "Adventure of a Lifetime - Coldplay.mp3",
+      "startTime": 115,
+      "_confidence": 1
+    },
+    {
+      "id": "g-flip-bed-on-fire",
+      "title": "Bed on Fire",
+      "artist": "G Flip",
+      "audioFile": "Bed on Fire - G Flip.mp3",
+      "startTime": 25,
+      "_confidence": 1
+    },
+    {
+      "id": "red-hot-chili-peppers-can-t-stop",
+      "title": "Can't Stop",
+      "artist": "Red Hot Chili Peppers",
+      "audioFile": "Can't Stop - Red Hot Chili Peppers.mp3",
+      "startTime": 50,
+      "_confidence": 1
+    },
+    {
+      "id": "smash-mouth-all-star",
+      "title": "All Star",
+      "artist": "Smash Mouth",
+      "audioFile": "All Star - Smash Mouth.mp3",
+      "startTime": 75,
+      "_confidence": 1
+    },
+    {
+      "id": "shania-twain-man-i-feel-like-a-woman",
+      "title": "Man! I Feel Like A Woman!",
+      "artist": "Shania Twain",
+      "audioFile": "Man! I Feel Like A Woman! - Shania Twain.mp3",
+      "startTime": 37,
+      "_confidence": 1
+    },
+    {
+      "id": "new-radicals-you-get-what-you-give",
+      "title": "You Get What You Give",
+      "artist": "New Radicals",
+      "audioFile": "You Get What You Give - New Radicals [nmy].mp3",
+      "startTime": 102,
+      "_confidence": 1
+    },
+    {
+      "id": "gwen-stefani-hollaback-girl",
+      "title": "Hollaback Girl",
+      "artist": "Gwen Stefani",
+      "audioFile": "Hollaback Girl - Gwen Stefani.mp3",
+      "startTime": 51,
+      "_confidence": 1
+    },
+    {
+      "id": "mike-posner-cooler-than-me",
+      "title": "Cooler Than Me",
+      "artist": "Mike Posner",
+      "audioFile": "Cooler Than Me - Mike Posner.mp3",
+      "startTime": 64,
+      "_confidence": 1
+    },
+    {
+      "id": "sia-chandelier",
+      "title": "Chandelier",
+      "artist": "Sia",
+      "audioFile": "Chandelier - Sia.mp3",
+      "startTime": 54,
+      "_confidence": 1
+    },
+    {
+      "id": "zara-larsson-lush-life",
+      "title": "Lush Life",
+      "artist": "Zara Larsson",
+      "audioFile": "Lush Life - Zara Larsson.mp3",
+      "startTime": 49,
+      "_confidence": 1
+    },
+    {
+      "id": "carly-rae-jepsen-call-me-maybe",
+      "title": "Call Me Maybe",
+      "artist": "Carly Rae Jepsen",
+      "audioFile": "Call Me Maybe - Carly Rae Jepsen.mp3",
+      "startTime": 80,
+      "_confidence": 1
+    },
+    {
+      "id": "da-i-freyr-think-about-things",
+      "title": "Think About Things",
+      "artist": "Daði Freyr",
+      "audioFile": "Think About Things - Daði Freyr.mp3",
+      "startTime": 98,
+      "_confidence": 1
+    },
+    {
+      "id": "alex-warren-ordinary",
+      "title": "Ordinary",
+      "artist": "Alex Warren",
+      "audioFile": "Ordinary - Alex Warren.mp3",
+      "startTime": 75,
+      "_confidence": 1
+    },
+    {
+      "id": "edward-sharpe-the-magnetic-zeros-home",
+      "title": "Home",
+      "artist": "Edward Sharpe & The Magnetic Zeros",
+      "audioFile": "Home - Edward Sharpe & The Magnetic Zeros.mp3",
+      "startTime": 123,
+      "_confidence": 1
+    },
+    {
+      "id": "huntr-x-golden",
+      "title": "Golden",
+      "artist": "HUNTR/X",
+      "audioFile": "Golden - HUNTR.mp3",
+      "startTime": 51,
+      "_confidence": 1
+    },
+    {
+      "id": "vanessa-carlton-a-thousand-miles",
+      "title": "A Thousand Miles",
+      "artist": "Vanessa Carlton",
+      "audioFile": "A Thousand Miles - Vanessa Carlton.mp3",
+      "startTime": 107,
+      "_confidence": 1
+    },
+    {
+      "id": "meduza-paradise",
+      "title": "Paradise",
+      "artist": "MEDUZA",
+      "audioFile": "Paradise - MEDUZA.mp3",
+      "startTime": 44,
+      "_confidence": 1
+    },
+    {
+      "id": "taylor-swift-the-fate-of-ophelia",
+      "title": "The Fate of Ophelia",
+      "artist": "Taylor Swift",
+      "audioFile": "The Fate of Ophelia - Taylor Swift [nmy].mp3",
+      "startTime": 47,
+      "_confidence": 1
+    },
+    {
+      "id": "ariana-grande-hate-that-i-made-you-love-me",
+      "title": "hate that i made you love me",
+      "artist": "Ariana Grande",
+      "audioFile": "hate that i made you love me - Ariana Grande.mp3",
+      "startTime": 79,
+      "_confidence": 1
+    }
+  ],
+  "createdAt": 1787155797650,
+  "updatedAt": 1787156277014
+}

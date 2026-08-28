@@ -28,6 +28,21 @@
           "path": "family-music-bingo/card-packs/family-music-bingo.json"
         }
       ]
+    },
+    {
+      "id": "nmy-vesta",
+      "name": "NMY / Vesta",
+      "songCount": 75,
+      "path": "/packs/nmy-vesta/playlist.json",
+      "updatedAt": 1787155797650,
+      "cardPacks": [
+        {
+          "id": "nmy-vesta",
+          "name": "NMY - Vesta",
+          "cardCount": 100,
+          "path": "nmy-vesta/card-packs/nmy-vesta.json"
+        }
+      ]
     }
   ]
 }

@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GameProvider } from './context/GameContext';
 import { AudioProvider } from './context/AudioContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { usePlaylistSync } from './hooks/usePlaylistSync';
+import { requestPersistentStorage } from './lib/audioCache';
 
 // Host components
 import { HomeScreen } from './components/host/HomeScreen';
@@ -27,6 +29,13 @@ import { EventCreator } from './components/admin/EventCreator';
 function AppContent() {
   // Sync playlists from public/packs on app startup
   usePlaylistSync();
+
+  // Protect storage from eviction as early as possible. Previously this only ran
+  // when downloading audio, so playlists with local URLs skip that page entirely
+  // and nothing ever asked - leaving live game state evictable under pressure.
+  useEffect(() => {
+    requestPersistentStorage();
+  }, []);
 
   return (
     <Routes>
