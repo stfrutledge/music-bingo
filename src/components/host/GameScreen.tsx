@@ -90,8 +90,12 @@ export function GameScreen() {
       return node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || node.isContentEditable;
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code !== 'Space' || e.repeat || isTypingTarget(e.target)) return;
+      if (e.code !== 'Space' || isTypingTarget(e.target)) return;
+      // Cancel the default on EVERY keydown, auto-repeat included - holding the
+      // key fires repeats, and letting those through scrolls the page down and
+      // pushes the song title out of view mid-callout.
       e.preventDefault();
+      if (e.repeat) return;
       audio.duck();
     };
     const onKeyUp = (e: KeyboardEvent) => {
