@@ -94,6 +94,41 @@ python scripts/detect_start_times.py "./my_songs" --output playlist.json
 
 The script analyzes energy, rhythm, and spectral features to find each song's most recognizable section.
 
+### Levelling the Loudness
+
+**Run this on every new pack before its first event.** Clips come from mixed
+sources, so their playback level varies wildly — nmy-vesta spanned 15.3 dB
+before it was levelled. In a room that means the crowd asks for more volume on
+a quiet song while the laptop is already maxed, and the next song is deafening.
+Nothing else in the stack corrects it: playback is a flat `volume = 1`, and the
+files carry no ReplayGain tags.
+
+```bash
+# See what would change (writes nothing)
+npm run normalize -- <pack-id> --dry-run
+
+# Do it - originals are backed up automatically first
+npm run normalize -- <pack-id>
+```
+
+Run it **after** `detect_start_times.py`: loudness is measured over the 30
+seconds the guests actually hear, starting at each song's `startTime`, so the
+start times need to exist first. A song with a quiet intro and a loud chorus
+reads completely differently otherwise.
+
+The default target is −9 LUFS rather than the −14 broadcast/Spotify standard,
+because these libraries already sit near −9 and −14 would make the whole night
+quieter.
+
+Afterwards, **listen to the biggest boosts** — a low-bitrate rip pushed up
+10 dB is where encoding artifacts would show. Every original is kept in an
+`audio-backup-<date>` folder next to the audio, so a single track can be put
+back with a copy.
+
+Files are stamped with an `MBNORM` tag, so re-running skips work already done.
+For a pack levelled by hand before this script existed, `--mark` records that
+fact without re-encoding (audio stays bit-identical).
+
 ## Project Structure
 
 ```
@@ -120,8 +155,10 @@ music-bingo/
 │   │   └── winChecker.ts
 │   └── types/              # TypeScript types
 └── scripts/
-    ├── detect_start_times.py  # Analyze songs to find optimal start points
-    └── trim_clips.py          # (Optional) Trim songs to clips if needed
+    ├── create_playlist.py      # Build playlist.json from a folder of MP3s
+    ├── detect_start_times.py   # Analyze songs to find optimal start points
+    ├── normalize_loudness.mjs  # Level clip loudness (run before every event)
+    └── trim_clips.py           # (Optional) Trim songs to clips if needed
 ```
 
 ## Deployment
